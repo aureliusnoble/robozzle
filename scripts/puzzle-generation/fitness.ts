@@ -71,8 +71,14 @@ export function evaluateFitness(puzzle: PuzzleConfig, program: Program): Fitness
   // Run simulation
   engine.start();
 
-  while (stepsUsed < MAX_SOLVER_STEPS) {
+  while (true) {
     const state = engine.getState();
+    stepsUsed = state.steps;
+
+    // Break if we've exceeded our step limit
+    if (stepsUsed >= MAX_SOLVER_STEPS) {
+      break;
+    }
 
     // Track visited tile
     const { x, y } = state.robot.position;
@@ -86,7 +92,6 @@ export function evaluateFitness(puzzle: PuzzleConfig, program: Program): Fitness
 
     // Check if finished
     if (state.status === 'won' || state.status === 'lost') {
-      stepsUsed = state.steps;
       break;
     }
 
@@ -208,9 +213,12 @@ export function getVisitedTiles(puzzle: PuzzleConfig, program: Program): Set<str
   const visited = new Set<string>();
   engine.start();
 
-  let steps = 0;
-  while (steps < MAX_SOLVER_STEPS) {
+  while (true) {
     const state = engine.getState();
+
+    // Break if we've exceeded step limit
+    if (state.steps >= MAX_SOLVER_STEPS) break;
+
     const { x, y } = state.robot.position;
     visited.add(`${x},${y}`);
 
@@ -218,7 +226,6 @@ export function getVisitedTiles(puzzle: PuzzleConfig, program: Program): Set<str
 
     const result = engine.step();
     if (result.finished) break;
-    steps++;
   }
 
   return visited;

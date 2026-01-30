@@ -5,12 +5,12 @@ import type { GenerationConfig, MechanicCategory, SolverConfig } from './types';
 // Default solver configuration
 // Keep generations low - if we can't find solution quickly, puzzle is too hard
 export const DEFAULT_SOLVER_CONFIG: SolverConfig = {
-  populationSize: 80,
-  maxGenerations: 200,
-  stagnationLimit: 30,
-  tournamentSize: 5,
-  eliteCount: 5,
-  mutationRate: 0.15,
+  populationSize: 40,
+  maxGenerations: 100,
+  stagnationLimit: 20,
+  tournamentSize: 4,
+  eliteCount: 3,
+  mutationRate: 0.2,
   crossoverRate: 0.7,
 };
 
@@ -24,12 +24,12 @@ export const DEFAULT_GENERATION_CONFIG: Omit<GenerationConfig, 'mechanicCategory
 
 // Quality thresholds
 export const QUALITY_THRESHOLDS = {
-  minScore: 60,                // Minimum quality score to pass
+  minScore: 55,                // Minimum quality score to pass
   minInstructions: 3,          // Reject solutions with <= 2 instructions
-  maxSolverGenerations: 400,   // Puzzles needing more are too hard
-  minSolverGenerations: 10,    // Puzzles solved immediately are too easy
-  minTileUtilization: 0.3,     // At least 30% of non-void tiles used
-  maxTileUtilization: 0.9,     // Not more than 90% (leave some breathing room)
+  maxSolverGenerations: 150,   // Puzzles needing more are too hard
+  minSolverGenerations: 5,     // Puzzles solved immediately are too easy
+  minTileUtilization: 0.25,    // At least 25% of non-void tiles used
+  maxTileUtilization: 0.95,    // Not more than 95% (leave some breathing room)
 };
 
 // Target pool sizes per category
@@ -82,8 +82,8 @@ export const DIFFICULTY_RANGES = {
   hard: { min: 55, max: 80 },
 };
 
-// Max steps for solver - if puzzle needs >1000 steps, it's too complex for humans
-export const MAX_SOLVER_STEPS = 1000;
+// Max steps for solver - if puzzle needs >500 steps, it's too complex for humans
+export const MAX_SOLVER_STEPS = 500;
 
 // Generation retry limits
 export const MAX_GENERATION_RETRIES = 100;
