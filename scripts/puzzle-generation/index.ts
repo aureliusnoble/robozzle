@@ -87,21 +87,30 @@ function generatePuzzleTitle(category: MechanicCategory, index: number): string 
   return `${categoryNames[category]} #${index + 1}`;
 }
 
+// Failure tracking
+interface FailureStats {
+  candidateFailed: number;
+  solverFailed: number;
+  qualityFailed: number;
+  pruneFailed: number;
+}
+
 // Main generation pipeline for a single puzzle
 async function generateSinglePuzzle(
   category: MechanicCategory,
   index: number,
+  attemptNum: number,
   seed?: number,
   verbose: boolean = false
-): Promise<GeneratedPuzzleConfig | null> {
+): Promise<{ puzzle: GeneratedPuzzleConfig | null; failReason?: string }> {
   const puzzleId = generatePuzzleId(category, index);
   const title = generatePuzzleTitle(category, index);
 
   // Step 1: Generate candidate
+  const candidateStart = Date.now();
   const candidate = generateCandidate(category, {}, seed);
   if (!candidate) {
-    if (verbose) console.log(`  [${puzzleId}] Failed to generate candidate`);
-    return null;
+    return { puzzle: null, failReason: 'candidate' };
   }
 
   // Convert to puzzle config
@@ -117,58 +126,50 @@ async function generateSinglePuzzle(
   };
 
   if (verbose) {
-    console.log(`  [${puzzleId}] Generated candidate from ${candidate.templateName}`);
+    console.log(`    [Attempt ${attemptNum}] Generated from ${candidate.templateName}`);
     console.log(printGrid(puzzle.grid));
   }
 
   // Step 2: Run solver
+  const solverStart = Date.now();
   const solverResult = solve(puzzle, {}, seed);
+  const solverTime = Date.now() - solverStart;
 
   if (!solverResult.solved) {
-    if (verbose) console.log(`  [${puzzleId}] Solver failed after ${solverResult.generations} generations`);
-    return null;
+    if (verbose) {
+      console.log(`    [Attempt ${attemptNum}] Solver failed: ${solverResult.generations} gens, ${solverTime}ms`);
+    }
+    return { puzzle: null, failReason: 'solver' };
   }
 
   if (verbose) {
-    console.log(`  [${puzzleId}] Solved in ${solverResult.generations} generations, ${solverResult.fitness.instructionsUsed} instructions`);
+    console.log(`    [Attempt ${attemptNum}] Solved: ${solverResult.generations} gens, ${solverResult.fitness.instructionsUsed} inst, ${solverTime}ms`);
   }
 
   // Step 3: Quality check
   const quality = evaluateQuality(puzzle, solverResult, category);
 
   if (!quality.passed) {
+    const reasons = Object.entries(quality.rejectionFlags)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
     if (verbose) {
-      const reasons = Object.entries(quality.rejectionFlags)
-        .filter(([, v]) => v)
-        .map(([k]) => k);
-      console.log(`  [${puzzleId}] Quality check failed: ${reasons.join(', ')} (score: ${quality.total.toFixed(1)})`);
+      console.log(`    [Attempt ${attemptNum}] Quality failed: ${reasons.join(', ')} (${quality.total.toFixed(0)})`);
     }
-    return null;
-  }
-
-  if (verbose) {
-    console.log(`  [${puzzleId}] Quality passed: ${quality.total.toFixed(1)}/100`);
+    return { puzzle: null, failReason: `quality:${reasons.join(',')}` };
   }
 
   // Step 4: Prune tiles
   const pruneResult = aggressivePrune(puzzle, solverResult.solution!);
 
   if (!pruneResult.stillSolvable) {
-    if (verbose) console.log(`  [${puzzleId}] Pruning broke solution`);
-    return null;
-  }
-
-  if (verbose && pruneResult.tilesRemoved > 0) {
-    console.log(`  [${puzzleId}] Pruned ${pruneResult.tilesRemoved} tiles`);
+    if (verbose) console.log(`    [Attempt ${attemptNum}] Pruning broke solution`);
+    return { puzzle: null, failReason: 'prune' };
   }
 
   // Step 5: Classify difficulty
   const prunedPuzzle = { ...puzzle, grid: pruneResult.prunedGrid };
   const difficultyResult = classifyDifficulty(prunedPuzzle, solverResult, category);
-
-  if (verbose) {
-    console.log(`  [${puzzleId}] Difficulty: ${getDifficultyDescription(difficultyResult)} (${difficultyResult.score.toFixed(1)})`);
-  }
 
   // Create final puzzle config
   const generatedPuzzle: GeneratedPuzzleConfig = {
@@ -182,7 +183,7 @@ async function generateSinglePuzzle(
     solution: solverResult.solution!,
   };
 
-  return generatedPuzzle;
+  return { puzzle: generatedPuzzle };
 }
 
 // Generate puzzles for a category
@@ -194,30 +195,58 @@ async function generateForCategory(
 ): Promise<GeneratedPuzzleConfig[]> {
   const puzzles: GeneratedPuzzleConfig[] = [];
   let attempts = 0;
-  const maxAttempts = target * 20; // Allow many retries
+  const maxAttempts = target * 50; // Allow many retries
+  const startTime = Date.now();
 
-  console.log(`\nGenerating ${target} puzzles for ${category}...`);
+  const failures: FailureStats = {
+    candidateFailed: 0,
+    solverFailed: 0,
+    qualityFailed: 0,
+    pruneFailed: 0,
+  };
+
+  console.log(`\n${'─'.repeat(60)}`);
+  console.log(`Generating ${target} puzzles for: ${category}`);
   console.log(`  ${MECHANIC_DESCRIPTIONS[category]}`);
+  console.log(`${'─'.repeat(60)}`);
 
   while (puzzles.length < target && attempts < maxAttempts) {
+    attempts++;
     const seed = baseSeed ? baseSeed + attempts * 1337 : undefined;
 
-    const puzzle = await generateSinglePuzzle(category, puzzles.length, seed, verbose);
+    // Show progress every attempt
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    const rate = attempts > 0 ? (puzzles.length / attempts * 100).toFixed(0) : '0';
+    process.stdout.write(`\r  [${puzzles.length}/${target}] Attempt ${attempts} | ${rate}% success | ${elapsed}s elapsed`);
 
-    if (puzzle) {
-      puzzles.push(puzzle);
-      console.log(`  ✓ [${puzzles.length}/${target}] ${puzzle.title} (quality: ${puzzle.qualityScore.toFixed(0)}, difficulty: ${puzzle.solverDifficultyScore.toFixed(0)})`);
+    const result = await generateSinglePuzzle(category, puzzles.length, attempts, seed, verbose);
+
+    if (result.puzzle) {
+      puzzles.push(result.puzzle);
+      // Clear line and print success
+      process.stdout.write('\r' + ' '.repeat(80) + '\r');
+      console.log(`  ✓ [${puzzles.length}/${target}] ${result.puzzle.title} (q:${result.puzzle.qualityScore.toFixed(0)} d:${result.puzzle.solverDifficultyScore.toFixed(0)})`);
+    } else {
+      // Track failure reason
+      if (result.failReason === 'candidate') failures.candidateFailed++;
+      else if (result.failReason === 'solver') failures.solverFailed++;
+      else if (result.failReason?.startsWith('quality')) failures.qualityFailed++;
+      else if (result.failReason === 'prune') failures.pruneFailed++;
     }
 
-    attempts++;
-
-    // Progress indicator for non-verbose mode
-    if (!verbose && attempts % 10 === 0 && puzzles.length < target) {
-      process.stdout.write('.');
+    // Periodic status update (every 25 attempts if not verbose)
+    if (!verbose && attempts % 25 === 0 && puzzles.length < target) {
+      process.stdout.write('\r' + ' '.repeat(80) + '\r');
+      console.log(`  ... ${attempts} attempts: ${failures.candidateFailed} bad candidates, ${failures.solverFailed} unsolvable, ${failures.qualityFailed} low quality`);
     }
   }
 
-  console.log(`\n  Completed: ${puzzles.length}/${target} puzzles (${attempts} attempts)`);
+  // Final summary for category
+  const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+  process.stdout.write('\r' + ' '.repeat(80) + '\r');
+  console.log(`  Completed: ${puzzles.length}/${target} in ${totalTime}s (${attempts} attempts)`);
+  console.log(`  Failures: ${failures.candidateFailed} candidate, ${failures.solverFailed} solver, ${failures.qualityFailed} quality, ${failures.pruneFailed} prune`);
+
   return puzzles;
 }
 
@@ -225,14 +254,15 @@ async function generateForCategory(
 async function main() {
   const args = parseArgs();
 
-  console.log('='.repeat(60));
-  console.log('Robozzle Puzzle Generator');
-  console.log('='.repeat(60));
-  console.log(`Target: ${args.countPerCategory} puzzles per category`);
-  console.log(`Output: ${args.upload ? 'Supabase + ' : ''}${args.output}`);
-  if (args.seed) console.log(`Seed: ${args.seed}`);
-  if (args.category) console.log(`Category: ${args.category}`);
-  console.log('');
+  console.log('═'.repeat(60));
+  console.log('  ROBOZZLE PUZZLE GENERATOR');
+  console.log('═'.repeat(60));
+  console.log(`  Target:   ${args.countPerCategory} puzzles per category`);
+  console.log(`  Output:   ${args.upload ? 'Supabase + ' : ''}${args.output}`);
+  if (args.seed) console.log(`  Seed:     ${args.seed}`);
+  if (args.category) console.log(`  Category: ${args.category}`);
+  if (args.verbose) console.log(`  Mode:     Verbose`);
+  console.log('═'.repeat(60));
 
   const categories: MechanicCategory[] = args.category
     ? [args.category]
@@ -254,6 +284,8 @@ async function main() {
     averageQualityScore: 0,
   };
 
+  const totalStart = Date.now();
+
   // Generate for each category
   for (const category of categories) {
     const puzzles = await generateForCategory(
@@ -266,6 +298,8 @@ async function main() {
     allPuzzles.push(...puzzles);
     stats.byCategory[category].passed = puzzles.length;
   }
+
+  const totalTime = ((Date.now() - totalStart) / 1000).toFixed(1);
 
   // Calculate averages
   if (allPuzzles.length > 0) {
@@ -289,14 +323,16 @@ async function main() {
   };
 
   // Print summary
-  console.log('\n' + '='.repeat(60));
-  console.log('Generation Summary');
-  console.log('='.repeat(60));
-  console.log(`Total puzzles: ${batch.totalGenerated}`);
-  console.log(`Average quality score: ${stats.averageQualityScore.toFixed(1)}`);
-  console.log('\nBy category:');
+  console.log('\n' + '═'.repeat(60));
+  console.log('  GENERATION SUMMARY');
+  console.log('═'.repeat(60));
+  console.log(`  Total puzzles: ${batch.totalGenerated}`);
+  console.log(`  Total time:    ${totalTime}s`);
+  console.log(`  Avg quality:   ${stats.averageQualityScore.toFixed(1)}`);
+  console.log('\n  By category:');
   for (const [cat, count] of Object.entries(batch.byCategory)) {
-    console.log(`  ${cat}: ${count}`);
+    const bar = '█'.repeat(count) + '░'.repeat(args.countPerCategory - count);
+    console.log(`    ${cat.padEnd(12)} ${bar} ${count}/${args.countPerCategory}`);
   }
 
   // Save to file
@@ -304,31 +340,33 @@ async function main() {
 
   // Upload to Supabase if requested
   if (args.upload) {
-    console.log('\nUploading to Supabase...');
+    console.log('\n  Uploading to Supabase...');
 
     try {
       const result = await uploadBatch(batch);
 
       if (result.success) {
-        console.log(`✓ Uploaded ${result.uploaded} puzzles successfully`);
+        console.log(`  ✓ Uploaded ${result.uploaded} puzzles successfully`);
       } else {
-        console.log(`⚠ Uploaded ${result.uploaded} puzzles, ${result.failed} failed`);
+        console.log(`  ⚠ Uploaded ${result.uploaded} puzzles, ${result.failed} failed`);
         for (const err of result.errors.slice(0, 5)) {
-          console.log(`  - ${err}`);
+          console.log(`    - ${err}`);
         }
       }
 
       // Show pool stats
       const poolStats = await getPoolStats();
       if (poolStats) {
-        console.log(`\nPool status: ${poolStats.unused}/${poolStats.total} unused`);
+        console.log(`\n  Pool status: ${poolStats.unused}/${poolStats.total} unused`);
       }
     } catch (err) {
-      console.error('Upload failed:', err);
+      console.error('  Upload failed:', err);
     }
   }
 
-  console.log('\nDone!');
+  console.log('\n' + '═'.repeat(60));
+  console.log('  DONE!');
+  console.log('═'.repeat(60));
 }
 
 // Run

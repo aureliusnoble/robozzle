@@ -14,7 +14,7 @@ function App() {
   }, [fetchProfile, fetchProgress]);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/robozzle">
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
