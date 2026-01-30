@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Check, X, Eye, Loader2, Shield, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Check, X, Eye, Loader2, Shield } from 'lucide-react';
 import { Game } from '../components/game';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
@@ -32,7 +32,7 @@ const CATEGORY_COLORS: Record<MechanicCategory, string> = {
 };
 
 export function DevMode() {
-  const { user, profile } = useAuthStore();
+  const { user } = useAuthStore();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [puzzles, setPuzzles] = useState<GeneratedPuzzle[]>([]);
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
