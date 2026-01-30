@@ -1,0 +1,380 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 4px;
+  margin: -4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #F1F5F9;
+  color: #64748B;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab:hover {
+  background: #E2E8F0;
+}
+
+.tab.active {
+  background: #6366F1;
+  color: white;
+}
+
+.tab.executing {
+  box-shadow: 0 0 0 2px #F59E0B;
+  animation: executingPulse 1s infinite;
+}
+
+@keyframes executingPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px #F59E0B;
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.5);
+  }
+}
+
+.slotCount {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* F1 tab label with loop icon */
+.f1Label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.loopIcon {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 60px;
+  padding: 0.5rem;
+  background: #F8FAFC;
+  border-radius: 8px;
+  border: 2px dashed #E2E8F0;
+}
+
+/* F1 slots - subtle visual hint that it loops */
+.slotsF1 {
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 50%, #F8FAFC 100%);
+  border-color: #CBD5E1;
+  position: relative;
+}
+
+/* Subtle loop arrow hint at bottom-right of F1 */
+.slotsF1::after {
+  content: '↻';
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 1rem;
+  color: #94A3B8;
+  opacity: 0.5;
+}
+
+.slot {
+  width: 48px;
+  height: 48px;
+  background: #E2E8F0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+}
+
+.slot:hover {
+  background: #CBD5E1;
+}
+
+.slot.dragOver {
+  background: #C7D2FE;
+  border-color: #6366F1;
+  transform: scale(1.05);
+}
+
+/* Next instruction to execute - prominent amber/orange */
+.slot.upNext {
+  background: #FEF3C7;
+  border: 3px solid #F59E0B;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.3);
+  transform: scale(1.08);
+  z-index: 10;
+  position: relative;
+}
+
+.slot.upNext::before {
+  content: 'NEXT';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #F59E0B;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Last executed instruction - subtle blue dashed, label BELOW */
+.slot.executing {
+  background: #E0F2FE;
+  border: 2px dashed #0EA5E9;
+  position: relative;
+}
+
+.slot.executing::after {
+  content: 'LAST';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0EA5E9;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 15;
+}
+
+/* When slot is BOTH next and executing (F1 loop case) - show both labels */
+.slot.upNext.executing {
+  background: linear-gradient(135deg, #FEF3C7 50%, #E0F2FE 50%);
+  border: 3px solid #F59E0B;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.slot.upNext.executing::after {
+  content: 'LAST';
+  bottom: -10px;
+  z-index: 15;
+}
+
+/* Instruction will be skipped (condition won't match) */
+.slot.willSkip {
+  opacity: 0.4;
+}
+
+.slot.willSkip .instruction {
+  filter: grayscale(50%);
+}
+
+/* Legacy - keep for compatibility but use .executing now */
+.slot.highlighted {
+  box-shadow: 0 0 0 3px #6366F1;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.2);
+  }
+}
+
+.emptySlot {
+  width: 24px;
+  height: 24px;
+  border: 2px dashed #94A3B8;
+  border-radius: 6px;
+}
+
+.instruction {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  touch-action: none;
+  cursor: grab;
+}
+
+/* Colorless (no condition) - translucent with rainbow shimmer */
+.instruction:not([data-color]) {
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.5) 0%,
+    rgba(251, 191, 36, 0.5) 20%,
+    rgba(34, 197, 94, 0.5) 40%,
+    rgba(59, 130, 246, 0.5) 60%,
+    rgba(168, 85, 247, 0.5) 80%,
+    rgba(239, 68, 68, 0.5) 100%
+  );
+  background-size: 300% 300%;
+  animation: rainbowShimmer 4s ease-in-out infinite;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.instruction:not([data-color]) .icon {
+  color: #1E293B;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+@keyframes rainbowShimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.instruction:active {
+  cursor: grabbing;
+}
+
+.instruction[data-color="red"] {
+  background: linear-gradient(135deg, #EF4444, #F87171);
+}
+
+.instruction[data-color="green"] {
+  background: linear-gradient(135deg, #10B981, #4ADE80);
+}
+
+.instruction[data-color="blue"] {
+  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  user-select: none;
+}
+
+/* Paint instruction icon - white brush with colored drop */
+.paintIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paintBrush {
+  color: white;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+.paintDrop {
+  position: absolute;
+  bottom: -4px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.funcLabel {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.conditionDot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.clearButton {
+  align-self: flex-start;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #FEE2E2;
+  color: #DC2626;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.clearButton:hover:not(:disabled) {
+  background: #FECACA;
+}
+
+.clearButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Running state - red background and border around container */
+.container.running {
+  background: linear-gradient(135deg, rgba(254, 202, 202, 0.5), rgba(254, 226, 226, 0.3));
+  border: 3px solid #EF4444;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+}
+
+.container.running .slots {
+  background: rgba(254, 226, 226, 0.4);
+  border-color: #FECACA;
+}
+
+.slotsDisabled {
+  /* No special styling needed now */
+}
+
+.slot.disabled {
+  cursor: not-allowed;
+}
+
+.slot.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}

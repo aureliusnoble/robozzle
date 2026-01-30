@@ -1,0 +1,234 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #64748B;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1E293B;
+  margin: 0 0 0.25rem;
+}
+
+.progress {
+  font-size: 1rem;
+  color: #64748B;
+  margin: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.selector {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.stepButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 2px solid #E2E8F0;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepButton:hover:not(:disabled) {
+  border-color: #6366F1;
+}
+
+.stepButton.current {
+  border-color: #6366F1;
+  background: #EEF2FF;
+}
+
+.stepButton.completed {
+  border-color: #10B981;
+  background: #D1FAE5;
+}
+
+.stepButton.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.stepButton.locked .stepNumber {
+  color: #94A3B8;
+}
+
+.stepNumber {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #64748B;
+}
+
+.stepButton.current .stepNumber {
+  color: #6366F1;
+}
+
+.stepButton.completed .stepNumber {
+  color: #10B981;
+}
+
+.gameArea {
+  /* Game component handles its own styling */
+}
+
+.allComplete {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+  border-radius: 16px;
+}
+
+.completeIcon {
+  display: block;
+  margin: 0 auto 0.5rem;
+  color: #065F46;
+}
+
+.allComplete h2 {
+  color: #065F46;
+  margin: 0 0 0.5rem;
+}
+
+.allComplete p {
+  color: #047857;
+  margin: 0 0 1.5rem;
+}
+
+.completeButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.dailyButton,
+.classicButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.dailyButton {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.dailyButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.classicButton {
+  background: white;
+  color: #065F46;
+  border: 2px solid #065F46;
+}
+
+.classicButton:hover {
+  background: #065F46;
+  color: white;
+}
+
+.congratsOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.congratsCard {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem 3rem;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.congratsIcon {
+  display: block;
+  margin: 0 auto 0.5rem;
+  color: #F59E0B;
+}
+
+.congratsCard h2 {
+  color: #1E293B;
+  margin: 0 0 0.5rem;
+}
+
+.congratsCard p {
+  color: #64748B;
+  margin: 0;
+}
+
+.nextButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #10B981, #059669);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.nextButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.nextButton:active {
+  transform: translateY(0);
+}

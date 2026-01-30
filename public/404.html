@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RoboZZle</title>
+    <script>
+      // Single Page App routing workaround for GitHub Pages
+      // Redirects 404s back to index.html with the path preserved in sessionStorage
+      // See: https://github.com/rafgraph/spa-github-pages
+      (function() {
+        var pathSegmentsToKeep = 0;
+
+        // Check if we're deployed to a subdirectory (e.g., /robozzle/)
+        var basePath = document.querySelector('base');
+        if (basePath) {
+          pathSegmentsToKeep = basePath.href.replace(/^https?:\/\/[^\/]+/, '').split('/').filter(Boolean).length;
+        }
+
+        var l = window.location;
+        var path = l.pathname.split('/').slice(pathSegmentsToKeep + 1).join('/');
+        var search = l.search;
+        var hash = l.hash;
+
+        // Store the path in sessionStorage for the main app to read
+        if (path || search || hash) {
+          sessionStorage.setItem('spa-redirect', JSON.stringify({
+            path: '/' + path,
+            search: search,
+            hash: hash
+          }));
+        }
+
+        // Redirect to the root
+        var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '');
+        if (pathSegmentsToKeep > 0) {
+          redirectUrl += '/' + l.pathname.split('/').slice(1, pathSegmentsToKeep + 1).join('/');
+        }
+        redirectUrl += '/';
+
+        l.replace(redirectUrl);
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <p>JavaScript is required to use RoboZZle.</p>
+      <p><a href="/">Go to homepage</a></p>
+    </noscript>
+  </body>
+</html>

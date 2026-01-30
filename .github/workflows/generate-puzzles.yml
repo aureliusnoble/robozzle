@@ -1,0 +1,76 @@
+name: Generate Daily Puzzles
+
+on:
+  # Manual trigger with optional parameters
+  workflow_dispatch:
+    inputs:
+      count:
+        description: 'Puzzles per category'
+        required: false
+        default: '24'
+      category:
+        description: 'Specific category (or all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - conditionals
+          - recursion
+          - painting
+          - multi-func
+          - loop
+
+  # Monthly regeneration on the 1st at midnight UTC
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate puzzles
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          ARGS="--upload --verbose"
+
+          if [ "${{ github.event.inputs.count }}" != "" ]; then
+            ARGS="$ARGS --count ${{ github.event.inputs.count }}"
+          fi
+
+          if [ "${{ github.event.inputs.category }}" != "" ] && [ "${{ github.event.inputs.category }}" != "all" ]; then
+            ARGS="$ARGS --category ${{ github.event.inputs.category }}"
+          fi
+
+          npx tsx scripts/puzzle-generation/index.ts $ARGS
+
+      - name: Upload generation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-puzzles-${{ github.run_id }}
+          path: generated-puzzles.json
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "## Puzzle Generation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Generated puzzles have been uploaded to Supabase." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact:** generated-puzzles-${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY

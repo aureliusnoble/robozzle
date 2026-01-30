@@ -1,0 +1,280 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #F1F5F9;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: all 0.15s;
+}
+
+.backButton:hover {
+  background: #E2E8F0;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.titleIcon {
+  color: #6366F1;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1E293B;
+  margin: 0;
+}
+
+.progress {
+  font-size: 1rem;
+  color: #64748B;
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.difficultyFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filterButton {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #E2E8F0;
+  background: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.difficultyDot {
+  flex-shrink: 0;
+}
+
+.filterButton:hover {
+  border-color: #CBD5E1;
+}
+
+.filterButton.active {
+  border-color: #6366F1;
+  background: #EEF2FF;
+  color: #6366F1;
+}
+
+.searchInput {
+  padding: 0.75rem 1rem;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.15s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #6366F1;
+}
+
+.loading,
+.empty,
+.loadingPuzzle {
+  text-align: center;
+  padding: 3rem;
+  color: #64748B;
+}
+
+.loadingPuzzle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-height: 300px;
+  justify-content: center;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: #6366F1;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyHint {
+  font-size: 0.875rem;
+  color: #94A3B8;
+}
+
+.puzzleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.puzzleCard {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.puzzleCard:hover {
+  border-color: #6366F1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.puzzleCard.solved {
+  border-color: #10B981;
+  background: #F0FDF4;
+}
+
+.puzzleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.puzzleDifficulty {
+  flex-shrink: 0;
+}
+
+.difficultyBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.starCount {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #F59E0B;
+}
+
+.solvedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: #10B981;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.puzzleTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0 0 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puzzleAuthor {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin: 0 0 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puzzleDescription {
+  font-size: 0.7rem;
+  color: #64748B;
+  margin: 0 0 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+}
+
+.puzzleMeta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+
+.loadMoreButton {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.loadMoreButton:hover {
+  background: #4F46E5;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .filters {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .searchInput {
+    width: 250px;
+  }
+}

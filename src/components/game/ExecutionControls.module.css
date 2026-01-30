@@ -1,0 +1,89 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.labeledButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.button {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: #F1F5F9;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.button:hover:not(:disabled) {
+  background: #E2E8F0;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button.primary {
+  background: #6366F1;
+}
+
+.button.primary:hover:not(:disabled) {
+  background: #4F46E5;
+}
+
+.button.primary .icon {
+  color: white;
+}
+
+.icon {
+  color: #64748B;
+}
+
+.resetButton {
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+}
+
+.resetButton:hover:not(:disabled) {
+  background: #FDE68A;
+}
+
+.resetIcon {
+  color: #D97706;
+}
+
+.buttonLabel {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Mobile adjustments */
+@media (max-width: 400px) {
+  .container {
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .button {
+    width: 40px;
+    height: 40px;
+  }
+}

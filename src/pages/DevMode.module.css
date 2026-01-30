@@ -1,0 +1,400 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.accessDenied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  color: #64748B;
+}
+
+.shieldIcon {
+  color: #EF4444;
+  margin-bottom: 1rem;
+}
+
+.accessDenied h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 0.5rem;
+}
+
+.accessDenied p {
+  margin: 0;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: #94A3B8;
+  margin-top: 0.5rem !important;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #64748B;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: #6366F1;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #F1F5F9;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: all 0.15s;
+}
+
+.backButton:hover {
+  background: #E2E8F0;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.titleIcon {
+  color: #8B5CF6;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1E293B;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #64748B;
+  margin: 0.25rem 0 0;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  color: #DC2626;
+  margin-bottom: 1rem;
+}
+
+.error button {
+  padding: 0.25rem 0.75rem;
+  background: #DC2626;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.categoryStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.categoryStat {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 2px solid;
+  border-radius: 8px;
+  min-width: 100px;
+}
+
+.categoryName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.categoryCount {
+  font-size: 0.875rem;
+  color: #64748B;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.categoryFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filterButton {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #E2E8F0;
+  background: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filterButton:hover {
+  border-color: #CBD5E1;
+}
+
+.filterButton.active {
+  border-color: #6366F1;
+  background: #EEF2FF;
+  color: #6366F1;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748B;
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem;
+  color: #64748B;
+}
+
+.puzzleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.puzzleCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+  transition: all 0.15s;
+}
+
+.puzzleCard:hover {
+  border-color: #CBD5E1;
+}
+
+.puzzleCard.inPool {
+  border-color: #10B981;
+  background: #F0FDF4;
+}
+
+.puzzleCard.used {
+  border-color: #94A3B8;
+  background: #F8FAFC;
+  opacity: 0.7;
+}
+
+.puzzleHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.puzzleTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+.categoryBadge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.puzzleStats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: #64748B;
+}
+
+.puzzleStatus {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.usedBadge,
+.poolBadge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.usedBadge {
+  background: #E2E8F0;
+  color: #64748B;
+}
+
+.poolBadge {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.puzzleActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.previewButton,
+.approveButton,
+.rejectButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.previewButton {
+  background: #E0E7FF;
+  color: #4F46E5;
+}
+
+.previewButton:hover {
+  background: #C7D2FE;
+}
+
+.approveButton {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.approveButton:hover {
+  background: #A7F3D0;
+}
+
+.rejectButton {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.rejectButton:hover {
+  background: #FECACA;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .filters {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .puzzleCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .puzzleStats {
+    flex-wrap: wrap;
+  }
+}
