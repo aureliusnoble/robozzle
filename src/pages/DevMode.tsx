@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Check, X, Eye, Loader2, Shield } from 'lucide-react';
+import { ArrowLeft, Check, X, Eye, Play, Loader2, Shield } from 'lucide-react';
 import { Game } from '../components/game';
 import { useAuthStore } from '../stores/authStore';
+import { useGameStore } from '../stores/gameStore';
 import { supabase } from '../lib/supabase';
-import type { PuzzleConfig } from '../engine/types';
+import type { PuzzleConfig, Program } from '../engine/types';
 import styles from './DevMode.module.css';
 
 interface GeneratedPuzzle {
@@ -40,9 +41,11 @@ function getProfileColor(profileName: string | null): string {
 
 export function DevMode() {
   const { user } = useAuthStore();
+  const { setProgram } = useGameStore();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [puzzles, setPuzzles] = useState<GeneratedPuzzle[]>([]);
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
+  const [pendingSolution, setPendingSolution] = useState<Program | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [showUsed, setShowUsed] = useState(false);
@@ -105,7 +108,7 @@ export function DevMode() {
   }, [hasAccess]);
 
   // Fetch full puzzle for preview
-  const handlePreview = async (puzzleId: string) => {
+  const handlePreview = async (puzzleId: string, withSolution: boolean = false) => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -130,6 +133,13 @@ export function DevMode() {
       };
 
       setSelectedPuzzle(puzzle);
+
+      // If solution requested and available, queue it to be applied
+      if (withSolution && data.solution) {
+        setPendingSolution(data.solution as Program);
+      } else {
+        setPendingSolution(null);
+      }
     } catch (err) {
       console.error('Error fetching puzzle:', err);
       setError('Failed to load puzzle');
@@ -137,6 +147,18 @@ export function DevMode() {
       setIsLoading(false);
     }
   };
+
+  // Apply pending solution after puzzle is loaded
+  useEffect(() => {
+    if (selectedPuzzle && pendingSolution) {
+      // Small delay to let the Game component initialize
+      const timer = setTimeout(() => {
+        setProgram(pendingSolution);
+        setPendingSolution(null);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedPuzzle, pendingSolution, setProgram]);
 
   // Approve puzzle (add to pool)
   const handleApprove = async (puzzleId: string) => {
@@ -245,7 +267,10 @@ export function DevMode() {
   if (selectedPuzzle) {
     return (
       <div className={styles.container}>
-        <button className={styles.backButton} onClick={() => setSelectedPuzzle(null)}>
+        <button className={styles.backButton} onClick={() => {
+          setSelectedPuzzle(null);
+          setPendingSolution(null);
+        }}>
           <ArrowLeft size={16} />
           Back to List
         </button>
@@ -388,10 +413,17 @@ export function DevMode() {
               <div className={styles.puzzleActions}>
                 <button
                   className={styles.previewButton}
-                  onClick={() => handlePreview(puzzle.id)}
+                  onClick={() => handlePreview(puzzle.id, false)}
                   title="Preview"
                 >
                   <Eye size={16} />
+                </button>
+                <button
+                  className={styles.solutionButton}
+                  onClick={() => handlePreview(puzzle.id, true)}
+                  title="Preview with Solution"
+                >
+                  <Play size={16} />
                 </button>
                 {!puzzle.pool_id && (
                   <button

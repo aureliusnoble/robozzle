@@ -39,16 +39,17 @@
 /* Header */
 .header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 1rem;
-  gap: 1rem;
 }
 
 .headerMain {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
+  margin-right: auto;
 }
 
 .title {
@@ -204,11 +205,12 @@
   transform: translateY(-1px);
 }
 
-/* Content Layout - Mobile first (leaderboard below) */
+/* Content Layout - Always stacked (game above, leaderboard below) */
 .content {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  max-width: 700px;
 }
 
 .gameSection {
@@ -270,7 +272,7 @@
   width: 100%;
 }
 
-/* Desktop Layout - Side by side */
+/* Desktop Layout - Keep stacked, just adjust spacing */
 @media (min-width: 900px) {
   .container {
     padding: 1.5rem 2rem;
@@ -284,28 +286,7 @@
     font-size: 1.5rem;
   }
 
-  .content {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 2rem;
-  }
-
-  .gameSection {
-    flex: 1;
-    max-width: 650px;
-  }
-
   .leaderboardSection {
-    width: 320px;
-    position: sticky;
-    top: 80px;
-    flex-shrink: 0;
-  }
-}
-
-/* Large Desktop */
-@media (min-width: 1100px) {
-  .leaderboardSection {
-    width: 380px;
+    max-width: 500px;
   }
 }

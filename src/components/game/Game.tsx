@@ -38,6 +38,7 @@ import styles from './Game.module.css';
 
 interface GameProps {
   puzzle: PuzzleConfig;
+  displayTitle?: string; // Override puzzle.title if provided (e.g., for daily challenges)
   onComplete?: (steps: number, instructions: number) => void;
   onNextPuzzle?: () => void;
   onBack?: () => void;
@@ -95,7 +96,7 @@ function getDragOverlayIcon(type: string) {
   }
 }
 
-export function Game({ puzzle, onComplete, onNextPuzzle, onBack, onShare, tutorialStep }: GameProps) {
+export function Game({ puzzle, displayTitle, onComplete, onNextPuzzle, onBack, onShare, tutorialStep }: GameProps) {
   // Configure drag sensors with activation constraint
   // This allows clicks to work for color cycling, while drags need movement
   const pointerSensor = useSensor(PointerSensor, {
@@ -388,7 +389,7 @@ export function Game({ puzzle, onComplete, onNextPuzzle, onBack, onShare, tutori
     <div className={styles.container}>
       {/* Puzzle info */}
       <div className={styles.header}>
-        <h2 className={styles.title}>{puzzle.title}</h2>
+        <h2 className={styles.title}>{displayTitle || puzzle.title}</h2>
         {puzzle.author && (
           <p className={styles.author}>by {puzzle.author}</p>
         )}

@@ -298,6 +298,17 @@
   letter-spacing: 0.05em;
 }
 
+.paintBadge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: #FCE7F3;
+  color: #DB2777;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .puzzleStats {
   display: flex;
   gap: 1rem;
@@ -334,6 +345,7 @@
 }
 
 .previewButton,
+.solutionButton,
 .approveButton,
 .rejectButton {
   display: flex;
@@ -354,6 +366,15 @@
 
 .previewButton:hover {
   background: #C7D2FE;
+}
+
+.solutionButton {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.solutionButton:hover {
+  background: #FDE68A;
 }
 
 .approveButton {

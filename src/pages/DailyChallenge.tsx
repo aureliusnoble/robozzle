@@ -197,6 +197,7 @@ export function DailyChallenge() {
         <div className={styles.gameSection}>
           <Game
             puzzle={dailyChallenge.puzzle}
+            displayTitle="Daily Challenge"
             onComplete={handleComplete}
             onShare={completedState ? () => setShowShare(true) : undefined}
           />
