@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Settings } from 'lucide-react';
 import { Game } from '../components/game';
 import { DailyLeaderboard } from '../components/leaderboard';
 import { ShareModal } from '../components/share';
@@ -54,7 +54,7 @@ export function DailyChallenge() {
     checkDevAccess();
   }, [user]);
 
-  // Load specific date if provided in URL
+  // Load specific date if provided in URL (for archive viewing)
   useEffect(() => {
     if (dateParam && loadSpecificDate) {
       loadSpecificDate(dateParam);
@@ -75,21 +75,9 @@ export function DailyChallenge() {
     [isAuthenticated, hasCompleted, dailyChallenge, submitSolution]
   );
 
-  // Navigate to previous/next day
-  const navigateDay = (direction: 'prev' | 'next') => {
-    const currentDate = dailyChallenge?.date || new Date().toISOString().split('T')[0];
-    const date = new Date(currentDate + 'T12:00:00');
-    date.setDate(date.getDate() + (direction === 'prev' ? -1 : 1));
-    const newDate = date.toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
-
-    if (newDate <= today) {
-      navigate(`/daily?date=${newDate}`);
-    }
-  };
-
-  const isToday = !dateParam || dateParam === new Date().toISOString().split('T')[0];
-  const canGoNext = !isToday;
+  const isViewingArchive = !!dateParam;
+  const today = new Date().toISOString().split('T')[0];
+  const isToday = !dateParam || dateParam === today;
 
   if (isLoadingDaily) {
     return (
@@ -102,38 +90,19 @@ export function DailyChallenge() {
     );
   }
 
-  if (!dailyChallenge) {
+  // Show "no puzzle" state if no daily challenge exists (and not viewing archive)
+  if (!dailyChallenge && !isViewingArchive) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>
-          <span className={styles.errorIcon}>:(</span>
-          <h2>No Challenge Today</h2>
-          <p>Check back later for today's puzzle.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const displayDate = new Date(dailyChallenge.date + 'T12:00:00');
-  const formattedDate = displayDate.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-
-  return (
-    <div className={styles.container}>
-      {/* Header with date navigation */}
-      <header className={styles.header}>
-        <div className={styles.headerTop}>
+        <header className={styles.header}>
           <h1 className={styles.title}>Daily Challenge</h1>
           <div className={styles.headerActions}>
             <button
-              className={styles.iconButton}
+              className={styles.archiveButton}
               onClick={() => navigate('/daily/archive')}
-              title="Archive"
             >
-              <Calendar size={20} />
+              <Calendar size={18} />
+              <span>Archive</span>
             </button>
             {isDevUser && (
               <button
@@ -145,50 +114,87 @@ export function DailyChallenge() {
               </button>
             )}
           </div>
-        </div>
-
-        <div className={styles.dateNav}>
+        </header>
+        <div className={styles.noPuzzle}>
+          <div className={styles.noPuzzleIcon}>🎯</div>
+          <h2>No Puzzle Today</h2>
+          <p>Today's challenge hasn't been set yet.</p>
+          <p className={styles.noPuzzleHint}>Check back soon or browse past challenges!</p>
           <button
-            className={styles.navArrow}
-            onClick={() => navigateDay('prev')}
-            title="Previous day"
+            className={styles.browseArchiveButton}
+            onClick={() => navigate('/daily/archive')}
           >
-            <ChevronLeft size={20} />
-          </button>
-          <span className={`${styles.date} ${!isToday ? styles.pastDate : ''}`}>
-            {isToday ? 'Today' : formattedDate}
-          </span>
-          <button
-            className={`${styles.navArrow} ${!canGoNext ? styles.disabled : ''}`}
-            onClick={() => canGoNext && navigateDay('next')}
-            disabled={!canGoNext}
-            title="Next day"
-          >
-            <ChevronRight size={20} />
+            Browse Archive
           </button>
         </div>
+      </div>
+    );
+  }
 
-        {!isToday && (
+  if (!dailyChallenge) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <span className={styles.errorIcon}>:(</span>
+          <h2>Challenge Not Found</h2>
+          <p>This challenge doesn't exist.</p>
           <button
-            className={styles.todayButton}
+            className={styles.browseArchiveButton}
             onClick={() => navigate('/daily')}
           >
-            Jump to Today
+            Back to Today
           </button>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  const displayDate = new Date(dailyChallenge.date + 'T12:00:00');
+  const formattedDate = displayDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  return (
+    <div className={styles.container}>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.headerMain}>
+          <h1 className={styles.title}>Daily Challenge</h1>
+          <p className={styles.date}>{isToday ? 'Today' : formattedDate}</p>
+        </div>
+        <div className={styles.headerActions}>
+          <button
+            className={styles.archiveButton}
+            onClick={() => navigate('/daily/archive')}
+          >
+            <Calendar size={18} />
+            <span>Archive</span>
+          </button>
+          {isDevUser && (
+            <button
+              className={`${styles.iconButton} ${styles.devButton}`}
+              onClick={() => navigate('/dev')}
+              title="Dev Mode"
+            >
+              <Settings size={20} />
+            </button>
+          )}
+        </div>
       </header>
 
-      {/* Main content */}
+      {/* Viewing archive notice */}
+      {isViewingArchive && (
+        <div className={styles.archiveNotice}>
+          <span>Viewing past challenge</span>
+          <button onClick={() => navigate('/daily')}>Back to Today</button>
+        </div>
+      )}
+
+      {/* Main content - game first, leaderboard below */}
       <div className={styles.content}>
         <div className={styles.gameSection}>
-          {/* Puzzle info card */}
-          <div className={styles.puzzleInfo}>
-            <span className={styles.puzzleTitle}>{dailyChallenge.puzzle.title}</span>
-            {(dailyChallenge.puzzle as any).profileName && (
-              <span className={styles.puzzleProfile}>{(dailyChallenge.puzzle as any).profileName}</span>
-            )}
-          </div>
-
           <Game
             puzzle={dailyChallenge.puzzle}
             onComplete={handleComplete}

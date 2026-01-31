@@ -130,12 +130,11 @@ export const usePuzzleStore = create<PuzzleStore>()(
             .eq('date', today)
             .single();
 
-          if (error) {
-            console.error('Error loading daily challenge:', error);
-            // Generate a fallback daily from classic puzzles metadata
-            const fallback = await generateFallbackDaily(get, today);
-            set({ dailyChallenge: fallback, isLoadingDaily: false });
-          } else if (daily && daily.puzzles) {
+          if (error || !daily || !daily.puzzles) {
+            // No daily challenge set for today - show "no puzzle" state
+            console.log('No daily challenge found for today');
+            set({ dailyChallenge: null, isLoadingDaily: false });
+          } else {
             set({
               dailyChallenge: {
                 date: daily.date,
@@ -144,14 +143,10 @@ export const usePuzzleStore = create<PuzzleStore>()(
               },
               isLoadingDaily: false,
             });
-          } else {
-            const fallback = await generateFallbackDaily(get, today);
-            set({ dailyChallenge: fallback, isLoadingDaily: false });
           }
         } catch (e) {
           console.error('Error loading daily challenge:', e);
-          const fallback = await generateFallbackDaily(get, today);
-          set({ dailyChallenge: fallback, isLoadingDaily: false });
+          set({ dailyChallenge: null, isLoadingDaily: false });
         }
       },
 
@@ -165,12 +160,11 @@ export const usePuzzleStore = create<PuzzleStore>()(
             .eq('date', date)
             .single();
 
-          if (error) {
-            console.error('Error loading daily challenge for date:', error);
-            // Generate a fallback daily from classic puzzles metadata
-            const fallback = await generateFallbackDaily(get, date);
-            set({ dailyChallenge: fallback, isLoadingDaily: false });
-          } else if (daily && daily.puzzles) {
+          if (error || !daily || !daily.puzzles) {
+            // No challenge found for this date
+            console.log('No daily challenge found for date:', date);
+            set({ dailyChallenge: null, isLoadingDaily: false });
+          } else {
             set({
               dailyChallenge: {
                 date: daily.date,
@@ -179,14 +173,10 @@ export const usePuzzleStore = create<PuzzleStore>()(
               },
               isLoadingDaily: false,
             });
-          } else {
-            const fallback = await generateFallbackDaily(get, date);
-            set({ dailyChallenge: fallback, isLoadingDaily: false });
           }
         } catch (e) {
           console.error('Error loading daily challenge for date:', e);
-          const fallback = await generateFallbackDaily(get, date);
-          set({ dailyChallenge: fallback, isLoadingDaily: false });
+          set({ dailyChallenge: null, isLoadingDaily: false });
         }
       },
 
@@ -309,26 +299,3 @@ function parsePuzzleFromDB(dbPuzzle: any): PuzzleConfig {
   };
 }
 
-// Generate a fallback daily puzzle using seeded random
-async function generateFallbackDaily(
-  get: () => PuzzleStore,
-  date: string
-): Promise<DailyChallenge | null> {
-  const { classicPuzzlesMeta, fetchPuzzle } = get();
-  if (classicPuzzlesMeta.length === 0) return null;
-
-  // Simple seeded random based on date
-  const seed = date.split('-').reduce((acc, part) => acc + parseInt(part, 10), 0);
-  const index = seed % classicPuzzlesMeta.length;
-  const meta = classicPuzzlesMeta[index];
-
-  // Fetch the full puzzle data
-  const puzzle = await fetchPuzzle(meta.id);
-  if (!puzzle) return null;
-
-  return {
-    date,
-    puzzleId: puzzle.id,
-    puzzle: { ...puzzle, category: 'daily' },
-  };
-}
