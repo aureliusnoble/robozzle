@@ -66,6 +66,14 @@ export function SignupForm({ onSwitchToLogin, onSuccess }: SignupFormProps) {
           <p className={styles.subtitle}>
             We've sent you a confirmation link. Click it to complete your registration.
           </p>
+          <button
+            type="button"
+            className={styles.submitButton}
+            onClick={onSwitchToLogin}
+            style={{ marginTop: '1.5rem' }}
+          >
+            Back to Login
+          </button>
         </div>
       </motion.div>
     );

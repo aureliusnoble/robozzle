@@ -73,10 +73,15 @@ export const useAuthStore = create<AuthStore>()(
 
       signInWithGoogle: async () => {
         try {
+          // Use the full URL including path (e.g., /robozzle/ for GitHub Pages)
+          const baseUrl = window.location.origin + window.location.pathname;
+          // Remove trailing hash or query params, ensure it ends with /
+          const redirectUrl = baseUrl.split('#')[0].split('?')[0].replace(/\/$/, '') + '/';
+
           const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: window.location.origin,
+              redirectTo: redirectUrl,
             },
           });
 

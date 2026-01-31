@@ -28,7 +28,7 @@ import { verifyNoTrivialSolution, checkVerifierAvailable } from './rust-verifier
 import { aggressivePrune } from './pruner';
 import { verifySolution } from './verifier';
 import { uploadBatch, saveBatchToFile, getPoolStats } from './uploader';
-import { TIMEOUT_CONFIG } from './config';
+import { TIMEOUT_CONFIG, getProfileByIndex, type PuzzleProfile } from './config';
 
 // Global flag for Rust verifier availability
 let useRustVerifier = false;
@@ -118,13 +118,9 @@ function generatePuzzleId(index: number): string {
   return `gen-${timestamp}-${index}`;
 }
 
-// Generate a puzzle title based on properties
-function generatePuzzleTitle(index: number, functionsUsed: number): string {
-  const prefixes = ['Logic', 'Path', 'Maze', 'Flow', 'Code', 'Link', 'Loop', 'Branch'];
-  const suffixes = ['Challenge', 'Puzzle', 'Quest', 'Trial', 'Test'];
-  const prefix = prefixes[index % prefixes.length];
-  const suffix = suffixes[Math.floor(index / prefixes.length) % suffixes.length];
-  return `${prefix} ${suffix} #${index + 1}`;
+// Generate a puzzle title - just numbered
+function generatePuzzleTitle(index: number): string {
+  return `Puzzle #${index + 1}`;
 }
 
 // Failure tracking
@@ -150,6 +146,7 @@ interface GeneratedPuzzle {
 async function generateSinglePuzzle(
   index: number,
   attemptNum: number,
+  profile: PuzzleProfile,
   seed?: number,
   verbose: boolean = false
 ): Promise<{ puzzle: GeneratedPuzzle | null; failReason?: string }> {
@@ -159,12 +156,12 @@ async function generateSinglePuzzle(
   const timeout = new TimeoutController(TIMEOUT_CONFIG.perPuzzleMs);
 
   try {
-    // Step 1: Generate solution with all required mechanics
+    // Step 1: Generate solution with profile-specific requirements
     if (verbose) {
-      console.log(`    [Attempt ${attemptNum}] Generating solution...`);
+      console.log(`    [Attempt ${attemptNum}] Generating solution (${profile.name})...`);
     }
 
-    const solutionTemplate = generateSolution(puzzleSeed);
+    const solutionTemplate = generateSolution(puzzleSeed, profile);
 
     if (!solutionTemplate.path || solutionTemplate.path.length < 5) {
       if (verbose) {
@@ -252,9 +249,9 @@ async function generateSinglePuzzle(
 
     timeout.check();
 
-    // Step 5: Check complexity bounds
+    // Step 5: Check complexity bounds (using profile-specific requirements)
     if (verbose) console.log(`    [Attempt ${attemptNum}] Checking complexity...`);
-    const complexityResult = checkComplexity(puzzle, solutionTemplate.program);
+    const complexityResult = checkComplexity(puzzle, solutionTemplate.program, profile);
 
     if (!complexityResult.passed) {
       if (verbose) {
@@ -292,7 +289,7 @@ async function generateSinglePuzzle(
 
     // Re-check complexity after pruning (metrics may have changed slightly)
     if (verbose) console.log(`    [Attempt ${attemptNum}] Re-checking complexity...`);
-    const postPruneComplexity = checkComplexity(prunedPuzzle, solutionTemplate.program);
+    const postPruneComplexity = checkComplexity(prunedPuzzle, solutionTemplate.program, profile);
     if (!postPruneComplexity.passed) {
       if (verbose) {
         console.log(`    [Attempt ${attemptNum}] Post-prune complexity check failed: ${postPruneComplexity.reason}`);
@@ -302,19 +299,19 @@ async function generateSinglePuzzle(
 
     // Success! Create final puzzle config
     const puzzleId = generatePuzzleId(index);
-    const usedFunctions = getUsedFunctions(solutionTemplate.program);
-    const title = generatePuzzleTitle(index, usedFunctions.length);
+    const title = generatePuzzleTitle(index);
 
     const generatedPuzzle: GeneratedPuzzleConfig = {
       ...prunedPuzzle,
       id: puzzleId,
       title,
       generationSource: 'generated',
-      mechanicCategory: 'multi-func', // All puzzles use multiple mechanics now
+      profileName: profile.name,
       solverDifficultyScore: postPruneComplexity.score,
-      qualityScore: postPruneComplexity.score, // Use same score for both
+      qualityScore: postPruneComplexity.score,
       solutionInstructionCount: countInstructions(solutionTemplate.program),
       solutionStepCount: postPruneComplexity.metrics.steps,
+      usesPainting: solutionTemplate.usesPainting,
       solution: solutionTemplate.program,
     };
 
@@ -373,19 +370,23 @@ async function generatePuzzles(
     attempts++;
     const seed = baseSeed ? baseSeed + attempts : undefined;
 
+    // Get profile for this puzzle (cycles through profiles)
+    const profile = getProfileByIndex(puzzles.length);
+
     // Progress update
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     const rate = attempts > 0 ? (puzzles.length / attempts * 100).toFixed(0) : '0';
     process.stdout.write(`\r  [${puzzles.length}/${count}] Attempt ${attempts} | ${rate}% success | ${elapsed}s elapsed`);
 
-    const result = await generateSinglePuzzle(puzzles.length, attempts, seed, verbose);
+    const result = await generateSinglePuzzle(puzzles.length, attempts, profile, seed, verbose);
 
     if (result.puzzle) {
       puzzles.push(result.puzzle);
       // Clear line and print success
       process.stdout.write('\r' + ' '.repeat(80) + '\r');
       const p = result.puzzle.puzzle;
-      console.log(`  ✓ [${puzzles.length}/${count}] ${p.title} (score: ${result.puzzle.complexityScore.toFixed(1)}, tiles: ${countTiles(p.grid)}, stars: ${countStars(p.grid)})`);
+      const profileTag = profile.requirements.requiresPainting ? ' [Paint]' : '';
+      console.log(`  ✓ [${puzzles.length}/${count}] ${p.title}${profileTag} (${profile.name}, score: ${result.puzzle.complexityScore.toFixed(1)})`);
     } else {
       // Track failure reason
       const reason = result.failReason || 'unknown';

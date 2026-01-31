@@ -77,6 +77,8 @@ export interface PathSegment {
   x: number;
   y: number;
   requiredColor: TileColor | null; // Color required by conditional
+  initialColor?: TileColor; // Initial color (may differ from required if painting needed)
+  paintTo?: TileColor; // Color to paint this tile to
   hasStar: boolean;
 }
 
@@ -87,22 +89,24 @@ export interface SolutionTemplate {
   functionCount: number;
   colors: TileColor[]; // Colors used in conditionals
   startDirection: Direction;
+  usesPainting: boolean;
 }
 
-// Hard requirements for all puzzles
-const HARD_REQUIREMENTS = {
-  minStackDepth: 3,
-  minFunctions: 2,
-  maxFunctions: 4,
-  minConditionals: 2,
-  minInstructions: 4,
-  minSteps: 10,
-  maxSteps: 200,
-};
+import { type PuzzleProfile, BASELINE_REQUIREMENTS } from './config';
 
-// Pick number of functions (weighted toward 2-3)
-function pickFunctionCount(rng: SeededRandom): 2 | 3 | 4 {
-  return rng.weightedChoice([2, 3, 4], [0.4, 0.4, 0.2]) as 2 | 3 | 4;
+// Pick number of functions based on profile requirements
+function pickFunctionCount(rng: SeededRandom, profile?: PuzzleProfile): number {
+  const minFuncs = profile?.requirements.minFunctions ?? 2;
+  const maxFuncs = profile?.requirements.maxFunctions ?? 4;
+
+  // Weight toward lower end unless profile requires more
+  if (minFuncs >= 4) {
+    return rng.weightedChoice([4, 5], [0.6, 0.4]);
+  } else if (minFuncs >= 3) {
+    return rng.weightedChoice([3, 4], [0.6, 0.4]);
+  } else {
+    return rng.weightedChoice([2, 3, 4], [0.4, 0.4, 0.2]);
+  }
 }
 
 // Pick colors to use (always at least 2 for conditionals)
@@ -117,17 +121,25 @@ function inst(type: InstructionType, condition: TileColor | null = null): Instru
   return { type, condition };
 }
 
-// Generate a solution that meets all hard requirements
-export function generateSolution(seed?: number): SolutionTemplate {
+// Generate a solution that meets profile requirements
+export function generateSolution(seed?: number, profile?: PuzzleProfile): SolutionTemplate {
   const rng = new SeededRandom(seed);
-  const functionCount = pickFunctionCount(rng);
+  const functionCount = pickFunctionCount(rng, profile);
   const colors = pickColors(rng);
+  const requiresPainting = profile?.requirements.requiresPainting ?? false;
 
-  // Choose a pattern type
-  const patternType = rng.nextInt(5);
+  // Choose a pattern type (include painting pattern if required)
+  let patternType: number;
+  if (requiresPainting) {
+    // For painting profiles, always use painting pattern
+    patternType = 5;
+  } else {
+    patternType = rng.nextInt(5);
+  }
 
   let program: Program;
   let colorAssignments: Map<number, TileColor>;
+  let paintingInfo: Map<number, { from: TileColor; to: TileColor }> | undefined;
 
   switch (patternType) {
     case 0:
@@ -142,6 +154,9 @@ export function generateSolution(seed?: number): SolutionTemplate {
     case 3:
       ({ program, colorAssignments } = generateLoopPattern(functionCount, colors, rng));
       break;
+    case 5:
+      ({ program, colorAssignments, paintingInfo } = generatePaintingPattern(functionCount, colors, rng));
+      break;
     default:
       ({ program, colorAssignments } = generateCrossCallPattern(functionCount, colors, rng));
       break;
@@ -149,11 +164,11 @@ export function generateSolution(seed?: number): SolutionTemplate {
 
   // Trace the program to get the path
   const startDirection = rng.choice<Direction>(['up', 'down', 'left', 'right']);
-  const { path, verified } = tracePath(program, startDirection, colorAssignments);
+  const { path, verified } = tracePath(program, startDirection, colorAssignments, paintingInfo);
 
   // If tracing failed, try a simpler fallback pattern
   if (!verified || path.length < 5) {
-    return generateFallbackSolution(functionCount, colors, rng);
+    return generateFallbackSolution(functionCount, colors, rng, requiresPainting);
   }
 
   return {
@@ -162,6 +177,7 @@ export function generateSolution(seed?: number): SolutionTemplate {
     functionCount,
     colors,
     startDirection,
+    usesPainting: requiresPainting || !!paintingInfo,
   };
 }
 
@@ -169,10 +185,16 @@ export function generateSolution(seed?: number): SolutionTemplate {
 function generateFallbackSolution(
   functionCount: number,
   colors: TileColor[],
-  rng: SeededRandom
+  rng: SeededRandom,
+  requiresPainting: boolean = false
 ): SolutionTemplate {
   const color1 = colors[0];
   const color2 = colors[1] || colors[0];
+
+  // For painting fallback, use a simple paint-then-check pattern
+  if (requiresPainting) {
+    return generatePaintingFallback(functionCount, colors, rng);
+  }
 
   // Simple pattern: F1 moves and calls F2 on color, F2 turns and moves
   // This guarantees stack depth 3+ with cross-calls
@@ -225,6 +247,7 @@ function generateFallbackSolution(
     functionCount,
     colors,
     startDirection,
+    usesPainting: false,
   };
 }
 
@@ -586,12 +609,141 @@ function generateCrossCallPattern(
   };
 }
 
+// Painting pattern: tiles start as one color but need to be painted to trigger conditionals
+function generatePaintingPattern(
+  functionCount: number,
+  colors: TileColor[],
+  rng: SeededRandom
+): { program: Program; colorAssignments: Map<number, TileColor>; paintingInfo: Map<number, { from: TileColor; to: TileColor }> } {
+  const color1 = colors[0]; // The color to paint TO
+  const color2 = colors[1] || 'blue'; // Starting color / secondary
+  const paintColor = color1 === 'red' ? 'paint_red' : color1 === 'green' ? 'paint_green' : 'paint_blue';
+
+  const colorAssignments = new Map<number, TileColor>();
+  const paintingInfo = new Map<number, { from: TileColor; to: TileColor }>();
+
+  // Pattern: F1 paints tile, then conditional triggers based on new color
+  // This creates puzzles where you must paint to proceed
+
+  const f1Instructions: (Instruction | null)[] = [
+    inst('forward'),
+    inst(paintColor as InstructionType), // Paint current tile
+    inst('f2', color1), // Now the tile is color1, so this triggers
+    inst('forward'),
+    inst('f1'), // Loop
+  ];
+  colorAssignments.set(3, color1);
+  paintingInfo.set(2, { from: color2, to: color1 }); // Position 2 starts as color2, painted to color1
+
+  const f2Instructions: (Instruction | null)[] = [
+    rng.next() > 0.5 ? inst('left') : inst('right'),
+    inst('forward'),
+  ];
+
+  if (functionCount >= 3) {
+    f2Instructions.push(inst('f3', color2));
+    colorAssignments.set(8, color2);
+  } else {
+    f2Instructions.push(inst('f1'));
+  }
+
+  let f3Instructions: (Instruction | null)[] = [];
+  if (functionCount >= 3) {
+    f3Instructions = [
+      inst('forward'),
+      inst(paintColor as InstructionType), // Another paint
+      inst('f2', color1),
+    ];
+    colorAssignments.set(12, color1);
+    paintingInfo.set(10, { from: color2, to: color1 });
+  }
+
+  let f4Instructions: (Instruction | null)[] = [];
+  if (functionCount >= 4) {
+    f4Instructions = [
+      inst('forward'),
+      inst('f3'),
+    ];
+    f3Instructions[2] = inst('f4', color2);
+    colorAssignments.set(14, color2);
+  }
+
+  return {
+    program: {
+      f1: f1Instructions,
+      f2: f2Instructions,
+      f3: f3Instructions,
+      f4: f4Instructions,
+      f5: [],
+    },
+    colorAssignments,
+    paintingInfo,
+  };
+}
+
+// Simple painting fallback
+function generatePaintingFallback(
+  functionCount: number,
+  colors: TileColor[],
+  rng: SeededRandom
+): SolutionTemplate {
+  const color1 = colors[0];
+  const color2 = colors[1] || 'blue';
+  const paintColor = color1 === 'red' ? 'paint_red' : color1 === 'green' ? 'paint_green' : 'paint_blue';
+
+  const program: Program = {
+    f1: [
+      inst('forward'),
+      inst(paintColor as InstructionType),
+      inst('f2', color1),
+      inst('forward'),
+      inst('f1'),
+    ],
+    f2: [
+      inst('right'),
+      inst('forward'),
+      inst('f1', color2),
+    ],
+    f3: [],
+    f4: [],
+    f5: [],
+  };
+
+  const colorAssignments = new Map<number, TileColor>();
+  colorAssignments.set(3, color1);
+  colorAssignments.set(7, color2);
+
+  const paintingInfo = new Map<number, { from: TileColor; to: TileColor }>();
+  paintingInfo.set(2, { from: color2, to: color1 });
+
+  const startDirection = rng.choice<Direction>(['up', 'down', 'left', 'right']);
+  const { path } = tracePath(program, startDirection, colorAssignments, paintingInfo);
+
+  // Mark painting info on path
+  for (const [idx, info] of paintingInfo) {
+    if (idx < path.length) {
+      path[idx].initialColor = info.from;
+      path[idx].paintTo = info.to;
+    }
+  }
+
+  return {
+    program,
+    path: path.length > 0 ? path : generateMinimalPath(startDirection),
+    functionCount,
+    colors,
+    startDirection,
+    usesPainting: true,
+  };
+}
+
 // Trace the path that a program would take
 // Returns the path and whether it seems valid
 function tracePath(
   program: Program,
   startDirection: Direction,
-  colorAssignments: Map<number, TileColor>
+  colorAssignments: Map<number, TileColor>,
+  paintingInfo?: Map<number, { from: TileColor; to: TileColor }>
 ): { path: PathSegment[]; verified: boolean } {
   const path: PathSegment[] = [];
   const visited = new Set<string>();

@@ -1,7 +1,7 @@
 // Complexity measurement and validation for puzzles
 
 import type { FunctionName, Program, PuzzleConfig, Tile, Direction, Position } from '../../src/engine/types';
-import { HARD_REQUIREMENTS } from './config';
+import { BASELINE_REQUIREMENTS, type PuzzleProfile } from './config';
 
 // Metric ranges for normalization
 const METRIC_RANGES = {
@@ -253,11 +253,14 @@ function calculateComplexityScore(metrics: ExecutionMetrics): {
 }
 
 // Check if puzzle meets complexity requirements
+// Accepts optional profile for profile-specific requirements
 export function checkComplexity(
   puzzle: PuzzleConfig,
-  program: Program
+  program: Program,
+  profile?: PuzzleProfile
 ): ComplexityResult {
   const metrics = measureExecution(puzzle, program);
+  const req = profile?.requirements ?? BASELINE_REQUIREMENTS;
 
   // Check if puzzle is solvable
   if (!metrics.solved) {
@@ -270,85 +273,85 @@ export function checkComplexity(
     };
   }
 
-  // Check hard requirements
-  if (metrics.stackDepth < HARD_REQUIREMENTS.minStackDepth) {
+  // Check requirements (profile-specific or baseline)
+  if (metrics.stackDepth < req.minStackDepth) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `stack depth ${metrics.stackDepth} < ${HARD_REQUIREMENTS.minStackDepth}`,
+      reason: `stack depth ${metrics.stackDepth} < ${req.minStackDepth}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }
 
-  if (metrics.functionsUsed < HARD_REQUIREMENTS.minFunctions) {
+  if (metrics.functionsUsed < req.minFunctions) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `functions used ${metrics.functionsUsed} < ${HARD_REQUIREMENTS.minFunctions}`,
+      reason: `functions used ${metrics.functionsUsed} < ${req.minFunctions}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }
 
-  if (metrics.functionsUsed > HARD_REQUIREMENTS.maxFunctions) {
+  if (metrics.functionsUsed > req.maxFunctions) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `functions used ${metrics.functionsUsed} > ${HARD_REQUIREMENTS.maxFunctions}`,
+      reason: `functions used ${metrics.functionsUsed} > ${req.maxFunctions}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }
 
-  if (metrics.conditionals < HARD_REQUIREMENTS.minConditionals) {
+  if (metrics.conditionals < req.minConditionals) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `conditionals ${metrics.conditionals} < ${HARD_REQUIREMENTS.minConditionals}`,
+      reason: `conditionals ${metrics.conditionals} < ${req.minConditionals}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }
 
-  if (metrics.instructions < HARD_REQUIREMENTS.minInstructions) {
+  if (metrics.instructions < req.minInstructions) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `instructions ${metrics.instructions} < ${HARD_REQUIREMENTS.minInstructions}`,
+      reason: `instructions ${metrics.instructions} < ${req.minInstructions}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }
 
-  if (metrics.steps < HARD_REQUIREMENTS.minSteps) {
+  if (metrics.steps < req.minSteps) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `steps ${metrics.steps} < ${HARD_REQUIREMENTS.minSteps}`,
+      reason: `steps ${metrics.steps} < ${req.minSteps}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }
 
-  if (metrics.steps > HARD_REQUIREMENTS.maxSteps) {
+  if (metrics.steps > req.maxSteps) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `steps ${metrics.steps} > ${HARD_REQUIREMENTS.maxSteps}`,
+      reason: `steps ${metrics.steps} > ${req.maxSteps}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }
 
   // Check steps per instruction ratio
   const stepsPerInstruction = metrics.steps / metrics.instructions;
-  if (stepsPerInstruction < HARD_REQUIREMENTS.minStepsPerInstruction) {
+  if (stepsPerInstruction < req.minStepsPerInstruction) {
     return {
       passed: false,
       score: 0,
       metrics,
-      reason: `steps/instructions ${stepsPerInstruction.toFixed(1)} < ${HARD_REQUIREMENTS.minStepsPerInstruction}`,
+      reason: `steps/instructions ${stepsPerInstruction.toFixed(1)} < ${req.minStepsPerInstruction}`,
       normalizedMetrics: { steps: 0, instructions: 0, stackDepth: 0, conditionals: 0 },
     };
   }

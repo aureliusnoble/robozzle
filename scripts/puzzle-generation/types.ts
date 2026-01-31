@@ -25,25 +25,18 @@ export type {
   TileColor,
 };
 
-// Mechanic categories for puzzle variety
-export type MechanicCategory =
-  | 'conditionals'
-  | 'recursion'
-  | 'painting'
-  | 'multi-func'
-  | 'loop';
-
 // Generation source tracking
 export type GenerationSource = 'classic' | 'generated' | 'user';
 
 // Extended puzzle config with generation metadata
 export interface GeneratedPuzzleConfig extends PuzzleConfig {
   generationSource: GenerationSource;
-  mechanicCategory: MechanicCategory;
+  profileName?: string; // Name of the puzzle profile used
   solverDifficultyScore: number;
   qualityScore: number;
   solutionInstructionCount: number;
   solutionStepCount: number;
+  usesPainting?: boolean;
   solution?: Program;
 }
 
@@ -106,26 +99,6 @@ export interface PuzzleTemplate {
   generate: (config: GenerationConfig) => PuzzleCandidate;
 }
 
-// Generation configuration
-export interface GenerationConfig {
-  gridWidth: number;           // Default: 16
-  gridHeight: number;          // Default: 12
-  targetDifficulty: 'medium' | 'hard'; // All in medium-hard band
-  mechanicCategory: MechanicCategory;
-  maxTotalSlots: number;       // Max 15 per requirements
-  seed?: number;               // Optional random seed
-}
-
-// Candidate puzzle before validation
-export interface PuzzleCandidate {
-  grid: (Tile | null)[][];
-  robotStart: { position: Position; direction: Direction };
-  functionLengths: PuzzleConfig['functionLengths'];
-  allowedInstructions: InstructionType[];
-  mechanicCategory: MechanicCategory;
-  templateName: string;
-}
-
 // Pruning result
 export interface PruningResult {
   prunedGrid: (Tile | null)[][];
@@ -135,47 +108,21 @@ export interface PruningResult {
   stillSolvable: boolean;
 }
 
-// Difficulty classification result
-export interface DifficultyResult {
-  score: number;               // 0-100 difficulty score
-  category: 'medium' | 'hard'; // For generated puzzles
-  factors: {
-    generationsNeeded: number;
-    solutionComplexity: number;
-    mechanicDifficulty: number;
-    gridComplexity: number;
-  };
-}
-
 // Upload batch for database
 export interface PuzzleBatch {
   puzzles: GeneratedPuzzleConfig[];
   generatedAt: Date;
   totalGenerated: number;
   totalPassed: number;
-  byCategory: Record<MechanicCategory, number>;
-}
-
-// Generation statistics
-export interface GenerationStats {
-  attempted: number;
-  solvable: number;
-  passedQuality: number;
-  byCategory: Record<MechanicCategory, {
-    attempted: number;
-    solvable: number;
-    passed: number;
-  }>;
-  averageSolverGenerations: number;
-  averageQualityScore: number;
+  byProfile: Record<string, number>;
 }
 
 // Pool entry for database
 export interface GeneratedPuzzlePoolEntry {
   id: string;
   puzzleId: string;
-  mechanicCategory: MechanicCategory;
-  usedForDaily: string | null;  // Date string or null
+  profileName?: string;
+  usedForDaily: string | null;
   qualityScore: number;
   createdAt: Date;
 }
