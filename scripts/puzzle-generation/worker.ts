@@ -3,13 +3,13 @@
 import { parentPort, workerData } from 'worker_threads';
 import type { Program, PuzzleConfig } from '../../src/engine/types';
 import type { GeneratedPuzzleConfig } from './types';
-import { generateSolution, countInstructions, getUsedFunctions } from './solution-generator';
+import { generateSolution, countInstructions } from './solution-generator';
 import { buildGrid, centerGrid, countStars } from './grid-builder';
 import { checkComplexity } from './complexity';
 import { checkSimplicity } from './triviality';
 import { aggressivePrune } from './pruner';
 import { verifySolution } from './verifier';
-import { TIMEOUT_CONFIG } from './config';
+import { TIMEOUT_CONFIG, getProfileByIndex, type PuzzleProfile } from './config';
 
 interface WorkerData {
   workerId: number;
@@ -64,24 +64,21 @@ function generatePuzzleId(workerId: number, index: number): string {
 }
 
 function generatePuzzleTitle(index: number): string {
-  const prefixes = ['Logic', 'Path', 'Maze', 'Flow', 'Code', 'Link', 'Loop', 'Branch'];
-  const suffixes = ['Challenge', 'Puzzle', 'Quest', 'Trial', 'Test'];
-  const prefix = prefixes[index % prefixes.length];
-  const suffix = suffixes[Math.floor(index / prefixes.length) % suffixes.length];
-  return `${prefix} ${suffix} #${index + 1}`;
+  return `Puzzle #${index + 1}`;
 }
 
 function generateSinglePuzzle(
   workerId: number,
   puzzleIndex: number,
   attemptNum: number,
+  profile: PuzzleProfile,
   seed?: number
 ): { puzzle: WorkerResult['puzzles'][0] | null; failReason?: string } {
   const puzzleSeed = seed ? seed + attemptNum * 1337 : undefined;
   const timeout = new TimeoutController(TIMEOUT_CONFIG.perPuzzleMs);
 
   try {
-    const solutionTemplate = generateSolution(puzzleSeed);
+    const solutionTemplate = generateSolution(puzzleSeed, profile);
 
     if (!solutionTemplate.path || solutionTemplate.path.length < 5) {
       return { puzzle: null, failReason: 'solution' };
@@ -116,7 +113,7 @@ function generateSinglePuzzle(
 
     timeout.check();
 
-    const complexityResult = checkComplexity(puzzle, solutionTemplate.program);
+    const complexityResult = checkComplexity(puzzle, solutionTemplate.program, profile);
     if (!complexityResult.passed) {
       return { puzzle: null, failReason: 'complexity' };
     }
@@ -136,13 +133,12 @@ function generateSinglePuzzle(
       return { puzzle: null, failReason: 'verify' };
     }
 
-    const postPruneComplexity = checkComplexity(prunedPuzzle, solutionTemplate.program);
+    const postPruneComplexity = checkComplexity(prunedPuzzle, solutionTemplate.program, profile);
     if (!postPruneComplexity.passed) {
       return { puzzle: null, failReason: 'complexity' };
     }
 
     const puzzleId = generatePuzzleId(workerId, puzzleIndex);
-    const usedFunctions = getUsedFunctions(solutionTemplate.program);
     const title = generatePuzzleTitle(puzzleIndex);
 
     const generatedPuzzle: GeneratedPuzzleConfig = {
@@ -150,11 +146,12 @@ function generateSinglePuzzle(
       id: puzzleId,
       title,
       generationSource: 'generated',
-      mechanicCategory: 'multi-func',
+      profileName: profile.name,
       solverDifficultyScore: postPruneComplexity.score,
       qualityScore: postPruneComplexity.score,
       solutionInstructionCount: countInstructions(solutionTemplate.program),
       solutionStepCount: postPruneComplexity.metrics.steps,
+      usesPainting: solutionTemplate.usesPainting,
       solution: solutionTemplate.program,
     };
 
@@ -198,7 +195,8 @@ while (result.puzzles.length < data.targetPuzzles && attempt < maxAttempts) {
   result.attempts++;
 
   const seed = data.baseSeed ? data.baseSeed + attempt : undefined;
-  const genResult = generateSinglePuzzle(data.workerId, result.puzzles.length, attempt, seed);
+  const profile = getProfileByIndex(result.puzzles.length);
+  const genResult = generateSinglePuzzle(data.workerId, result.puzzles.length, attempt, profile, seed);
 
   if (genResult.puzzle) {
     result.puzzles.push(genResult.puzzle);

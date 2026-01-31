@@ -436,7 +436,7 @@ async function generatePuzzlesParallel(
   console.log(`\nGenerating ${count} puzzles using ${numWorkers} workers...`);
   console.log('─'.repeat(60));
 
-  const workerPath = join(__dirname, 'worker.ts');
+  const workerPath = join(__dirname, 'worker-loader.mjs');
   const workers: Worker[] = [];
   const results: GeneratedPuzzle[] = [];
   const totalFailures = {
@@ -467,7 +467,6 @@ async function generatePuzzlesParallel(
           targetPuzzles: puzzlesPerWorker,
           baseSeed,
         },
-        execArgv: ['--import', 'tsx'],
       });
 
       workers.push(worker);

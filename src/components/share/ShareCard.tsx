@@ -37,6 +37,29 @@ const DIRECTION_ROTATION: Record<string, number> = {
   left: 180,
 };
 
+// Robot icon matching the favicon
+function RobotIcon({ size = 24, color = '#6366F1' }: { size?: number; color?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 8V4H8" />
+      <rect width="16" height="12" x="4" y="8" rx="2" />
+      <path d="M2 14h2" />
+      <path d="M20 14h2" />
+      <path d="M15 13v2" />
+      <path d="M9 13v2" />
+    </svg>
+  );
+}
+
 // Gradient backgrounds matching the app's instruction styling
 const CONDITION_BACKGROUNDS: Record<string, string> = {
   red: 'linear-gradient(135deg, #EF4444, #F87171)',
@@ -193,11 +216,11 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 10,
           }}
         >
-          <span style={{ fontSize: 24 }}>{'\uD83E\uDD16'}</span>
-          <span style={{ fontSize: 18, fontWeight: 700 }}>RoboZZle</span>
+          <RobotIcon size={28} color="white" />
+          <span style={{ fontSize: 20, fontWeight: 700 }}>RoboZZle</span>
         </div>
 
         {/* Title Section */}
