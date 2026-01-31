@@ -116,7 +116,7 @@ export const useAuthStore = create<AuthStore>()(
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
           if (profile) {
             // Check if this is a Google user without a proper username
@@ -173,7 +173,7 @@ export const useAuthStore = create<AuthStore>()(
             .from('user_progress')
             .select('*')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
 
           if (progress) {
             set({
@@ -203,7 +203,7 @@ export const useAuthStore = create<AuthStore>()(
             .select('id')
             .eq('username', username)
             .neq('id', user.id)
-            .single();
+            .maybeSingle();
 
           if (existing) {
             return { error: 'Username is already taken' };
