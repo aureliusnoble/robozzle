@@ -14,6 +14,7 @@ import tileDefault from '../../assets/sprites/tile_default.png';
 interface GameBoardProps {
   puzzle?: PuzzleConfig;
   gameState: GameState;
+  showFireworks?: boolean;
 }
 
 const TILE_SIZE = 32;
@@ -35,7 +36,87 @@ const TILE_SPRITES: Record<string, string> = {
   null: tileDefault,
 };
 
-export function GameBoard({ gameState }: GameBoardProps) {
+// Firework particle component
+function FireworkParticle({
+  delay,
+  angle,
+  distance,
+  color
+}: {
+  delay: number;
+  angle: number;
+  distance: number;
+  color: string;
+}) {
+  return (
+    <motion.div
+      style={{
+        position: 'absolute',
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: color,
+        boxShadow: `0 0 6px ${color}, 0 0 10px ${color}`,
+      }}
+      initial={{
+        x: 0,
+        y: 0,
+        scale: 0,
+        opacity: 1
+      }}
+      animate={{
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        scale: [0, 1.5, 0.5],
+        opacity: [1, 1, 0]
+      }}
+      transition={{
+        duration: 0.8,
+        delay,
+        ease: [0.2, 0.8, 0.2, 1]
+      }}
+    />
+  );
+}
+
+// Fireworks burst component
+function FireworksBurst({ x, y }: { x: number; y: number }) {
+  const colors = ['#FBBF24', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#3B82F6', '#10B981'];
+  const particles: Array<{ angle: number; distance: number; delay: number; color: string }> = [];
+
+  // Create multiple bursts with different timings
+  for (let burst = 0; burst < 3; burst++) {
+    const particleCount = 8;
+    const baseDelay = burst * 0.15;
+    const baseDistance = 25 + burst * 15;
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2 + (burst * 0.3);
+      particles.push({
+        angle,
+        distance: baseDistance + Math.random() * 10,
+        delay: baseDelay + Math.random() * 0.1,
+        color: colors[(i + burst) % colors.length]
+      });
+    }
+  }
+
+  return (
+    <div style={{ position: 'absolute', left: x, top: y, zIndex: 20 }}>
+      {particles.map((p, i) => (
+        <FireworkParticle
+          key={i}
+          angle={p.angle}
+          distance={p.distance}
+          delay={p.delay}
+          color={p.color}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function GameBoard({ gameState, showFireworks }: GameBoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate bounding box of non-null tiles
@@ -140,6 +221,16 @@ export function GameBoard({ gameState }: GameBoardProps) {
             className={styles.robotSprite}
           />
         </motion.div>
+
+        {/* Fireworks on puzzle completion */}
+        <AnimatePresence>
+          {showFireworks && (
+            <FireworksBurst
+              x={BOARD_PADDING + (gameState.robot.position.x - minX) * (TILE_SIZE + TILE_GAP) + TILE_SIZE / 2}
+              y={BOARD_PADDING + (gameState.robot.position.y - minY) * (TILE_SIZE + TILE_GAP) + TILE_SIZE / 2}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

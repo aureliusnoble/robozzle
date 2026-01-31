@@ -139,6 +139,7 @@ export function Game({ puzzle, onComplete, onNextPuzzle, onBack, onShare, tutori
   const [selectedColor, setSelectedColor] = useState<TileColor | null>(null);
   const [activeDrag, setActiveDrag] = useState<{ type: string; condition: TileColor | null } | null>(null);
   const [showHint, setShowHint] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
 
   // Ref and state for conditional horizontal scroll (only when tiles overflow, not padding)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -214,6 +215,18 @@ export function Game({ puzzle, onComplete, onNextPuzzle, onBack, onShare, tutori
       onComplete(gameState.steps, instructionsUsed);
     }
   }, [isComplete, gameState, instructionsUsed, onComplete]);
+
+  // Delay victory modal to let player see the robot reach the final star
+  useEffect(() => {
+    if (isComplete) {
+      const timer = setTimeout(() => {
+        setShowVictoryModal(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowVictoryModal(false);
+    }
+  }, [isComplete]);
 
   // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -426,7 +439,7 @@ export function Game({ puzzle, onComplete, onNextPuzzle, onBack, onShare, tutori
               className={styles.boardScrollContainer}
               style={{ overflowX: needsHorizontalScroll ? 'auto' : 'visible' }}
             >
-              <GameBoard puzzle={puzzle} gameState={gameState} />
+              <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} />
             </div>
 
             <div className={styles.sidePanel}>
@@ -536,7 +549,7 @@ export function Game({ puzzle, onComplete, onNextPuzzle, onBack, onShare, tutori
 
       {/* Victory/Fail Modal - separate from game board for better sizing */}
       <AnimatePresence>
-        {isComplete && (
+        {showVictoryModal && (
           <motion.div
             className={styles.modalOverlay}
             initial={{ opacity: 0 }}
