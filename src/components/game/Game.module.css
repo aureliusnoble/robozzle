@@ -255,7 +255,8 @@
 }
 
 .modalContent.failModal {
-  border-color: #EF4444;
+  border-color: #F97316;
+  background: linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 30%);
 }
 
 .victoryIcon {
@@ -263,9 +264,28 @@
   margin-bottom: 0.5rem;
 }
 
+.failIconWrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FEE2E2, #FECACA);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
 .failIcon {
   color: #EF4444;
-  margin-bottom: 0.5rem;
+}
+
+.modalHint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #94A3B8;
+  font-style: italic;
 }
 
 .modalTitle {
@@ -306,6 +326,26 @@
 .tryAgainButton:hover {
   background: #E2E8F0;
   color: #1E293B;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #EEF2FF;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6366F1;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.backButton:hover {
+  background: #E0E7FF;
+  color: #4F46E5;
 }
 
 .nextButton {

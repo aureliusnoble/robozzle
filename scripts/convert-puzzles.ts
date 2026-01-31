@@ -213,17 +213,20 @@ function convertPuzzle(raw: RawPuzzle): PuzzleConfig | null {
   // Parse sub lengths
   const subLengths = parseSubLengths(raw.SubLengths);
 
-  // Parse allowed commands from bitmask
-  const allowedInstructions: InstructionType[] = ['forward', 'left', 'right', 'f1'];
-  const allowedMask = toNumber(raw.AllowedCommands);
+  // Allow all instructions - the archive doesn't have reliable data about which
+  // instructions are allowed, so we allow everything. The puzzle constraints
+  // come from the function slot limits (functionLengths).
+  const allowedInstructions: InstructionType[] = [
+    'forward', 'left', 'right',
+    'f1',
+    'paint_red', 'paint_green', 'paint_blue',
+  ];
 
-  if (allowedMask & 1) allowedInstructions.push('f2');
-  if (allowedMask & 2) allowedInstructions.push('f3');
-  if (allowedMask & 4) allowedInstructions.push('f4');
-  if (allowedMask & 8) allowedInstructions.push('f5');
-  if (allowedMask & 16) allowedInstructions.push('paint_red');
-  if (allowedMask & 32) allowedInstructions.push('paint_green');
-  if (allowedMask & 64) allowedInstructions.push('paint_blue');
+  // Add function calls for functions that have slots
+  if (subLengths[1] > 0) allowedInstructions.push('f2');
+  if (subLengths[2] > 0) allowedInstructions.push('f3');
+  if (subLengths[3] > 0) allowedInstructions.push('f4');
+  if (subLengths[4] > 0) allowedInstructions.push('f5');
 
   // Calculate difficulty
   const voteCount = toNumber(raw.DifficultyVoteCount);

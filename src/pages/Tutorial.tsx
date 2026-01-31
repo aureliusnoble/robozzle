@@ -21,9 +21,11 @@ export function Tutorial() {
 
   // Set initial step based on progress - only on first load
   useEffect(() => {
-    if (!initialLoadDone.current && progress?.tutorialCompleted && tutorials.length > 0) {
-      const maxCompleted = Math.max(...progress.tutorialCompleted, 0);
-      setCurrentStep(Math.min(maxCompleted + 1, tutorials.length));
+    if (!initialLoadDone.current && tutorials.length > 0) {
+      if (progress?.tutorialCompleted && progress.tutorialCompleted.length > 0) {
+        const maxCompleted = Math.max(...progress.tutorialCompleted, 0);
+        setCurrentStep(Math.min(maxCompleted + 1, tutorials.length));
+      }
       initialLoadDone.current = true;
     }
   }, [progress, tutorials.length]);
@@ -94,8 +96,13 @@ export function Tutorial() {
                   title={isLocked ? 'Complete previous tutorials to unlock' : tutorial.title}
                 >
                   <span className={styles.stepNumber}>
-                    {isLocked ? <Lock size={14} /> : isCompleted ? <Check size={16} /> : step}
+                    {isLocked ? <Lock size={14} /> : step}
                   </span>
+                  {isCompleted && !isLocked && (
+                    <span className={styles.completeBadge}>
+                      <Check size={10} strokeWidth={3} />
+                    </span>
+                  )}
                 </button>
               );
             })}

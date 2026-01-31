@@ -51,6 +51,7 @@
 }
 
 .stepButton {
+  position: relative;
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -70,6 +71,17 @@
 .stepButton.current {
   border-color: #6366F1;
   background: #EEF2FF;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.stepButton.current.completed {
+  border-color: #6366F1;
+  background: #EEF2FF;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.stepButton.current.completed .stepNumber {
+  color: #6366F1;
 }
 
 .stepButton.completed {
@@ -100,6 +112,22 @@
 
 .stepButton.completed .stepNumber {
   color: #10B981;
+}
+
+.completeBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  background: #10B981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: 2px solid white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .gameArea {

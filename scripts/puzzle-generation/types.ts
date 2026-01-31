@@ -89,32 +89,6 @@ export interface RejectionFlags {
   tooEasy: boolean;            // Solved in first few generations
 }
 
-// Solver configuration
-export interface SolverConfig {
-  populationSize: number;      // Number of programs in population (default: 100)
-  maxGenerations: number;      // Max generations before giving up (default: 500)
-  stagnationLimit: number;     // Generations without improvement (default: 50)
-  tournamentSize: number;      // Tournament selection size (default: 5)
-  eliteCount: number;          // Top programs preserved each generation (default: 5)
-  mutationRate: number;        // Probability of mutation per instruction (default: 0.1)
-  crossoverRate: number;       // Probability of crossover (default: 0.7)
-}
-
-export interface SolverResult {
-  solved: boolean;
-  solution: Program | null;
-  fitness: FitnessResult;
-  generations: number;
-  totalEvaluations: number;
-  bestFitnessHistory: number[];
-}
-
-// Individual in evolutionary population
-export interface Individual {
-  program: Program;
-  fitness: FitnessResult;
-}
-
 // Template system for guided generation
 export interface PuzzleTemplate {
   name: string;

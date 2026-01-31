@@ -34,4 +34,10 @@ supabase/.temp
 
 # PWA
 dev-dist
-DEPLOYMENT.md
+
+# Generated puzzle files
+generated-puzzles.json
+scripts/upload-batch.ts
+
+# Rust build artifacts
+crates/*/target/

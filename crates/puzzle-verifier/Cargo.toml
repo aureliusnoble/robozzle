@@ -1,0 +1,20 @@
+[package]
+name = "puzzle-verifier"
+version = "0.1.0"
+edition = "2021"
+description = "Fast bounded solver for Robozzle puzzle verification"
+authors = ["Robozzle Team"]
+
+[[bin]]
+name = "puzzle-verifier"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+smallvec = "1.11"

@@ -160,12 +160,13 @@ export class GameEngine {
     const frame = this.stack[this.stack.length - 1];
     const func = this.program[frame.functionName];
 
-    // If we've reached the end of the function, pop the frame
+    // Safety check: if frame is already exhausted, pop it and return
+    // (This should rarely happen since we clean up at the end of each step)
     if (frame.instructionIndex >= func.length) {
       this.stack.pop();
-      // Don't recurse - return here so UI can see the "returned to caller" state
-      // The next step() call will continue execution in the calling function
-      // (or F1 will auto-restart if stack is empty)
+      if (this.stack.length === 0) {
+        this.stack.push({ functionName: 'f1', instructionIndex: 0 });
+      }
       return { state: this.getState(), finished: false, won: false };
     }
 
@@ -205,6 +206,26 @@ export class GameEngine {
         this.state.status = 'won';
         return { state: this.getState(), finished: true, won: true };
       }
+    }
+
+    // Pop frames that have reached their end immediately
+    // This ensures getCurrentPosition() returns the next instruction to execute,
+    // not a stale position past the end of a completed function
+    while (this.stack.length > 0) {
+      const topFrame = this.stack[this.stack.length - 1];
+      const topFunc = this.program[topFrame.functionName];
+
+      if (topFrame.instructionIndex < topFunc.length) {
+        break; // This frame has more instructions
+      }
+
+      // Pop the exhausted frame - execution returns to caller
+      this.stack.pop();
+    }
+
+    // If stack became empty (F1 completed), re-push F1 to continue the loop
+    if (this.stack.length === 0) {
+      this.stack.push({ functionName: 'f1', instructionIndex: 0 });
     }
 
     return { state: this.getState(), finished: false, won: false };

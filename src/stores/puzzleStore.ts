@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { PuzzleConfig, PuzzleMetadata, DailyChallenge } from '../engine/types';
+import type { PuzzleConfig, PuzzleMetadata, DailyChallenge, InstructionType } from '../engine/types';
 import { tutorialPuzzles } from '../engine/tutorials';
 import { supabase } from '../lib/supabase';
 
@@ -52,7 +52,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
 
         try {
           // Load lightweight metadata from local JSON
-          const response = await fetch('/puzzles/classic/index.json');
+          const response = await fetch(`${import.meta.env.BASE_URL}puzzles/classic/index.json`);
           if (response.ok) {
             const metadata: PuzzleMetadata[] = await response.json();
             set({ classicPuzzlesMeta: metadata, isLoadingClassic: false });
@@ -211,14 +211,60 @@ export const usePuzzleStore = create<PuzzleStore>()(
 );
 
 function parsePuzzleFromDB(dbPuzzle: any): PuzzleConfig {
+  // Parse function lengths with fallback defaults
+  const functionLengths = dbPuzzle.function_lengths || {
+    f1: 10,
+    f2: 0,
+    f3: 0,
+    f4: 0,
+    f5: 0,
+  };
+
+  // Ensure all function keys exist
+  const normalizedLengths = {
+    f1: functionLengths.f1 ?? 10,
+    f2: functionLengths.f2 ?? 0,
+    f3: functionLengths.f3 ?? 0,
+    f4: functionLengths.f4 ?? 0,
+    f5: functionLengths.f5 ?? 0,
+  };
+
+  // Parse allowed instructions, or derive from function lengths if missing
+  let allowedInstructions: InstructionType[] = dbPuzzle.allowed_instructions;
+
+  if (!allowedInstructions || !Array.isArray(allowedInstructions) || allowedInstructions.length === 0) {
+    // Default instructions: movement + functions that have slots
+    allowedInstructions = ['forward', 'left', 'right', 'f1'];
+    if (normalizedLengths.f2 > 0) allowedInstructions.push('f2');
+    if (normalizedLengths.f3 > 0) allowedInstructions.push('f3');
+    if (normalizedLengths.f4 > 0) allowedInstructions.push('f4');
+    if (normalizedLengths.f5 > 0) allowedInstructions.push('f5');
+  } else {
+    // Ensure consistency: if a function has slots, it should be callable
+    // and if a function has no slots, remove it from allowed instructions
+    const funcInstructions = ['f2', 'f3', 'f4', 'f5'] as const;
+    for (const func of funcInstructions) {
+      const hasSlots = normalizedLengths[func] > 0;
+      const isAllowed = allowedInstructions.includes(func);
+
+      if (hasSlots && !isAllowed) {
+        // Function has slots but isn't in allowed - add it
+        allowedInstructions.push(func);
+      } else if (!hasSlots && isAllowed) {
+        // Function has no slots but is in allowed - remove it
+        allowedInstructions = allowedInstructions.filter(i => i !== func);
+      }
+    }
+  }
+
   return {
     id: dbPuzzle.id,
     title: dbPuzzle.title,
     description: dbPuzzle.description,
     grid: dbPuzzle.grid,
     robotStart: dbPuzzle.robot_start,
-    functionLengths: dbPuzzle.function_lengths,
-    allowedInstructions: dbPuzzle.allowed_instructions,
+    functionLengths: normalizedLengths,
+    allowedInstructions,
     category: dbPuzzle.category,
     difficulty: dbPuzzle.difficulty,
     author: dbPuzzle.author,

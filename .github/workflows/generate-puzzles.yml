@@ -1,29 +1,22 @@
-name: Generate Daily Puzzles
+name: Generate Weekly Puzzles
 
 on:
+  # Weekly generation on Sunday at midnight UTC
+  schedule:
+    - cron: '0 0 * * 0'
+
   # Manual trigger with optional parameters
   workflow_dispatch:
     inputs:
       count:
-        description: 'Puzzles per category'
+        description: 'Number of puzzles to generate'
         required: false
-        default: '24'
-      category:
-        description: 'Specific category (or all)'
+        default: '7'
+      upload:
+        description: 'Upload to Supabase'
         required: false
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - conditionals
-          - recursion
-          - painting
-          - multi-func
-          - loop
-
-  # Monthly regeneration on the 1st at midnight UTC
-  schedule:
-    - cron: '0 0 1 * *'
+        default: 'true'
+        type: boolean
 
 jobs:
   generate:
@@ -34,6 +27,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Rust toolchain for the puzzle verifier
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates/puzzle-verifier
+
+      - name: Build Rust verifier
+        run: cargo build --release --manifest-path crates/puzzle-verifier/Cargo.toml
+
+      # Node.js for the TypeScript orchestration
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -48,17 +54,16 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          ARGS="--upload --verbose"
+          COUNT="${{ github.event.inputs.count || '7' }}"
+          UPLOAD="${{ github.event.inputs.upload || 'true' }}"
 
-          if [ "${{ github.event.inputs.count }}" != "" ]; then
-            ARGS="$ARGS --count ${{ github.event.inputs.count }}"
+          ARGS="--count $COUNT"
+
+          if [ "$UPLOAD" = "true" ]; then
+            ARGS="$ARGS --upload"
           fi
 
-          if [ "${{ github.event.inputs.category }}" != "" ] && [ "${{ github.event.inputs.category }}" != "all" ]; then
-            ARGS="$ARGS --category ${{ github.event.inputs.category }}"
-          fi
-
-          npx tsx scripts/puzzle-generation/index.ts $ARGS
+          npx tsx scripts/puzzle-generation/index.ts $ARGS --workers 1
 
       - name: Upload generation artifact
         uses: actions/upload-artifact@v4
@@ -69,8 +74,16 @@ jobs:
 
       - name: Summary
         run: |
-          echo "## Puzzle Generation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "## Weekly Puzzle Generation Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Generated puzzles have been uploaded to Supabase." >> $GITHUB_STEP_SUMMARY
+          echo "Generated ${{ github.event.inputs.count || '7' }} puzzles using:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rust verifier**: Fast bounded backtracking solver" >> $GITHUB_STEP_SUMMARY
+          echo "- **TypeScript orchestration**: Solution-first generation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.upload || 'true' }}" = "true" ]; then
+            echo "Puzzles have been uploaded to Supabase." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Puzzles saved to artifact only (upload disabled)." >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Artifact:** generated-puzzles-${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY

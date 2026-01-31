@@ -26,7 +26,7 @@ const slotCollisionDetection: CollisionDetection = (args) => {
   return pointerWithin(args);
 };
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle } from 'lucide-react';
+import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library } from 'lucide-react';
 import type { PuzzleConfig, FunctionName, TileColor, Instruction } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import { GameBoard } from './GameBoard';
@@ -40,6 +40,7 @@ interface GameProps {
   puzzle: PuzzleConfig;
   onComplete?: (steps: number, instructions: number) => void;
   onNextPuzzle?: () => void;
+  onBack?: () => void;
   tutorialStep?: number; // For progressive disclosure and onboarding
 }
 
@@ -93,7 +94,7 @@ function getDragOverlayIcon(type: string) {
   }
 }
 
-export function Game({ puzzle, onComplete, onNextPuzzle, tutorialStep }: GameProps) {
+export function Game({ puzzle, onComplete, onNextPuzzle, onBack, tutorialStep }: GameProps) {
   // Configure drag sensors with activation constraint
   // This allows clicks to work for color cycling, while drags need movement
   const pointerSensor = useSensor(PointerSensor, {
@@ -354,10 +355,13 @@ export function Game({ puzzle, onComplete, onNextPuzzle, tutorialStep }: GamePro
   }, [start, scrollToBoard, gameState]);
 
   // Handle step - single step only, don't auto-run, no scrolling
+  // First step after reset shows the starting position (NEXT indicator) without executing
   const handleStep = useCallback(() => {
     if (!isRunning) {
+      // Starting fresh - show the first instruction as NEXT without executing
       start();
-      pause(); // Immediately pause so interval doesn't run
+      pause();
+      return; // Don't step yet - let user see which instruction will execute first
     }
     step();
   }, [isRunning, start, pause, step]);
@@ -479,6 +483,7 @@ export function Game({ puzzle, onComplete, onNextPuzzle, tutorialStep }: GamePro
               currentTileColor={
                 gameState.grid[gameState.robot.position.y]?.[gameState.robot.position.x]?.color
               }
+              stepCount={gameState.steps}
               disabled={editingDisabled}
               tutorialStep={tutorialStep}
               onFunctionSelect={setCurrentFunction}
@@ -553,6 +558,12 @@ export function Game({ puzzle, onComplete, onNextPuzzle, tutorialStep }: GamePro
                   <RotateCcw size={18} />
                   Try Again
                 </button>
+                {onBack && (
+                  <button className={styles.backButton} onClick={onBack}>
+                    <Library size={18} />
+                    Back to Puzzles
+                  </button>
+                )}
                 {onNextPuzzle && (
                   <button className={styles.nextButton} onClick={onNextPuzzle}>
                     Next Puzzle
@@ -577,15 +588,27 @@ export function Game({ puzzle, onComplete, onNextPuzzle, tutorialStep }: GamePro
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.8, y: 20 }}
             >
-              <XCircle size={56} className={styles.failIcon} />
+              <div className={styles.failIconWrapper}>
+                <XCircle size={48} className={styles.failIcon} />
+              </div>
               <h2 className={styles.modalTitle}>Robot Lost!</h2>
               <p className={styles.modalStats}>
-                The robot fell off the board or got stuck
+                The robot fell off the board.
+                <br />
+                <span className={styles.modalHint}>Adjust your program and try again!</span>
               </p>
-              <button className={styles.tryAgainButton} onClick={reset}>
-                <RotateCcw size={18} />
-                Try Again
-              </button>
+              <div className={styles.modalButtons}>
+                <button className={styles.tryAgainButton} onClick={reset}>
+                  <RotateCcw size={18} />
+                  Try Again
+                </button>
+                {onBack && (
+                  <button className={styles.backButton} onClick={onBack}>
+                    <Library size={18} />
+                    Back to Puzzles
+                  </button>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}

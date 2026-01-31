@@ -1,17 +1,32 @@
 // Configuration for puzzle generation system
 
-import type { GenerationConfig, MechanicCategory, SolverConfig } from './types';
+import type { GenerationConfig, MechanicCategory } from './types';
 
-// Default solver configuration
-// Keep generations low - if we can't find solution quickly, puzzle is too hard
-export const DEFAULT_SOLVER_CONFIG: SolverConfig = {
-  populationSize: 40,
-  maxGenerations: 100,
-  stagnationLimit: 20,
-  tournamentSize: 4,
-  eliteCount: 3,
-  mutationRate: 0.2,
-  crossoverRate: 0.7,
+// Timeout configuration - guarantees bounded execution
+export const TIMEOUT_CONFIG = {
+  perPuzzleMs: 20000, // 20 seconds max per puzzle
+  trivialityMs: 1000, // 1 second for triviality check
+  verificationMs: 100, // 100ms for verification
+  totalGenerationMs: 1500000, // 25 minutes total
+};
+
+// Triviality check configuration
+export const TRIVIALITY_CONFIG = {
+  maxProgramsToTest: 2000, // Absolute program limit
+  maxStepsPerProgram: 100, // Hard cutoff per program
+};
+
+// Hard requirements for a solution to be considered valid
+// Used by both complexity checking and triviality checking
+export const HARD_REQUIREMENTS = {
+  minStackDepth: 3, // Recursive depth reached
+  minFunctions: 2, // Functions used
+  maxFunctions: 4, // Maximum functions (avoid overly complex)
+  minConditionals: 3, // Conditionals applied
+  minInstructions: 4, // Non-null instructions
+  minSteps: 12, // Execution steps
+  maxSteps: 200, // Maximum steps (avoid overly long)
+  minStepsPerInstruction: 3, // 1:3 ratio (ensures looping/recursion)
 };
 
 // Default generation configuration

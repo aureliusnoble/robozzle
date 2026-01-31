@@ -2,7 +2,76 @@
 
 import type { Program, PuzzleConfig, Tile } from '../../src/engine/types';
 import type { PruningResult } from './types';
-import { getVisitedTiles, quickEvaluate } from './fitness';
+import { runProgram } from './verifier';
+
+// Get visited tiles during execution
+function getVisitedTiles(puzzle: PuzzleConfig, program: Program): Set<string> {
+  const result = runProgram(puzzle, program);
+  // We need to track visited tiles - let's create a simple version
+  const grid = puzzle.grid.map(row => row.map(tile => tile ? { ...tile } : null));
+  const visited = new Set<string>();
+
+  let pos = { ...puzzle.robotStart.position };
+  let dir = puzzle.robotStart.direction;
+  visited.add(`${pos.x},${pos.y}`);
+
+  const DIRECTION_DELTAS: Record<string, { x: number; y: number }> = {
+    up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 },
+  };
+  const TURN_LEFT: Record<string, string> = { up: 'left', left: 'down', down: 'right', right: 'up' };
+  const TURN_RIGHT: Record<string, string> = { up: 'right', right: 'down', down: 'left', left: 'up' };
+
+  type FunctionName = 'f1' | 'f2' | 'f3' | 'f4' | 'f5';
+  const queue: Array<[FunctionName, number]> = [['f1', 0]];
+  let steps = 0;
+  const maxSteps = 500;
+
+  while (queue.length > 0 && steps < maxSteps) {
+    const [funcName, idx] = queue.shift()!;
+    const func = program[funcName];
+
+    if (idx >= func.length) {
+      if (funcName === 'f1' && queue.length === 0) queue.push(['f1', 0]);
+      continue;
+    }
+
+    queue.unshift([funcName, idx + 1]);
+    const instruction = func[idx];
+    if (!instruction) continue;
+
+    const tile = grid[pos.y]?.[pos.x];
+    if (instruction.condition !== null) {
+      if (!tile || tile.color !== instruction.condition) continue;
+    }
+
+    steps++;
+
+    if (instruction.type === 'forward') {
+      const delta = DIRECTION_DELTAS[dir];
+      const newX = pos.x + delta.x;
+      const newY = pos.y + delta.y;
+      if (!grid[newY]?.[newX]) break;
+      pos = { x: newX, y: newY };
+      visited.add(`${pos.x},${pos.y}`);
+      if (grid[newY][newX]?.hasStar) grid[newY][newX]!.hasStar = false;
+    } else if (instruction.type === 'left') {
+      dir = TURN_LEFT[dir] as typeof dir;
+    } else if (instruction.type === 'right') {
+      dir = TURN_RIGHT[dir] as typeof dir;
+    } else if (['f1', 'f2', 'f3', 'f4', 'f5'].includes(instruction.type)) {
+      queue.unshift([instruction.type as FunctionName, 0]);
+    } else if (instruction.type.startsWith('paint_') && tile) {
+      tile.color = instruction.type.replace('paint_', '') as 'red' | 'green' | 'blue';
+    }
+  }
+
+  return visited;
+}
+
+// Quick check if solution still works
+function quickEvaluate(puzzle: PuzzleConfig, program: Program): { solved: boolean } {
+  return { solved: runProgram(puzzle, program).solved };
+}
 
 // Deep clone a grid
 function cloneGrid(grid: (Tile | null)[][]): (Tile | null)[][] {

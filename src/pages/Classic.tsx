@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ArrowLeft, Check, Circle, Loader2, Star, Library } from 'lucide-react';
 import { Game } from '../components/game';
 import { usePuzzleStore } from '../stores/puzzleStore';
@@ -17,12 +18,18 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 type DifficultyFilter = 'all' | 'easy' | 'medium' | 'hard' | 'expert' | 'impossible';
 
 export function Classic() {
+  const location = useLocation();
   const { classicPuzzlesMeta, isLoadingClassic, isLoadingPuzzle, loadClassicPuzzles, fetchPuzzle } = usePuzzleStore();
   const { progress, updateProgress } = useAuthStore();
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [filter, setFilter] = useState<DifficultyFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleCount, setVisibleCount] = useState(100);
+
+  // Reset selected puzzle when navigating to /classic (e.g., clicking footer link)
+  useEffect(() => {
+    setSelectedPuzzle(null);
+  }, [location.key]);
 
   useEffect(() => {
     loadClassicPuzzles();
@@ -89,6 +96,7 @@ export function Classic() {
         <Game
           puzzle={selectedPuzzle}
           onComplete={handleComplete}
+          onBack={handleBack}
         />
       </div>
     );

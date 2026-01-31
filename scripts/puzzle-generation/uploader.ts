@@ -1,6 +1,7 @@
 // Database upload logic for generated puzzles
 
 import { createClient } from '@supabase/supabase-js';
+import * as fs from 'fs';
 import type { GeneratedPuzzleConfig, MechanicCategory, PuzzleBatch } from './types';
 
 // Get Supabase client from environment variables
@@ -179,7 +180,6 @@ export async function getPoolStats(): Promise<{
 
 // Save batch to local JSON file (for offline/testing)
 export function saveBatchToFile(batch: PuzzleBatch, filepath: string): void {
-  const fs = require('fs');
   const json = JSON.stringify(batch, null, 2);
   fs.writeFileSync(filepath, json, 'utf-8');
   console.log(`Saved ${batch.puzzles.length} puzzles to ${filepath}`);
@@ -188,7 +188,6 @@ export function saveBatchToFile(batch: PuzzleBatch, filepath: string): void {
 // Load batch from local JSON file
 export function loadBatchFromFile(filepath: string): PuzzleBatch | null {
   try {
-    const fs = require('fs');
     const json = fs.readFileSync(filepath, 'utf-8');
     return JSON.parse(json) as PuzzleBatch;
   } catch (err) {

@@ -12,6 +12,7 @@ interface FunctionSlotsProps {
   currentFunction: FunctionName;
   executionPosition: { functionName: FunctionName; index: number } | null;
   currentTileColor?: TileColor | null; // Color of tile robot is currently on
+  stepCount?: number; // Number of steps executed (to hide LAST on first step)
   disabled?: boolean;
   tutorialStep?: number; // For progressive disclosure
   onFunctionSelect: (func: FunctionName) => void;
@@ -196,6 +197,7 @@ export function FunctionSlots({
   currentFunction,
   executionPosition,
   currentTileColor,
+  stepCount = 0,
   disabled,
   tutorialStep,
   onFunctionSelect,
@@ -287,6 +289,11 @@ export function FunctionSlots({
 
   // Calculate "NOW" - the instruction that just executed
   const getExecutingSlotIndex = (): number | null => {
+    // Don't show LAST on the very first instruction - there's no "previous" to compare to
+    if (stepCount <= 1) {
+      return null;
+    }
+
     if (!executionPosition || executionPosition.functionName !== currentFunction) {
       return null;
     }
