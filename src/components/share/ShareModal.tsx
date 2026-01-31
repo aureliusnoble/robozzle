@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X, Image, Link } from 'lucide-react';
 import type { PuzzleConfig, Program } from '../../engine/types';
 import { ShareCard } from './ShareCard';
-import { generateShareDataUrl, downloadShareImage, shareImage } from '../../lib/shareImageGenerator';
+import { generateShareDataUrl } from '../../lib/shareImageGenerator';
 import { copyToClipboard } from '../../lib/shareGenerator';
 import styles from './ShareModal.module.css';
 
@@ -80,32 +81,30 @@ export function ShareModal({
     }
   }, [isOpen, includeSolution, generateImage]);
 
-  const handleShare = async () => {
-    if (!cardRef.current) return;
+  const [imageCopied, setImageCopied] = useState(false);
 
-    // Check if we can share files (Web Share API level 2)
-    let canShareFiles = false;
+  const handleCopyImage = async () => {
+    if (!imageUrl) return;
+
     try {
-      const testFile = new File([''], 'test.png', { type: 'image/png' });
-      canShareFiles = 'canShare' in navigator && navigator.canShare({ files: [testFile] });
-    } catch {
-      canShareFiles = false;
-    }
+      // Convert data URL to blob
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
 
-    if (canShareFiles) {
-      const success = await shareImage(
-        cardRef.current,
-        category === 'daily' ? `RoboZZle Daily #${effectiveDailyNumber}` : `RoboZZle: ${puzzle.title}`,
-        shareUrl
-      );
-      if (success) {
-        onClose();
-        return;
-      }
-    }
+      // Try to copy to clipboard
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob,
+        }),
+      ]);
 
-    // Fall back to copying URL
-    await handleCopyLink();
+      setImageCopied(true);
+      setTimeout(() => setImageCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy image:', err);
+      // Fallback: copy the link instead
+      await handleCopyLink();
+    }
   };
 
   const handleCopyLink = async () => {
@@ -114,14 +113,6 @@ export function ShareModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  };
-
-  const handleDownload = async () => {
-    if (!cardRef.current) return;
-    const filename = category === 'daily'
-      ? `robozzle-daily-${date || 'challenge'}.png`
-      : `robozzle-${puzzle.id}.png`;
-    await downloadShareImage(cardRef.current, filename);
   };
 
   return (
@@ -144,7 +135,7 @@ export function ShareModal({
             <div className={styles.header}>
               <h2 className={styles.title}>Share Your Result</h2>
               <button className={styles.closeButton} onClick={onClose}>
-                {'\u2715'}
+                <X size={20} />
               </button>
             </div>
 
@@ -174,29 +165,16 @@ export function ShareModal({
 
             {/* Actions */}
             <div className={styles.actions}>
-              <button className={styles.shareButton} onClick={handleShare}>
-                {'\uD83D\uDCE4'} Share
+              <button className={styles.shareButton} onClick={handleCopyImage} disabled={!imageUrl}>
+                <Image size={18} />
+                {imageCopied ? 'Copied!' : 'Copy Image'}
               </button>
               <button className={styles.copyButton} onClick={handleCopyLink}>
-                {'\uD83D\uDD17'} Copy Link
-              </button>
-              <button className={styles.downloadButton} onClick={handleDownload}>
-                {'\u2B07'} Download
+                <Link size={18} />
+                {copied ? 'Copied!' : 'Copy Link'}
               </button>
             </div>
 
-            <AnimatePresence>
-              {copied && (
-                <motion.div
-                  className={styles.copiedMessage}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  Link copied to clipboard!
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         </motion.div>
       )}

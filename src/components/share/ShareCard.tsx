@@ -97,10 +97,10 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
     const gridCols = maxX - minX + 1;
     const gridRows = maxY - minY + 1;
 
-    // Calculate tile size to fit grid nicely (max 200px width for grid area)
-    const maxGridWidth = 200;
-    const tileSize = Math.min(24, Math.floor(maxGridWidth / gridCols));
-    const tileGap = 2;
+    // Calculate tile size to fit grid nicely (max 280px width for grid area)
+    const maxGridWidth = 280;
+    const tileSize = Math.min(36, Math.floor(maxGridWidth / gridCols));
+    const tileGap = 3;
 
     const gridWidth = gridCols * (tileSize + tileGap) - tileGap;
     const gridHeight = gridRows * (tileSize + tileGap) - tileGap;
@@ -321,14 +321,14 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                       <div
                         key={idx}
                         style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 6,
+                          width: 36,
+                          height: 36,
+                          borderRadius: 8,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: inst.type.startsWith('f') ? 10 : 14,
-                          fontWeight: 600,
+                          fontSize: inst.type.startsWith('f') ? 14 : 20,
+                          fontWeight: 700,
                           color: 'white',
                           boxShadow: hasCondition ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.2)',
                           ...pillStyle,
@@ -337,8 +337,8 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                         {isPaint ? (
                           <span
                             style={{
-                              width: 12,
-                              height: 12,
+                              width: 16,
+                              height: 16,
                               borderRadius: '50%',
                               background:
                                 paintColor === 'red'

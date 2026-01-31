@@ -44,10 +44,12 @@
   background: #F1F5F9;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
   color: #64748B;
   transition: all 0.15s;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .closeButton:hover {
@@ -135,10 +137,9 @@
 }
 
 .shareButton,
-.copyButton,
-.downloadButton {
+.copyButton {
   flex: 1;
-  padding: 0.75rem 0.5rem;
+  padding: 0.75rem 1rem;
   border-radius: 10px;
   border: none;
   font-size: 0.875rem;
@@ -149,7 +150,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .shareButton {
@@ -157,8 +158,13 @@
   color: white;
 }
 
-.shareButton:hover {
+.shareButton:hover:not(:disabled) {
   background: #4F46E5;
+}
+
+.shareButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .copyButton {
@@ -168,25 +174,6 @@
 
 .copyButton:hover {
   background: #E2E8F0;
-}
-
-.downloadButton {
-  background: #F1F5F9;
-  color: #475569;
-}
-
-.downloadButton:hover {
-  background: #E2E8F0;
-}
-
-.copiedMessage {
-  text-align: center;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: #DCFCE7;
-  color: #166534;
-  border-radius: 8px;
-  font-weight: 500;
 }
 
 /* Mobile optimizations */
@@ -215,8 +202,7 @@
   }
 
   .shareButton,
-  .copyButton,
-  .downloadButton {
+  .copyButton {
     padding: 0.875rem;
   }
 }
