@@ -10,6 +10,7 @@ import type {
   Program,
   TileColor,
 } from '../../src/engine/types';
+import { BASELINE_REQUIREMENTS } from './config';
 
 // Seeded random number generator
 export class SeededRandom {
@@ -864,8 +865,8 @@ function tracePath(
   // Verify the solution meets requirements
   const verified =
     path.length >= 5 &&
-    conditionalCount >= HARD_REQUIREMENTS.minConditionals &&
-    maxStackDepth >= HARD_REQUIREMENTS.minStackDepth;
+    conditionalCount >= BASELINE_REQUIREMENTS.minConditionals &&
+    maxStackDepth >= BASELINE_REQUIREMENTS.minStackDepth;
 
   return { path, verified };
 }

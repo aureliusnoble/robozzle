@@ -82,23 +82,6 @@ export interface RejectionFlags {
   tooEasy: boolean;            // Solved in first few generations
 }
 
-// Template system for guided generation
-export interface PuzzleTemplate {
-  name: string;
-  category: MechanicCategory;
-  description: string;
-  minSlots: number;
-  maxSlots: number;
-  requiredInstructions: InstructionType[];
-  optionalInstructions: InstructionType[];
-  minColors: number;
-  maxColors: number;
-  minStars: number;
-  maxStars: number;
-  pathComplexity: 'simple' | 'branching' | 'looping';
-  generate: (config: GenerationConfig) => PuzzleCandidate;
-}
-
 // Pruning result
 export interface PruningResult {
   prunedGrid: (Tile | null)[][];

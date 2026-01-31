@@ -6,14 +6,13 @@ import { supabase } from '../lib/supabase';
 import type { PuzzleConfig } from '../engine/types';
 import styles from './DevMode.module.css';
 
-type MechanicCategory = 'conditionals' | 'recursion' | 'painting' | 'multi-func' | 'loop';
-
 interface GeneratedPuzzle {
   id: string;
   title: string;
   difficulty: string;
   generation_source: string;
-  mechanic_category: MechanicCategory | null;
+  profile_name: string | null;
+  uses_painting: boolean | null;
   solver_difficulty_score: number | null;
   quality_score: number | null;
   solution_instruction_count: number | null;
@@ -23,13 +22,21 @@ interface GeneratedPuzzle {
   pool_id: string | null;
 }
 
-const CATEGORY_COLORS: Record<MechanicCategory, string> = {
-  conditionals: '#3B82F6',
-  recursion: '#8B5CF6',
-  painting: '#EC4899',
-  'multi-func': '#F59E0B',
-  loop: '#10B981',
+// Colors for different profiles
+const PROFILE_COLORS: Record<string, string> = {
+  'Deep Recursion': '#8B5CF6',
+  'Multi-Function': '#F59E0B',
+  'Painter': '#EC4899',
+  'Efficient Looper': '#10B981',
+  'Instruction Heavy': '#3B82F6',
+  'High Conditionals': '#EF4444',
+  'Balanced': '#6B7280',
 };
+
+function getProfileColor(profileName: string | null): string {
+  if (!profileName) return '#6B7280';
+  return PROFILE_COLORS[profileName] || '#6B7280';
+}
 
 export function DevMode() {
   const { user } = useAuthStore();
@@ -37,7 +44,7 @@ export function DevMode() {
   const [puzzles, setPuzzles] = useState<GeneratedPuzzle[]>([]);
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<MechanicCategory | 'all'>('all');
+  const [filter, setFilter] = useState<string>('all');
   const [showUsed, setShowUsed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -141,7 +148,7 @@ export function DevMode() {
         .from('generated_puzzle_pool')
         .insert({
           puzzle_id: puzzleId,
-          mechanic_category: puzzle.mechanic_category,
+          profile_name: puzzle.profile_name,
           quality_score: puzzle.quality_score || 0,
         });
 
@@ -187,22 +194,25 @@ export function DevMode() {
 
   // Filter puzzles
   const filteredPuzzles = puzzles.filter(p => {
-    if (filter !== 'all' && p.mechanic_category !== filter) return false;
+    if (filter !== 'all' && p.profile_name !== filter) return false;
     if (!showUsed && p.used_for_daily) return false;
     return true;
   });
+
+  // Get unique profile names from puzzles
+  const profileNames = [...new Set(puzzles.map(p => p.profile_name).filter(Boolean))] as string[];
 
   // Calculate stats
   const stats = {
     total: puzzles.length,
     inPool: puzzles.filter(p => p.pool_id).length,
     used: puzzles.filter(p => p.used_for_daily).length,
-    byCategory: Object.fromEntries(
-      (['conditionals', 'recursion', 'painting', 'multi-func', 'loop'] as MechanicCategory[]).map(cat => [
-        cat,
-        puzzles.filter(p => p.mechanic_category === cat && p.pool_id && !p.used_for_daily).length,
+    byProfile: Object.fromEntries(
+      profileNames.map(profile => [
+        profile,
+        puzzles.filter(p => p.profile_name === profile && p.pool_id && !p.used_for_daily).length,
       ])
-    ) as Record<MechanicCategory, number>,
+    ) as Record<string, number>,
   };
 
   // Access denied
@@ -281,16 +291,16 @@ export function DevMode() {
         </div>
       </div>
 
-      {/* Category breakdown */}
+      {/* Profile breakdown */}
       <div className={styles.categoryStats}>
-        {(['conditionals', 'recursion', 'painting', 'multi-func', 'loop'] as MechanicCategory[]).map(cat => (
+        {profileNames.map(profile => (
           <div
-            key={cat}
+            key={profile}
             className={styles.categoryStat}
-            style={{ borderColor: CATEGORY_COLORS[cat] }}
+            style={{ borderColor: getProfileColor(profile) }}
           >
-            <span className={styles.categoryName}>{cat}</span>
-            <span className={styles.categoryCount}>{stats.byCategory[cat]} avail</span>
+            <span className={styles.categoryName}>{profile}</span>
+            <span className={styles.categoryCount}>{stats.byProfile[profile]} avail</span>
           </div>
         ))}
       </div>
@@ -304,14 +314,14 @@ export function DevMode() {
           >
             All
           </button>
-          {(['conditionals', 'recursion', 'painting', 'multi-func', 'loop'] as MechanicCategory[]).map(cat => (
+          {profileNames.map(profile => (
             <button
-              key={cat}
-              className={`${styles.filterButton} ${filter === cat ? styles.active : ''}`}
-              onClick={() => setFilter(cat)}
-              style={{ borderColor: filter === cat ? CATEGORY_COLORS[cat] : undefined }}
+              key={profile}
+              className={`${styles.filterButton} ${filter === profile ? styles.active : ''}`}
+              onClick={() => setFilter(profile)}
+              style={{ borderColor: filter === profile ? getProfileColor(profile) : undefined }}
             >
-              {cat}
+              {profile}
             </button>
           ))}
         </div>
@@ -346,13 +356,16 @@ export function DevMode() {
             >
               <div className={styles.puzzleHeader}>
                 <h3 className={styles.puzzleTitle}>{puzzle.title}</h3>
-                {puzzle.mechanic_category && (
+                {puzzle.profile_name && (
                   <span
                     className={styles.categoryBadge}
-                    style={{ background: CATEGORY_COLORS[puzzle.mechanic_category] }}
+                    style={{ background: getProfileColor(puzzle.profile_name) }}
                   >
-                    {puzzle.mechanic_category}
+                    {puzzle.profile_name}
                   </span>
+                )}
+                {puzzle.uses_painting && (
+                  <span className={styles.paintBadge}>Paint</span>
                 )}
               </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
@@ -6,7 +6,7 @@ import type { LeaderboardEntry, Program } from '../engine/types';
 import { assignRanks } from '../lib/scoring';
 
 export function useDailyPuzzle() {
-  const { dailyChallenge, isLoadingDaily, loadDailyChallenge } = usePuzzleStore();
+  const { dailyChallenge, isLoadingDaily, loadDailyChallenge, loadDailyChallengeForDate } = usePuzzleStore();
   const { user, progress, updateProgress } = useAuthStore();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
@@ -16,6 +16,13 @@ export function useDailyPuzzle() {
   useEffect(() => {
     loadDailyChallenge();
   }, [loadDailyChallenge]);
+
+  // Load a specific date's challenge
+  const loadSpecificDate = useCallback((date: string) => {
+    if (loadDailyChallengeForDate) {
+      loadDailyChallengeForDate(date);
+    }
+  }, [loadDailyChallengeForDate]);
 
   // Check if user has completed today's challenge
   useEffect(() => {
@@ -120,5 +127,6 @@ export function useDailyPuzzle() {
     userRank,
     hasCompleted,
     submitSolution,
+    loadSpecificDate,
   };
 }

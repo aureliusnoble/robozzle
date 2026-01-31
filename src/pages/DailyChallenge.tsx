@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Game } from '../components/game';
 import { DailyLeaderboard } from '../components/leaderboard';
 import { ShareModal } from '../components/share';
@@ -9,15 +10,25 @@ import { useGameStore } from '../stores/gameStore';
 import styles from './DailyChallenge.module.css';
 
 export function DailyChallenge() {
-  const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution } = useDailyPuzzle();
+  const [searchParams] = useSearchParams();
+  const dateParam = searchParams.get('date');
+
+  const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution, loadSpecificDate } = useDailyPuzzle();
   const { user, isAuthenticated } = useAuthStore();
-  const { gameState } = useGameStore();
+  const { getProgram } = useGameStore();
   const [showShare, setShowShare] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [completedState, setCompletedState] = useState<{
     steps: number;
     instructions: number;
   } | null>(null);
+
+  // Load specific date if provided in URL
+  useEffect(() => {
+    if (dateParam && loadSpecificDate) {
+      loadSpecificDate(dateParam);
+    }
+  }, [dateParam, loadSpecificDate]);
 
   const handleComplete = useCallback(
     async (steps: number, instructions: number) => {
@@ -45,7 +56,7 @@ export function DailyChallenge() {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          <span className={styles.errorIcon}>😕</span>
+          <span className={styles.errorIcon}>:(</span>
           <h2>No Challenge Today</h2>
           <p>Check back later for today's puzzle.</p>
         </div>
@@ -53,7 +64,7 @@ export function DailyChallenge() {
     );
   }
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const displayDate = new Date(dailyChallenge.date + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -64,7 +75,7 @@ export function DailyChallenge() {
     <div className={styles.container}>
       <header className={styles.header}>
         <h1 className={styles.title}>Daily Challenge</h1>
-        <p className={styles.date}>{today}</p>
+        <p className={styles.date}>{displayDate}</p>
       </header>
 
       <div className={styles.content}>
@@ -89,7 +100,7 @@ export function DailyChallenge() {
                 className={styles.shareButton}
                 onClick={() => setShowShare(true)}
               >
-                📤 Share Result
+                Share Result
               </button>
             </div>
           )}
@@ -111,15 +122,15 @@ export function DailyChallenge() {
       </div>
 
       {/* Share Modal */}
-      {dailyChallenge && gameState && completedState && (
+      {dailyChallenge && completedState && (
         <ShareModal
           isOpen={showShare}
           onClose={() => setShowShare(false)}
           puzzle={dailyChallenge.puzzle}
-          gameState={gameState}
-          instructionsUsed={completedState.instructions}
+          program={getProgram() || undefined}
+          stats={completedState}
+          category="daily"
           date={dailyChallenge.date}
-          rank={userRank || undefined}
         />
       )}
 

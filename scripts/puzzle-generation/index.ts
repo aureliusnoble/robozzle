@@ -542,19 +542,19 @@ async function main() {
     ? await generatePuzzlesParallel(args.count, args.workers, args.seed)
     : await generatePuzzles(args.count, args.seed, args.verbose);
 
-  // Create batch
+  // Create batch with profile stats
+  const byProfile: Record<string, number> = {};
+  for (const gp of generatedPuzzles) {
+    const profileName = gp.puzzle.profileName || 'unknown';
+    byProfile[profileName] = (byProfile[profileName] || 0) + 1;
+  }
+
   const batch: PuzzleBatch = {
     puzzles: generatedPuzzles.map(g => g.puzzle),
     generatedAt: new Date(),
     totalGenerated: generatedPuzzles.length,
     totalPassed: generatedPuzzles.length,
-    byCategory: {
-      conditionals: 0,
-      recursion: 0,
-      painting: 0,
-      'multi-func': generatedPuzzles.length, // All puzzles are multi-mechanic
-      loop: 0,
-    },
+    byProfile,
   };
 
   // Print summary stats

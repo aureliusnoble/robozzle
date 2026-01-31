@@ -2,7 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
-import type { GeneratedPuzzleConfig, MechanicCategory, PuzzleBatch } from './types';
+import type { GeneratedPuzzleConfig, PuzzleBatch } from './types';
 
 // Get Supabase client from environment variables
 function getSupabaseClient() {
@@ -33,7 +33,8 @@ function puzzleToDbFormat(puzzle: GeneratedPuzzleConfig) {
     quality_score: puzzle.qualityScore,
     solution_instruction_count: puzzle.solutionInstructionCount,
     solution_step_count: puzzle.solutionStepCount,
-    mechanic_category: puzzle.mechanicCategory,
+    profile_name: puzzle.profileName || null,
+    uses_painting: puzzle.usesPainting || false,
   };
 }
 
@@ -60,7 +61,7 @@ export async function uploadPuzzle(puzzle: GeneratedPuzzleConfig): Promise<{ suc
 // Add puzzle to generated pool
 export async function addToPool(
   puzzleId: string,
-  mechanicCategory: MechanicCategory,
+  profileName: string | undefined,
   qualityScore: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -70,7 +71,7 @@ export async function addToPool(
       .from('generated_puzzle_pool')
       .insert({
         puzzle_id: puzzleId,
-        mechanic_category: mechanicCategory,
+        profile_name: profileName || null,
         quality_score: qualityScore,
         used_for_daily: null,
       });
@@ -108,7 +109,7 @@ export async function uploadBatch(batch: PuzzleBatch): Promise<{
     // Add to pool
     const poolResult = await addToPool(
       puzzle.id,
-      puzzle.mechanicCategory,
+      puzzle.profileName,
       puzzle.qualityScore
     );
 
@@ -133,45 +134,39 @@ export async function uploadBatch(batch: PuzzleBatch): Promise<{
 export async function getPoolStats(): Promise<{
   total: number;
   unused: number;
-  byCategory: Record<MechanicCategory, { total: number; unused: number }>;
+  byProfile: Record<string, { total: number; unused: number }>;
 } | null> {
   try {
     const supabase = getSupabaseClient();
 
     const { data, error } = await supabase
       .from('generated_puzzle_pool')
-      .select('mechanic_category, used_for_daily');
+      .select('profile_name, used_for_daily');
 
     if (error || !data) {
       console.error('Error fetching pool stats:', error);
       return null;
     }
 
-    const categories: MechanicCategory[] = ['conditionals', 'recursion', 'painting', 'multi-func', 'loop'];
-    const byCategory: Record<MechanicCategory, { total: number; unused: number }> = {
-      conditionals: { total: 0, unused: 0 },
-      recursion: { total: 0, unused: 0 },
-      painting: { total: 0, unused: 0 },
-      'multi-func': { total: 0, unused: 0 },
-      loop: { total: 0, unused: 0 },
-    };
+    const byProfile: Record<string, { total: number; unused: number }> = {};
 
     let total = 0;
     let unused = 0;
 
     for (const entry of data) {
-      const cat = entry.mechanic_category as MechanicCategory;
-      if (categories.includes(cat)) {
-        byCategory[cat].total++;
-        total++;
-        if (!entry.used_for_daily) {
-          byCategory[cat].unused++;
-          unused++;
-        }
+      const profile = entry.profile_name || 'unknown';
+      if (!byProfile[profile]) {
+        byProfile[profile] = { total: 0, unused: 0 };
+      }
+      byProfile[profile].total++;
+      total++;
+      if (!entry.used_for_daily) {
+        byProfile[profile].unused++;
+        unused++;
       }
     }
 
-    return { total, unused, byCategory };
+    return { total, unused, byProfile };
   } catch (err) {
     console.error('Error getting pool stats:', err);
     return null;

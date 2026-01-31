@@ -21,6 +21,7 @@ interface PuzzleStore {
   loadTutorials: () => void;
   loadClassicPuzzles: () => Promise<void>;
   loadDailyChallenge: () => Promise<void>;
+  loadDailyChallengeForDate: (date: string) => Promise<void>;
   loadDailyArchive: () => Promise<void>;
   fetchPuzzle: (id: string) => Promise<PuzzleConfig | null>;
   getPuzzleById: (id: string) => PuzzleConfig | null;
@@ -150,6 +151,41 @@ export const usePuzzleStore = create<PuzzleStore>()(
         } catch (e) {
           console.error('Error loading daily challenge:', e);
           const fallback = await generateFallbackDaily(get, today);
+          set({ dailyChallenge: fallback, isLoadingDaily: false });
+        }
+      },
+
+      loadDailyChallengeForDate: async (date: string) => {
+        set({ isLoadingDaily: true });
+
+        try {
+          const { data: daily, error } = await supabase
+            .from('daily_challenges')
+            .select('*, puzzles(*)')
+            .eq('date', date)
+            .single();
+
+          if (error) {
+            console.error('Error loading daily challenge for date:', error);
+            // Generate a fallback daily from classic puzzles metadata
+            const fallback = await generateFallbackDaily(get, date);
+            set({ dailyChallenge: fallback, isLoadingDaily: false });
+          } else if (daily && daily.puzzles) {
+            set({
+              dailyChallenge: {
+                date: daily.date,
+                puzzleId: daily.puzzle_id,
+                puzzle: parsePuzzleFromDB(daily.puzzles),
+              },
+              isLoadingDaily: false,
+            });
+          } else {
+            const fallback = await generateFallbackDaily(get, date);
+            set({ dailyChallenge: fallback, isLoadingDaily: false });
+          }
+        } catch (e) {
+          console.error('Error loading daily challenge for date:', e);
+          const fallback = await generateFallbackDaily(get, date);
           set({ dailyChallenge: fallback, isLoadingDaily: false });
         }
       },

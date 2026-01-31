@@ -13,8 +13,10 @@
   background: white;
   border-radius: 16px;
   padding: 1.5rem;
-  max-width: 400px;
+  max-width: 440px;
   width: calc(100% - 2rem);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   z-index: 101;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
@@ -49,6 +51,80 @@
   background: #E2E8F0;
 }
 
+/* Image Preview */
+.imagePreview {
+  background: #1E293B;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.previewImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.generating {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+/* Toggle */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  display: none;
+}
+
+.toggleSlider {
+  width: 44px;
+  height: 24px;
+  background: #E2E8F0;
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggleSlider::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle input:checked + .toggleSlider {
+  background: #6366F1;
+}
+
+.toggle input:checked + .toggleSlider::after {
+  transform: translateX(20px);
+}
+
+.toggleLabel {
+  color: #475569;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Legacy preview for text */
 .preview {
   background: #1E293B;
   border-radius: 12px;
@@ -68,19 +144,21 @@
 
 .actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .shareButton,
-.copyButton {
+.copyButton,
+.downloadButton {
   flex: 1;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0.5rem;
   border-radius: 10px;
   border: none;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 
 .shareButton {
@@ -98,6 +176,15 @@
 }
 
 .copyButton:hover {
+  background: #E2E8F0;
+}
+
+.downloadButton {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.downloadButton:hover {
   background: #E2E8F0;
 }
 

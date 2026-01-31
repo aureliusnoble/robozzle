@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, Circle, Loader2, Star, Library } from 'lucide-react';
 import { Game } from '../components/game';
+import { ShareModal } from '../components/share';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useAuthStore } from '../stores/authStore';
+import { useGameStore } from '../stores/gameStore';
 import type { PuzzleConfig, PuzzleMetadata } from '../engine/types';
 import styles from './Classic.module.css';
 
@@ -19,21 +21,46 @@ type DifficultyFilter = 'all' | 'easy' | 'medium' | 'hard' | 'expert' | 'impossi
 
 export function Classic() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const puzzleParam = searchParams.get('puzzle');
+
   const { classicPuzzlesMeta, isLoadingClassic, isLoadingPuzzle, loadClassicPuzzles, fetchPuzzle } = usePuzzleStore();
   const { progress, updateProgress } = useAuthStore();
+  const { getProgram } = useGameStore();
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [filter, setFilter] = useState<DifficultyFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleCount, setVisibleCount] = useState(100);
+  const [showShare, setShowShare] = useState(false);
+  const [completedState, setCompletedState] = useState<{
+    steps: number;
+    instructions: number;
+  } | null>(null);
 
   // Reset selected puzzle when navigating to /classic (e.g., clicking footer link)
   useEffect(() => {
-    setSelectedPuzzle(null);
-  }, [location.key]);
+    if (!puzzleParam) {
+      setSelectedPuzzle(null);
+      setCompletedState(null);
+    }
+  }, [location.key, puzzleParam]);
 
   useEffect(() => {
     loadClassicPuzzles();
   }, [loadClassicPuzzles]);
+
+  // Handle puzzle URL parameter
+  useEffect(() => {
+    if (puzzleParam && classicPuzzlesMeta.length > 0) {
+      const loadPuzzleFromUrl = async () => {
+        const puzzle = await fetchPuzzle(puzzleParam);
+        if (puzzle) {
+          setSelectedPuzzle(puzzle);
+        }
+      };
+      loadPuzzleFromUrl();
+    }
+  }, [puzzleParam, classicPuzzlesMeta, fetchPuzzle]);
 
   // Reset visible count when filter or search changes
   useEffect(() => {
@@ -54,10 +81,13 @@ export function Classic() {
     const puzzle = await fetchPuzzle(meta.id);
     if (puzzle) {
       setSelectedPuzzle(puzzle);
+      setCompletedState(null);
     }
   };
 
-  const handleComplete = async () => {
+  const handleComplete = async (steps: number, instructions: number) => {
+    setCompletedState({ steps, instructions });
+
     if (selectedPuzzle && progress) {
       const newSolved = [...(progress.classicSolved || [])];
       if (!newSolved.includes(selectedPuzzle.id)) {
@@ -69,6 +99,9 @@ export function Classic() {
 
   const handleBack = () => {
     setSelectedPuzzle(null);
+    setCompletedState(null);
+    // Clear URL param
+    window.history.replaceState({}, '', '/classic');
   };
 
   const solvedCount = progress?.classicSolved?.length || 0;
@@ -98,6 +131,30 @@ export function Classic() {
           onComplete={handleComplete}
           onBack={handleBack}
         />
+
+        {/* Completion actions */}
+        {completedState && (
+          <div className={styles.completionActions}>
+            <button
+              className={styles.shareButton}
+              onClick={() => setShowShare(true)}
+            >
+              Share Result
+            </button>
+          </div>
+        )}
+
+        {/* Share Modal */}
+        {completedState && (
+          <ShareModal
+            isOpen={showShare}
+            onClose={() => setShowShare(false)}
+            puzzle={selectedPuzzle}
+            program={getProgram() || undefined}
+            stats={completedState}
+            category="classic"
+          />
+        )}
       </div>
     );
   }

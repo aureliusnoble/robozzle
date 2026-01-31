@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/ui';
 import { Home, DailyChallenge, Tutorial, Classic, Leaderboard, Auth, DevMode } from './pages';
+import { UsernamePrompt } from './components/auth';
 import { useAuthStore } from './stores/authStore';
 
 function App() {
@@ -26,6 +27,8 @@ function App() {
           <Route path="/dev" element={<DevMode />} />
         </Routes>
       </Layout>
+      {/* Username prompt for Google OAuth users who need to set a username */}
+      <UsernamePrompt />
     </BrowserRouter>
   );
 }
