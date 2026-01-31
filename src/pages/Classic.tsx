@@ -130,19 +130,8 @@ export function Classic() {
           puzzle={selectedPuzzle}
           onComplete={handleComplete}
           onBack={handleBack}
+          onShare={completedState ? () => setShowShare(true) : undefined}
         />
-
-        {/* Completion actions */}
-        {completedState && (
-          <div className={styles.completionActions}>
-            <button
-              className={styles.shareButton}
-              onClick={() => setShowShare(true)}
-            >
-              Share Result
-            </button>
-          </div>
-        )}
 
         {/* Share Modal */}
         {completedState && (

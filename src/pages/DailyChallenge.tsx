@@ -83,24 +83,17 @@ export function DailyChallenge() {
           <Game
             puzzle={dailyChallenge.puzzle}
             onComplete={handleComplete}
+            onShare={completedState ? () => setShowShare(true) : undefined}
           />
 
-          {/* Completion actions */}
-          {completedState && (
+          {/* Sign in prompt for unauthenticated users */}
+          {completedState && !isAuthenticated && (
             <div className={styles.completionActions}>
-              {!isAuthenticated && (
-                <button
-                  className={styles.signInButton}
-                  onClick={() => setShowAuth(true)}
-                >
-                  Sign in to save your score
-                </button>
-              )}
               <button
-                className={styles.shareButton}
-                onClick={() => setShowShare(true)}
+                className={styles.signInButton}
+                onClick={() => setShowAuth(true)}
               >
-                Share Result
+                Sign in to save your score
               </button>
             </div>
           )}

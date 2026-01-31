@@ -26,7 +26,7 @@ const slotCollisionDetection: CollisionDetection = (args) => {
   return pointerWithin(args);
 };
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library } from 'lucide-react';
+import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2 } from 'lucide-react';
 import type { PuzzleConfig, FunctionName, TileColor, Instruction } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import { GameBoard } from './GameBoard';
@@ -41,6 +41,7 @@ interface GameProps {
   onComplete?: (steps: number, instructions: number) => void;
   onNextPuzzle?: () => void;
   onBack?: () => void;
+  onShare?: () => void;
   tutorialStep?: number; // For progressive disclosure and onboarding
 }
 
@@ -94,7 +95,7 @@ function getDragOverlayIcon(type: string) {
   }
 }
 
-export function Game({ puzzle, onComplete, onNextPuzzle, onBack, tutorialStep }: GameProps) {
+export function Game({ puzzle, onComplete, onNextPuzzle, onBack, onShare, tutorialStep }: GameProps) {
   // Configure drag sensors with activation constraint
   // This allows clicks to work for color cycling, while drags need movement
   const pointerSensor = useSensor(PointerSensor, {
@@ -554,6 +555,12 @@ export function Game({ puzzle, onComplete, onNextPuzzle, onBack, tutorialStep }:
                 Completed in {gameState.steps} steps using {instructionsUsed} instructions
               </p>
               <div className={styles.modalButtons}>
+                {onShare && (
+                  <button className={styles.shareButton} onClick={onShare}>
+                    <Share2 size={18} />
+                    Share
+                  </button>
+                )}
                 <button className={styles.tryAgainButton} onClick={reset}>
                   <RotateCcw size={18} />
                   Try Again
