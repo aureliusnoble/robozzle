@@ -37,27 +37,71 @@ const DIRECTION_ROTATION: Record<string, number> = {
   left: 180,
 };
 
-const CONDITION_COLORS: Record<string, string> = {
-  red: 'rgba(239, 68, 68, 0.6)',
-  green: 'rgba(34, 197, 94, 0.6)',
-  blue: 'rgba(59, 130, 246, 0.6)',
+// Gradient backgrounds matching the app's instruction styling
+const CONDITION_BACKGROUNDS: Record<string, string> = {
+  red: 'linear-gradient(135deg, #EF4444, #F87171)',
+  green: 'linear-gradient(135deg, #10B981, #4ADE80)',
+  blue: 'linear-gradient(135deg, #3B82F6, #60A5FA)',
 };
 
-function getInstructionIcon(type: string): string {
+// Rainbow gradient for "any" condition
+const ANY_CONDITION_BACKGROUND = 'linear-gradient(135deg, rgba(239, 68, 68, 0.7) 0%, rgba(251, 191, 36, 0.7) 25%, rgba(34, 197, 94, 0.7) 50%, rgba(59, 130, 246, 0.7) 75%, rgba(168, 85, 247, 0.7) 100%)';
+
+// SVG icons matching Lucide icons used in the app
+function ArrowUpIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 19V5M5 12l7-7 7 7" />
+    </svg>
+  );
+}
+
+function CornerUpLeftIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 14 4 9 9 4" />
+      <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+    </svg>
+  );
+}
+
+function CornerUpRightIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 14 20 9 15 4" />
+      <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+    </svg>
+  );
+}
+
+function getInstructionContent(type: string, size: number): React.ReactNode {
+  const iconSize = Math.floor(size * 0.6);
+
   switch (type) {
-    case 'forward': return '\u2191'; // ↑
-    case 'left': return '\u21B6'; // ↶
-    case 'right': return '\u21B7'; // ↷
-    case 'paint_red': return '\uD83D\uDD8C'; // paintbrush emoji
-    case 'paint_green': return '\uD83D\uDD8C';
-    case 'paint_blue': return '\uD83D\uDD8C';
-    case 'noop': return '\u25CB'; // ○
-    case 'f1': return 'F1';
-    case 'f2': return 'F2';
-    case 'f3': return 'F3';
-    case 'f4': return 'F4';
-    case 'f5': return 'F5';
-    default: return '';
+    case 'forward':
+      return <ArrowUpIcon size={iconSize} />;
+    case 'left':
+      return <CornerUpLeftIcon size={iconSize} />;
+    case 'right':
+      return <CornerUpRightIcon size={iconSize} />;
+    case 'paint_red':
+    case 'paint_green':
+    case 'paint_blue':
+      return null; // Handled separately with paint dot
+    case 'noop':
+      return (
+        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      );
+    case 'f1':
+    case 'f2':
+    case 'f3':
+    case 'f4':
+    case 'f5':
+      return <span style={{ fontSize: Math.floor(size * 0.4), fontWeight: 700 }}>{type.toUpperCase()}</span>;
+    default:
+      return null;
   }
 }
 
@@ -279,66 +323,65 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  marginBottom: name !== nonEmptyFunctions[nonEmptyFunctions.length - 1].name ? 8 : 0,
+                  gap: 12,
+                  marginBottom: name !== nonEmptyFunctions[nonEmptyFunctions.length - 1].name ? 12 : 0,
                 }}
               >
-                {/* Function label with loop indicator for F1 */}
+                {/* Function label - styled like app tabs */}
                 <div
                   style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    width: 32,
+                    background: '#6366F1',
+                    borderRadius: 8,
+                    padding: '6px 12px',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: 'white',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 2,
+                    gap: 4,
+                    minWidth: 48,
+                    justifyContent: 'center',
                   }}
                 >
-                  {name === 'f1' && <span style={{ fontSize: 10 }}>{'\u21BB'}</span>}
                   {name.toUpperCase()}
+                  {name === 'f1' && <span style={{ fontSize: 12, opacity: 0.8 }}>↻</span>}
                 </div>
                 {/* Instructions */}
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {instructions.map((inst, idx) => {
                     if (!inst) return null;
                     const hasCondition = inst.condition !== null;
                     const isPaint = inst.type.startsWith('paint_');
                     const paintColor = isPaint ? inst.type.replace('paint_', '') : null;
+                    const instructionSize = 44;
 
-                    // Style for condition vs "any" tiles
-                    const pillStyle: React.CSSProperties = hasCondition
-                      ? {
-                          background: CONDITION_COLORS[inst.condition!],
-                        }
-                      : {
-                          // Rainbow gradient for "any" condition
-                          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.7), rgba(251, 191, 36, 0.7), rgba(34, 197, 94, 0.7), rgba(59, 130, 246, 0.7))',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                        };
+                    // Background style matching the app
+                    const backgroundStyle = hasCondition
+                      ? CONDITION_BACKGROUNDS[inst.condition!]
+                      : ANY_CONDITION_BACKGROUND;
 
                     return (
                       <div
                         key={idx}
                         style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 8,
+                          width: instructionSize,
+                          height: instructionSize,
+                          borderRadius: 10,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: inst.type.startsWith('f') ? 14 : 20,
-                          fontWeight: 700,
                           color: 'white',
-                          boxShadow: hasCondition ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.2)',
-                          ...pillStyle,
+                          background: backgroundStyle,
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                          border: hasCondition ? 'none' : '2px solid rgba(255, 255, 255, 0.4)',
+                          position: 'relative',
                         }}
                       >
                         {isPaint ? (
-                          <span
+                          <div
                             style={{
-                              width: 16,
-                              height: 16,
+                              width: instructionSize * 0.45,
+                              height: instructionSize * 0.45,
                               borderRadius: '50%',
                               background:
                                 paintColor === 'red'
@@ -346,11 +389,12 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                                   : paintColor === 'green'
                                   ? '#22C55E'
                                   : '#3B82F6',
-                              border: '2px solid white',
+                              border: '3px solid white',
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
                             }}
                           />
                         ) : (
-                          getInstructionIcon(inst.type)
+                          getInstructionContent(inst.type, instructionSize)
                         )}
                       </div>
                     );
