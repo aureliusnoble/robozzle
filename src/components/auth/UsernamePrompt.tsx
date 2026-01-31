@@ -46,19 +46,18 @@ export function UsernamePrompt() {
   return (
     <AnimatePresence>
       {needsUsername && (
-        <>
-          <motion.div
-            className={modalStyles.overlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            // No onClick - modal cannot be dismissed by clicking outside
-          />
+        <motion.div
+          className={modalStyles.overlay}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           <motion.div
             className={modalStyles.modal}
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.container}>
               <h2 className={styles.title}>Choose Your Username</h2>
@@ -106,7 +105,7 @@ export function UsernamePrompt() {
               </form>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

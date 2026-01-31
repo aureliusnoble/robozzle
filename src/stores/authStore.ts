@@ -100,7 +100,7 @@ export const useAuthStore = create<AuthStore>()(
 
       signOut: async () => {
         await supabase.auth.signOut();
-        set({ user: null, progress: null, isAuthenticated: false });
+        set({ user: null, progress: null, isAuthenticated: false, needsUsername: false });
       },
 
       fetchProfile: async () => {

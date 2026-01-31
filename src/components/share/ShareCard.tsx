@@ -302,11 +302,20 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {instructions.map((inst, idx) => {
                     if (!inst) return null;
-                    const bgColor = inst.condition
-                      ? CONDITION_COLORS[inst.condition]
-                      : '#475569';
+                    const hasCondition = inst.condition !== null;
                     const isPaint = inst.type.startsWith('paint_');
                     const paintColor = isPaint ? inst.type.replace('paint_', '') : null;
+
+                    // Style for condition vs "any" tiles
+                    const pillStyle: React.CSSProperties = hasCondition
+                      ? {
+                          background: CONDITION_COLORS[inst.condition!],
+                        }
+                      : {
+                          // Rainbow gradient for "any" condition
+                          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.7), rgba(251, 191, 36, 0.7), rgba(34, 197, 94, 0.7), rgba(59, 130, 246, 0.7))',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                        };
 
                     return (
                       <div
@@ -315,13 +324,14 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                           width: 28,
                           height: 28,
                           borderRadius: 6,
-                          background: bgColor,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: inst.type.startsWith('f') ? 10 : 14,
                           fontWeight: 600,
                           color: 'white',
+                          boxShadow: hasCondition ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.2)',
+                          ...pillStyle,
                         }}
                       >
                         {isPaint ? (

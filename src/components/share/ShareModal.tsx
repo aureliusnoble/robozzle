@@ -127,19 +127,19 @@ export function ShareModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          <motion.div
-            className={styles.overlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
+        <motion.div
+          className={styles.overlay}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
           <motion.div
             className={styles.modal}
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.header}>
               <h2 className={styles.title}>Share Your Result</h2>
@@ -198,30 +198,32 @@ export function ShareModal({
               )}
             </AnimatePresence>
           </motion.div>
+        </motion.div>
+      )}
 
-          {/* Hidden ShareCard for image generation */}
-          <div
-            style={{
-              position: 'fixed',
-              left: -9999,
-              top: -9999,
-              opacity: 0,
-              pointerEvents: 'none',
-            }}
-          >
-            <ShareCard
-              ref={cardRef}
-              puzzle={puzzle}
-              program={program}
-              stats={stats}
-              showSolution={includeSolution}
-              shareUrl={displayUrl}
-              category={category}
-              dailyNumber={effectiveDailyNumber}
-              date={date}
-            />
-          </div>
-        </>
+      {/* Hidden ShareCard for image generation - outside AnimatePresence */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            left: -9999,
+            top: -9999,
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
+        >
+          <ShareCard
+            ref={cardRef}
+            puzzle={puzzle}
+            program={program}
+            stats={stats}
+            showSolution={includeSolution}
+            shareUrl={displayUrl}
+            category={category}
+            dailyNumber={effectiveDailyNumber}
+            date={date}
+          />
+        </div>
       )}
     </AnimatePresence>
   );

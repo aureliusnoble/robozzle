@@ -1,21 +1,23 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
 .modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   background: white;
   border-radius: 16px;
-  padding: 1.5rem;
-  max-width: 440px;
-  width: calc(100% - 2rem);
+  padding: 1.25rem;
+  max-width: 420px;
+  width: 100%;
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   z-index: 101;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -29,7 +31,7 @@
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #1E293B;
   margin: 0;
@@ -45,6 +47,7 @@
   font-size: 1rem;
   color: #64748B;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 
 .closeButton:hover {
@@ -55,12 +58,12 @@
 .imagePreview {
   background: #1E293B;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.75rem;
   margin-bottom: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 200px;
+  min-height: 180px;
 }
 
 .previewImage {
@@ -95,6 +98,7 @@
   border-radius: 12px;
   position: relative;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
 .toggleSlider::after {
@@ -124,24 +128,7 @@
   font-weight: 500;
 }
 
-/* Legacy preview for text */
-.preview {
-  background: #1E293B;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.shareText {
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-  font-size: 0.875rem;
-  color: #F8FAFC;
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.5;
-}
-
+/* Actions */
 .actions {
   display: flex;
   gap: 0.5rem;
@@ -159,6 +146,10 @@
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
 }
 
 .shareButton {
@@ -196,4 +187,36 @@
   color: #166534;
   border-radius: 8px;
   font-weight: 500;
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  .overlay {
+    padding: 0.75rem;
+  }
+
+  .modal {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .imagePreview {
+    padding: 0.5rem;
+    min-height: 150px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .shareButton,
+  .copyButton,
+  .downloadButton {
+    padding: 0.875rem;
+  }
 }
