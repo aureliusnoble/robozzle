@@ -27,7 +27,7 @@ const slotCollisionDetection: CollisionDetection = (args) => {
 };
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2 } from 'lucide-react';
-import type { PuzzleConfig, FunctionName, TileColor, Instruction } from '../../engine/types';
+import type { PuzzleConfig, FunctionName, TileColor, Instruction, Program } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import { GameBoard } from './GameBoard';
 import { InstructionPalette } from './InstructionPalette';
@@ -39,6 +39,7 @@ import styles from './Game.module.css';
 interface GameProps {
   puzzle: PuzzleConfig;
   displayTitle?: string; // Override puzzle.title if provided (e.g., for daily challenges)
+  initialProgram?: Program; // Pre-fill the program (e.g., for solution preview)
   onComplete?: (steps: number, instructions: number) => void;
   onNextPuzzle?: () => void;
   onBack?: () => void;
@@ -96,7 +97,7 @@ function getDragOverlayIcon(type: string) {
   }
 }
 
-export function Game({ puzzle, displayTitle, onComplete, onNextPuzzle, onBack, onShare, tutorialStep }: GameProps) {
+export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextPuzzle, onBack, onShare, tutorialStep }: GameProps) {
   // Configure drag sensors with activation constraint
   // This allows clicks to work for color cycling, while drags need movement
   const pointerSensor = useSensor(PointerSensor, {
@@ -127,6 +128,7 @@ export function Game({ puzzle, displayTitle, onComplete, onNextPuzzle, onBack, o
     loadPuzzle,
     setInstruction,
     clearFunction,
+    setProgram,
     start,
     pause,
     resume,
@@ -194,6 +196,11 @@ export function Game({ puzzle, displayTitle, onComplete, onNextPuzzle, onBack, o
     setCurrentFunction('f1');
     setSelectedColor(null);
 
+    // Apply initial program if provided (e.g., for solution preview)
+    if (initialProgram) {
+      setProgram(initialProgram);
+    }
+
     // Center the board scroll after puzzle loads (wait for DOM to update)
     setTimeout(() => {
       const scrollContainer = document.getElementById('board-scroll-container');
@@ -208,7 +215,7 @@ export function Game({ puzzle, displayTitle, onComplete, onNextPuzzle, onBack, o
         }
       }
     }, 50);
-  }, [puzzle, loadPuzzle]);
+  }, [puzzle, loadPuzzle, initialProgram, setProgram]);
 
   // Handle completion
   useEffect(() => {
