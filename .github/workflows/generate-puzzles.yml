@@ -1,9 +1,10 @@
 name: Generate Weekly Puzzles
 
 on:
-  # Weekly generation on Sunday at midnight UTC
+  # Weekly generation on Saturday at 6 PM UTC (before end of week)
+  # This ensures puzzles are ready in the pool before the new week starts
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 18 * * 6'
 
   # Manual trigger with optional parameters
   workflow_dispatch:
@@ -72,18 +73,43 @@ jobs:
           path: generated-puzzles.json
           retention-days: 30
 
+      - name: Check pool status
+        if: ${{ github.event.inputs.upload != 'false' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          # Check unused puzzle count in pool
+          npx tsx -e "
+            import { createClient } from '@supabase/supabase-js';
+            const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
+            const { data, error } = await supabase
+              .from('generated_puzzle_pool')
+              .select('id')
+              .is('used_for_daily', null);
+            if (error) {
+              console.error('Error checking pool:', error.message);
+              process.exit(1);
+            }
+            const unusedCount = data?.length || 0;
+            console.log('POOL_UNUSED=' + unusedCount);
+            if (unusedCount < 7) {
+              console.log('::warning::Pool has fewer than 7 unused puzzles!');
+            }
+          "
+
       - name: Summary
         run: |
-          echo "## Weekly Puzzle Generation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "## Weekly Puzzle Generation Complete :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Generated ${{ github.event.inputs.count || '7' }} puzzles using:" >> $GITHUB_STEP_SUMMARY
           echo "- **Rust verifier**: Fast bounded backtracking solver" >> $GITHUB_STEP_SUMMARY
           echo "- **TypeScript orchestration**: Solution-first generation" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event.inputs.upload || 'true' }}" = "true" ]; then
-            echo "Puzzles have been uploaded to Supabase." >> $GITHUB_STEP_SUMMARY
+            echo ":white_check_mark: Puzzles have been uploaded to Supabase." >> $GITHUB_STEP_SUMMARY
           else
-            echo "Puzzles saved to artifact only (upload disabled)." >> $GITHUB_STEP_SUMMARY
+            echo ":file_folder: Puzzles saved to artifact only (upload disabled)." >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Artifact:** generated-puzzles-${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
