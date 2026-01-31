@@ -98,9 +98,8 @@ export function UsernamePrompt() {
 
                 <button
                   type="button"
-                  className={styles.switchButton}
+                  className={styles.cancelButton}
                   onClick={handleCancel}
-                  style={{ marginTop: '1rem', display: 'block', width: '100%', textAlign: 'center' }}
                 >
                   Cancel and sign out
                 </button>
