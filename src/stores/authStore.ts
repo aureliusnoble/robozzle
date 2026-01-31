@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthStore>()(
           await get().fetchProfile();
           await get().fetchProgress();
           return {};
-        } catch (e) {
+        } catch {
           return { error: 'An unexpected error occurred' };
         }
       },
@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           return {};
-        } catch (e) {
+        } catch {
           return { error: 'An unexpected error occurred' };
         }
       },
@@ -93,7 +93,7 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           return {};
-        } catch (e) {
+        } catch {
           return { error: 'An unexpected error occurred' };
         }
       },
@@ -157,8 +157,8 @@ export const useAuthStore = create<AuthStore>()(
               needsUsername: isGoogleUser,
             });
           }
-        } catch (e) {
-          console.error('Error fetching profile:', e);
+        } catch (err) {
+          console.error('Error fetching profile:', err);
           set({ isLoading: false });
         }
       },
@@ -184,8 +184,8 @@ export const useAuthStore = create<AuthStore>()(
               },
             });
           }
-        } catch (e) {
-          console.error('Error fetching progress:', e);
+        } catch (err) {
+          console.error('Error fetching progress:', err);
         }
       },
 
@@ -227,8 +227,8 @@ export const useAuthStore = create<AuthStore>()(
           await get().fetchProgress();
 
           return {};
-        } catch (e) {
-          console.error('Error setting username:', e);
+        } catch (err) {
+          console.error('Error setting username:', err);
           return { error: 'An unexpected error occurred' };
         }
       },
@@ -259,8 +259,8 @@ export const useAuthStore = create<AuthStore>()(
                 daily_solved: mergedProgress.dailySolved,
               });
           }
-        } catch (e) {
-          console.error('Error updating progress:', e);
+        } catch (err) {
+          console.error('Error updating progress:', err);
         }
       },
     }),

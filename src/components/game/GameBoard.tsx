@@ -12,7 +12,7 @@ import tileBlue from '../../assets/sprites/tile_blue.png';
 import tileDefault from '../../assets/sprites/tile_default.png';
 
 interface GameBoardProps {
-  puzzle: PuzzleConfig;
+  puzzle?: PuzzleConfig;
   gameState: GameState;
 }
 
@@ -35,7 +35,7 @@ const TILE_SPRITES: Record<string, string> = {
   null: tileDefault,
 };
 
-export function GameBoard({ puzzle: _puzzle, gameState }: GameBoardProps) {
+export function GameBoard({ gameState }: GameBoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate bounding box of non-null tiles
