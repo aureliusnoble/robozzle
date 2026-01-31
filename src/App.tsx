@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/ui';
-import { Home, DailyChallenge, Tutorial, Classic, Leaderboard, Auth, DevMode } from './pages';
+import { Home, DailyChallenge, DailyArchive, Tutorial, Classic, Leaderboard, Auth, DevMode } from './pages';
 import { UsernamePrompt } from './components/auth';
 import { useAuthStore } from './stores/authStore';
 
@@ -20,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/daily" element={<DailyChallenge />} />
+          <Route path="/daily/archive" element={<DailyArchive />} />
           <Route path="/tutorial" element={<Tutorial />} />
           <Route path="/classic" element={<Classic />} />
           <Route path="/leaderboard" element={<Leaderboard />} />

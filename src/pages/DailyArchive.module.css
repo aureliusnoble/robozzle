@@ -1,0 +1,210 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: calc(100vh - 120px);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: #F1F5F9;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.backButton:hover {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0;
+}
+
+/* Loading & Empty States */
+.loading,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  color: #64748B;
+  gap: 0.5rem;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #E2E8F0;
+  border-top-color: #6366F1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.emptyHint {
+  font-size: 0.875rem;
+  color: #94A3B8;
+}
+
+/* Archive List */
+.archiveList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.monthGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.monthTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding-left: 0.25rem;
+}
+
+.entriesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Entry Card */
+.entryCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.entryCard:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+.entryCard.completed {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+
+.entryCard.completed:hover {
+  border-color: #86EFAC;
+}
+
+/* Entry Date */
+.entryDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+}
+
+.entryDay {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1E293B;
+  line-height: 1.2;
+}
+
+.entryWeekday {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+/* Entry Info */
+.entryInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.entryTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entryProfile {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748B;
+}
+
+/* Entry Status */
+.entryStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+}
+
+.checkIcon {
+  color: #10B981;
+}
+
+.playIcon {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6366F1;
+  padding: 0.375rem 0.75rem;
+  background: #EEF2FF;
+  border-radius: 6px;
+}
+
+/* Desktop */
+@media (min-width: 600px) {
+  .container {
+    padding: 1.5rem 2rem;
+  }
+
+  .entriesGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}

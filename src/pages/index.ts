@@ -1,5 +1,6 @@
 export { Home } from './Home';
 export { DailyChallenge } from './DailyChallenge';
+export { DailyArchive } from './DailyArchive';
 export { Tutorial } from './Tutorial';
 export { Classic } from './Classic';
 export { Leaderboard } from './Leaderboard';
