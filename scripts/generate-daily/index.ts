@@ -99,8 +99,8 @@ async function uploadPuzzle(
   // Insert puzzle
   const { error: puzzleError } = await supabase.from('puzzles').insert({
     id: puzzleId,
-    title: `Daily ${challengeType === 'easy' ? 'Easy' : 'Challenge'} ${new Date().toISOString().split('T')[0]}`,
-    description: `Auto-generated ${challengeType} puzzle`,
+    title: `Generated ${challengeType} ${new Date().toISOString().split('T')[0]}`,
+    description: null,
     grid: puzzle.grid,
     robot_start: puzzle.robotStart,
     function_lengths: puzzle.functionLengths,
@@ -319,10 +319,10 @@ async function selectDailyPuzzle(challengeType: ChallengeType): Promise<boolean>
 
   console.log(`Selecting ${challengeType} puzzle ${puzzleId} as "${dailyTitle}"`);
 
-  // Update puzzle title
+  // Update puzzle title and clear description
   const { error: titleError } = await supabase
     .from('puzzles')
-    .update({ title: dailyTitle })
+    .update({ title: dailyTitle, description: null })
     .eq('id', puzzleId);
 
   if (titleError) {

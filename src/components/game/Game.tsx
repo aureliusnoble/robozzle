@@ -445,7 +445,7 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
               id="board-scroll-container"
               ref={scrollContainerRef}
               className={styles.boardScrollContainer}
-              style={{ overflowX: needsHorizontalScroll ? 'auto' : 'visible' }}
+              style={{ overflowX: needsHorizontalScroll ? 'auto' : 'hidden' }}
             >
               <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} />
             </div>

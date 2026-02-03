@@ -1,8 +1,7 @@
 .container {
-  max-width: 700px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 1rem;
-  min-height: calc(100vh - 120px);
 }
 
 /* Loading & Error States */
@@ -42,7 +41,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .headerMain {
@@ -225,24 +224,11 @@
   transform: translateY(-1px);
 }
 
-/* Content Layout - Always stacked (game above, leaderboard below) */
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.gameSection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 /* Completion Card */
 .completionCard {
   display: flex;
   justify-content: center;
-  padding: 0.5rem;
+  padding: 1rem 0.5rem;
 }
 
 .rankDisplay {
@@ -286,21 +272,8 @@
   transform: translateY(-1px);
 }
 
-/* Leaderboard Section - Full width below game on mobile */
-.leaderboardSection {
-  width: 100%;
-}
-
-/* Desktop Layout - Keep stacked, just adjust spacing */
+/* Desktop Layout */
 @media (min-width: 768px) {
-  .container {
-    padding: 1.5rem 2rem;
-  }
-
-  .header {
-    margin-bottom: 1.5rem;
-  }
-
   .title {
     font-size: 1.5rem;
   }

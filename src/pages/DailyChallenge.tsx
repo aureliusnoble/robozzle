@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Game } from '../components/game';
 import { DailyLeaderboard } from '../components/leaderboard';
 import { ShareModal } from '../components/share';
@@ -8,7 +8,6 @@ import { AuthModal } from '../components/auth';
 import { useDailyPuzzle } from '../hooks/useDailyPuzzle';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
-import { supabase } from '../lib/supabase';
 import styles from './DailyChallenge.module.css';
 
 export function DailyChallenge() {
@@ -21,38 +20,10 @@ export function DailyChallenge() {
   const { getProgram } = useGameStore();
   const [showShare, setShowShare] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-  const [isDevUser, setIsDevUser] = useState(false);
   const [completedState, setCompletedState] = useState<{
     steps: number;
     instructions: number;
   } | null>(null);
-
-  // Check if user has dev/admin access
-  useEffect(() => {
-    async function checkDevAccess() {
-      if (!user) {
-        setIsDevUser(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (!error && data) {
-          const role = data.role as string | undefined;
-          setIsDevUser(role === 'admin' || role === 'dev');
-        }
-      } catch {
-        setIsDevUser(false);
-      }
-    }
-
-    checkDevAccess();
-  }, [user]);
 
   // Load specific date if provided in URL (for archive viewing)
   useEffect(() => {
@@ -99,18 +70,6 @@ export function DailyChallenge() {
             <button className={styles.backButtonInline} onClick={() => navigate('/daily')}>
               <ArrowLeft size={20} />
             </button>
-            <h1 className={styles.title}>Daily Challenge</h1>
-          </div>
-          <div className={styles.headerActions}>
-            {isDevUser && (
-              <button
-                className={`${styles.iconButton} ${styles.devButton}`}
-                onClick={() => navigate('/dev')}
-                title="Dev Mode"
-              >
-                <Settings size={20} />
-              </button>
-            )}
           </div>
         </header>
         <div className={styles.noPuzzle}>
@@ -162,20 +121,8 @@ export function DailyChallenge() {
           <button className={styles.backButtonInline} onClick={() => navigate('/daily')}>
             <ArrowLeft size={20} />
           </button>
-          <div>
-            <h1 className={styles.title}>Daily Challenge</h1>
-            <p className={styles.date}>{isToday ? 'Today' : formattedDate}</p>
-          </div>
-        </div>
-        <div className={styles.headerActions}>
-          {isDevUser && (
-            <button
-              className={`${styles.iconButton} ${styles.devButton}`}
-              onClick={() => navigate('/dev')}
-              title="Dev Mode"
-            >
-              <Settings size={20} />
-            </button>
+          {!isToday && (
+            <p className={styles.date}>{formattedDate}</p>
           )}
         </div>
       </header>
@@ -188,43 +135,37 @@ export function DailyChallenge() {
         </div>
       )}
 
-      {/* Main content - game first, leaderboard below */}
-      <div className={styles.content}>
-        <div className={styles.gameSection}>
-          <Game
-            puzzle={dailyChallenge.puzzle}
-            displayTitle="Daily Challenge"
-            onComplete={handleComplete}
-            onShare={completedState ? () => setShowShare(true) : undefined}
-          />
+      {/* Game */}
+      <Game
+        puzzle={dailyChallenge.puzzle}
+        onComplete={handleComplete}
+        onShare={completedState ? () => setShowShare(true) : undefined}
+      />
 
-          {/* Completion state */}
-          {completedState && (
-            <div className={styles.completionCard}>
-              {hasCompleted && userRank ? (
-                <div className={styles.rankDisplay}>
-                  <span className={styles.rankLabel}>Your Rank</span>
-                  <span className={styles.rankValue}>#{userRank}</span>
-                </div>
-              ) : !isAuthenticated ? (
-                <button
-                  className={styles.signInButton}
-                  onClick={() => setShowAuth(true)}
-                >
-                  Sign in to save your score
-                </button>
-              ) : null}
+      {/* Completion state */}
+      {completedState && (
+        <div className={styles.completionCard}>
+          {hasCompleted && userRank ? (
+            <div className={styles.rankDisplay}>
+              <span className={styles.rankLabel}>Your Rank</span>
+              <span className={styles.rankValue}>#{userRank}</span>
             </div>
-          )}
+          ) : !isAuthenticated ? (
+            <button
+              className={styles.signInButton}
+              onClick={() => setShowAuth(true)}
+            >
+              Sign in to save your score
+            </button>
+          ) : null}
         </div>
+      )}
 
-        <div className={styles.leaderboardSection}>
-          <DailyLeaderboard
-            entries={leaderboard}
-            currentUsername={user?.username}
-          />
-        </div>
-      </div>
+      {/* Leaderboard */}
+      <DailyLeaderboard
+        entries={leaderboard}
+        currentUsername={user?.username}
+      />
 
       {/* Share Modal */}
       {dailyChallenge && completedState && (

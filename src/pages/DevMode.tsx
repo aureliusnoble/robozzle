@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, X, Eye, Play, Loader2, Shield, List, Zap, Upload, Settings, Clock, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
 import { Game } from '../components/game';
 import { SimulationMode } from '../components/simulation/SimulationMode';
@@ -77,6 +78,7 @@ function getChallengeColor(type: ChallengeType | string | null): string {
 }
 
 export function DevMode() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('puzzles');
@@ -303,27 +305,130 @@ export function DevMode() {
     }
   };
 
-  // Reject puzzle (remove from pool)
-  const handleReject = async (puzzleId: string) => {
+  // Remove puzzle from pool (but keep the puzzle)
+  const handleRemoveFromPool = async (puzzleId: string) => {
     const puzzle = puzzles.find(p => p.id === puzzleId);
-    if (!puzzle) return;
+    if (!puzzle || !puzzle.pool_id) return;
 
     try {
-      if (puzzle.pool_id) {
-        await supabase
-          .from('generated_puzzle_pool')
-          .delete()
-          .eq('puzzle_id', puzzleId);
-      }
+      await supabase
+        .from('generated_puzzle_pool')
+        .delete()
+        .eq('puzzle_id', puzzleId);
 
       const { data } = await supabase
         .from('generated_puzzles_view')
         .select('*')
         .order('created_at', { ascending: false });
       setPuzzles(data || []);
+
+      setSuccessMessage('Removed from pool');
+      setTimeout(() => setSuccessMessage(null), 2000);
     } catch (err) {
-      console.error('Error rejecting puzzle:', err);
-      setError('Failed to reject puzzle');
+      console.error('Error removing from pool:', err);
+      setError('Failed to remove from pool');
+    }
+  };
+
+  // Delete a single puzzle completely
+  const handleDeletePuzzle = async (puzzleId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this puzzle?')) {
+      return;
+    }
+
+    try {
+      // First remove from pool if exists
+      await supabase
+        .from('generated_puzzle_pool')
+        .delete()
+        .eq('puzzle_id', puzzleId);
+
+      // Remove from daily_challenges if referenced
+      await supabase
+        .from('daily_challenges')
+        .delete()
+        .eq('puzzle_id', puzzleId);
+
+      // Delete the puzzle itself
+      const { error } = await supabase
+        .from('puzzles')
+        .delete()
+        .eq('id', puzzleId);
+
+      if (error) throw error;
+
+      const { data } = await supabase
+        .from('generated_puzzles_view')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setPuzzles(data || []);
+
+      setSuccessMessage('Puzzle deleted');
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (err) {
+      console.error('Error deleting puzzle:', err);
+      setError('Failed to delete puzzle');
+    }
+  };
+
+  // Delete all puzzles
+  const handleDeleteAllPuzzles = async () => {
+    if (!confirm('Are you sure you want to delete ALL puzzles? This cannot be undone!')) {
+      return;
+    }
+    if (!confirm('This will delete all puzzles from the database. Are you REALLY sure?')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Delete all from pool first (use gte on created_at to match all)
+      const { error: poolError } = await supabase
+        .from('generated_puzzle_pool')
+        .delete()
+        .gte('created_at', '1970-01-01');
+
+      if (poolError) {
+        console.error('Error deleting pool:', poolError);
+      }
+
+      // Delete all daily challenges
+      const { error: dailyError } = await supabase
+        .from('daily_challenges')
+        .delete()
+        .gte('created_at', '1970-01-01');
+
+      if (dailyError) {
+        console.error('Error deleting daily challenges:', dailyError);
+      }
+
+      // Delete all generated puzzles (where generation_source is 'generated')
+      const { error: puzzleError } = await supabase
+        .from('puzzles')
+        .delete()
+        .eq('generation_source', 'generated');
+
+      if (puzzleError) {
+        console.error('Error deleting puzzles:', puzzleError);
+        throw puzzleError;
+      }
+
+      // Refresh the list
+      const { data } = await supabase
+        .from('generated_puzzles_view')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setPuzzles(data || []);
+
+      setSuccessMessage('All puzzles deleted');
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (err) {
+      console.error('Error deleting all puzzles:', err);
+      setError('Failed to delete puzzles: ' + (err as Error).message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -452,6 +557,11 @@ export function DevMode() {
 
   return (
     <div className={styles.container}>
+      <button className={styles.backButton} onClick={() => navigate('/daily')}>
+        <ArrowLeft size={16} />
+        Back to Daily
+      </button>
+
       <header className={styles.header}>
         <div className={styles.titleRow}>
           <Shield size={28} className={styles.titleIcon} />
@@ -724,14 +834,26 @@ export function DevMode() {
               )}
             </div>
 
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={showUsed}
-                onChange={(e) => setShowUsed(e.target.checked)}
-              />
-              Show used
-            </label>
+            <div className={styles.filterRight}>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={showUsed}
+                  onChange={(e) => setShowUsed(e.target.checked)}
+                />
+                Show used
+              </label>
+              {stats.total > 0 && (
+                <button
+                  className={styles.deleteAllButton}
+                  onClick={handleDeleteAllPuzzles}
+                  title="Delete all puzzles"
+                >
+                  <Trash2 size={14} />
+                  Delete All
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Puzzle list */}
@@ -816,13 +938,20 @@ export function DevMode() {
                     )}
                     {puzzle.pool_id && !puzzle.used_for_daily && (
                       <button
-                        className={styles.rejectButton}
-                        onClick={() => handleReject(puzzle.id)}
+                        className={styles.removeFromPoolButton}
+                        onClick={() => handleRemoveFromPool(puzzle.id)}
                         title="Remove from pool"
                       >
                         <X size={16} />
                       </button>
                     )}
+                    <button
+                      className={styles.deletePuzzleButton}
+                      onClick={() => handleDeletePuzzle(puzzle.id)}
+                      title="Delete puzzle permanently"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
               ))}
