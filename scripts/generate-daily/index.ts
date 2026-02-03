@@ -261,6 +261,104 @@ function calculateQualityScore(result: any, config: SimulationConfig): number {
   return Math.round(score);
 }
 
+// Check if today's daily challenge exists for a given type
+async function hasTodaysDailyChallenge(challengeType: ChallengeType): Promise<boolean> {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase
+    .from('daily_challenges')
+    .select('id')
+    .eq('date', today)
+    .eq('challenge_type', challengeType)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+    console.error('Error checking daily challenge:', error);
+  }
+  return !!data;
+}
+
+// Get the next daily number based on archive count
+async function getNextDailyNumber(challengeType: ChallengeType): Promise<number> {
+  const { count, error } = await supabase
+    .from('daily_challenges')
+    .select('*', { count: 'exact', head: true })
+    .eq('challenge_type', challengeType);
+
+  if (error) {
+    console.error('Error counting daily challenges:', error);
+    return 1;
+  }
+  return (count || 0) + 1;
+}
+
+// Select a puzzle from the pool and set it as today's daily
+async function selectDailyPuzzle(challengeType: ChallengeType): Promise<boolean> {
+  const today = new Date().toISOString().split('T')[0];
+
+  // Get an available puzzle from the pool
+  const { data: poolEntry, error: poolError } = await supabase
+    .from('generated_puzzle_pool')
+    .select('puzzle_id, id')
+    .eq('mechanic_category', challengeType)
+    .is('used_for_daily', null)
+    .order('quality_score', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (poolError || !poolEntry) {
+    console.log(`No available ${challengeType} puzzles in pool`);
+    return false;
+  }
+
+  const puzzleId = poolEntry.puzzle_id;
+  const poolId = poolEntry.id;
+
+  // Get next daily number
+  const dailyNumber = await getNextDailyNumber(challengeType);
+  const dailyTitle = `Daily ${challengeType === 'easy' ? 'Easy' : 'Challenge'} #${dailyNumber}`;
+
+  console.log(`Selecting ${challengeType} puzzle ${puzzleId} as "${dailyTitle}"`);
+
+  // Update puzzle title
+  const { error: titleError } = await supabase
+    .from('puzzles')
+    .update({ title: dailyTitle })
+    .eq('id', puzzleId);
+
+  if (titleError) {
+    console.error('Error updating puzzle title:', titleError);
+    return false;
+  }
+
+  // Mark as used in pool
+  const { error: usedError } = await supabase
+    .from('generated_puzzle_pool')
+    .update({ used_for_daily: today })
+    .eq('id', poolId);
+
+  if (usedError) {
+    console.error('Error marking puzzle as used:', usedError);
+    return false;
+  }
+
+  // Create daily challenge entry
+  const { error: dailyError } = await supabase
+    .from('daily_challenges')
+    .insert({
+      date: today,
+      puzzle_id: puzzleId,
+      challenge_type: challengeType,
+    });
+
+  if (dailyError) {
+    console.error('Error creating daily challenge:', dailyError);
+    return false;
+  }
+
+  console.log(`Successfully set ${dailyTitle} for ${today}`);
+  return true;
+}
+
 // Default configs if none are in the database
 const DEFAULT_EASY_CONFIG: SimulationConfig = {
   slotsPerFunction: { f1: 5, f2: 0, f3: 0, f4: 0, f5: 0 },
@@ -344,18 +442,45 @@ async function main() {
 
   if (toGenerate.length === 0) {
     console.log('\nAll pools have sufficient puzzles. Nothing to generate.');
-    return;
+  } else {
+    // Generate puzzles
+    let totalGenerated = 0;
+    for (const { challengeType, count, config } of toGenerate) {
+      const generated = await generatePuzzlesForType(challengeType, config, count);
+      totalGenerated += generated;
+    }
+
+    console.log(`\n=== Generation Complete ===`);
+    console.log(`Total puzzles generated: ${totalGenerated}`);
   }
 
-  // Generate puzzles
-  let totalGenerated = 0;
-  for (const { challengeType, count, config } of toGenerate) {
-    const generated = await generatePuzzlesForType(challengeType, config, count);
-    totalGenerated += generated;
+  // Check and select today's daily challenges if not already set
+  console.log('\n=== Checking Daily Challenges ===');
+
+  const hasEasyDaily = await hasTodaysDailyChallenge('easy');
+  const hasChallengeDaily = await hasTodaysDailyChallenge('challenge');
+
+  if (hasEasyDaily) {
+    console.log('Easy daily already set for today');
+  } else {
+    console.log('No easy daily set for today, selecting one...');
+    const success = await selectDailyPuzzle('easy');
+    if (!success) {
+      console.log('Failed to select easy daily puzzle');
+    }
   }
 
-  console.log(`\n=== Generation Complete ===`);
-  console.log(`Total puzzles generated: ${totalGenerated}`);
+  if (hasChallengeDaily) {
+    console.log('Challenge daily already set for today');
+  } else {
+    console.log('No challenge daily set for today, selecting one...');
+    const success = await selectDailyPuzzle('challenge');
+    if (!success) {
+      console.log('Failed to select challenge daily puzzle');
+    }
+  }
+
+  console.log('\n=== Script Complete ===');
 }
 
 main().catch(err => {
