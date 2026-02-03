@@ -114,13 +114,7 @@ export function ClassicRanksTab({ currentUsername }: ClassicRanksTabProps) {
         <div className={styles.formulaBox}>
           <h4>How Scoring Works</h4>
           <p className={styles.formulaNote}>
-            Harder puzzles are worth more points, with difficulty scaling exponentially.
-          </p>
-          <p className={styles.formulaNote}>
-            Solving multiple puzzles at each difficulty level gives bonus points, but with diminishing returns.
-          </p>
-          <p className={styles.formulaNote}>
-            The system rewards tackling a variety of difficulty levels over grinding easy puzzles.
+            Harder puzzles are worth exponentially more. Variety across difficulty levels is rewarded over grinding easy puzzles.
           </p>
         </div>
       </div>
