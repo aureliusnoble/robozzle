@@ -10,7 +10,16 @@ interface StarParticle {
   offsetX: number;
   offsetY: number;
   rotation: number;
-  curve: number; // How much the star curves during flight
+  curve: number;
+}
+
+interface SparkleParticle {
+  id: string;
+  starId: number;
+  offsetAngle: number;
+  offsetDistance: number;
+  size: number;
+  delay: number;
 }
 
 interface ImpactParticle {
@@ -20,9 +29,14 @@ interface ImpactParticle {
   size: number;
 }
 
+// Animation timing constants
+const STAGGER_DELAY = 0.25; // Delay between each star (longer for more drama)
+const FLIGHT_DURATION = 2.0; // How long each star takes to fly
+
 export function FlyingStars() {
   const { pendingStarAnimation, clearStarAnimation } = useAuthStore();
   const [particles, setParticles] = useState<StarParticle[]>([]);
+  const [sparkles, setSparkles] = useState<SparkleParticle[]>([]);
   const [impactParticles, setImpactParticles] = useState<ImpactParticle[]>([]);
   const [targetPosition, setTargetPosition] = useState<{ x: number; y: number } | null>(null);
   const [startPosition, setStartPosition] = useState<{ x: number; y: number } | null>(null);
@@ -73,24 +87,22 @@ export function FlyingStars() {
     setHeaderBounce(true);
     setTimeout(() => setHeaderBounce(false), 200);
 
-    // Only create impact particles for first few impacts
-    if (impactCountRef.current <= 3) {
-      const newImpactParticles: ImpactParticle[] = [];
-      for (let i = 0; i < 8; i++) {
-        newImpactParticles.push({
-          id: Date.now() + i,
-          angle: (i * 45) + (Math.random() - 0.5) * 20,
-          distance: 30 + Math.random() * 40,
-          size: 6 + Math.random() * 8,
-        });
-      }
-      setImpactParticles(prev => [...prev, ...newImpactParticles]);
-
-      // Clear impact particles after animation
-      setTimeout(() => {
-        setImpactParticles(prev => prev.filter(p => !newImpactParticles.some(np => np.id === p.id)));
-      }, 600);
+    // Create impact particles for each star
+    const newImpactParticles: ImpactParticle[] = [];
+    for (let i = 0; i < 6; i++) {
+      newImpactParticles.push({
+        id: Date.now() + i + Math.random() * 1000,
+        angle: (i * 60) + (Math.random() - 0.5) * 30,
+        distance: 25 + Math.random() * 35,
+        size: 5 + Math.random() * 6,
+      });
     }
+    setImpactParticles(prev => [...prev, ...newImpactParticles]);
+
+    // Clear impact particles after animation
+    setTimeout(() => {
+      setImpactParticles(prev => prev.filter(p => !newImpactParticles.some(np => np.id === p.id)));
+    }, 600);
 
     // Show impact flash
     setShowImpact(true);
@@ -100,28 +112,48 @@ export function FlyingStars() {
   // Generate particles when animation is triggered
   useEffect(() => {
     if (pendingStarAnimation && targetPosition && startPosition) {
-      // More particles - at least as many as stars earned, up to 20
-      const starCount = Math.min(Math.max(pendingStarAnimation, 8), 20);
+      // Use EXACT star count - no minimum or maximum
+      const starCount = pendingStarAnimation;
       const newParticles: StarParticle[] = [];
+      const newSparkles: SparkleParticle[] = [];
 
       for (let i = 0; i < starCount; i++) {
+        const starDelay = i * STAGGER_DELAY;
+
         newParticles.push({
           id: i,
-          delay: i * 0.12, // Stagger
-          offsetX: (Math.random() - 0.5) * 120,
-          offsetY: (Math.random() - 0.5) * 80,
+          delay: starDelay,
+          offsetX: (Math.random() - 0.5) * 100,
+          offsetY: (Math.random() - 0.5) * 60,
           rotation: Math.random() * 360,
-          curve: (Math.random() - 0.5) * 150, // Horizontal curve during flight
+          curve: (Math.random() - 0.5) * 120,
         });
+
+        // Add sparkle particles around each star (4-6 sparkles per star)
+        const sparkleCount = 4 + Math.floor(Math.random() * 3);
+        for (let j = 0; j < sparkleCount; j++) {
+          newSparkles.push({
+            id: `${i}-${j}`,
+            starId: i,
+            offsetAngle: (j * (360 / sparkleCount)) + (Math.random() - 0.5) * 30,
+            offsetDistance: 20 + Math.random() * 25,
+            size: 4 + Math.random() * 6,
+            delay: starDelay + 0.1, // Slightly after the star appears
+          });
+        }
       }
 
       setParticles(newParticles);
+      setSparkles(newSparkles);
       impactCountRef.current = 0;
 
-      // Clear animation after all particles have animated
-      const totalDuration = (starCount * 0.12) + 2500; // stagger + animation duration + buffer
+      // Calculate total animation duration based on star count
+      // Last star starts at (starCount-1) * STAGGER_DELAY, then takes FLIGHT_DURATION
+      const totalDuration = ((starCount - 1) * STAGGER_DELAY * 1000) + (FLIGHT_DURATION * 1000) + 800;
+
       const timer = setTimeout(() => {
         setParticles([]);
+        setSparkles([]);
         setImpactParticles([]);
         clearStarAnimation();
       }, totalDuration);
@@ -157,7 +189,7 @@ export function FlyingStars() {
             initial={{
               x: startPosition.x + particle.offsetX,
               y: startPosition.y + particle.offsetY,
-              scale: 2.5, // Start BIG
+              scale: 2.5,
               opacity: 0,
               rotate: particle.rotation,
             }}
@@ -169,15 +201,15 @@ export function FlyingStars() {
               ],
               y: [
                 startPosition.y + particle.offsetY,
-                startPosition.y + particle.offsetY - 100, // Arc upward first
+                startPosition.y + particle.offsetY - 80,
                 targetPosition.y,
               ],
-              scale: [2.5, 2.0, 0.5], // Shrink as they fly
+              scale: [2.5, 2.0, 0.5],
               opacity: [0, 1, 1, 0.8],
               rotate: [particle.rotation, particle.rotation + 180, particle.rotation + 360],
             }}
             transition={{
-              duration: 1.8,
+              duration: FLIGHT_DURATION,
               delay: particle.delay,
               ease: [0.2, 0.6, 0.3, 1],
               times: [0, 0.4, 1],
@@ -187,6 +219,55 @@ export function FlyingStars() {
             <Star size={48} fill="#F59E0B" color="#F59E0B" strokeWidth={1} />
           </motion.div>
         ))}
+      </AnimatePresence>
+
+      {/* Sparkle particles around each star */}
+      <AnimatePresence>
+        {sparkles.map((sparkle) => {
+          const parentStar = particles.find(p => p.id === sparkle.starId);
+          if (!parentStar) return null;
+
+          const rad = (sparkle.offsetAngle * Math.PI) / 180;
+          const sparkleStartX = startPosition.x + parentStar.offsetX + Math.cos(rad) * sparkle.offsetDistance;
+          const sparkleStartY = startPosition.y + parentStar.offsetY + Math.sin(rad) * sparkle.offsetDistance;
+
+          return (
+            <motion.div
+              key={sparkle.id}
+              className={styles.sparkle}
+              style={{
+                width: sparkle.size,
+                height: sparkle.size,
+              }}
+              initial={{
+                x: sparkleStartX,
+                y: sparkleStartY,
+                scale: 0,
+                opacity: 0,
+              }}
+              animate={{
+                x: [
+                  sparkleStartX,
+                  startPosition.x + parentStar.offsetX + parentStar.curve + Math.cos(rad) * (sparkle.offsetDistance * 0.8),
+                  targetPosition.x + Math.cos(rad) * 15,
+                ],
+                y: [
+                  sparkleStartY,
+                  startPosition.y + parentStar.offsetY - 80 + Math.sin(rad) * (sparkle.offsetDistance * 0.8),
+                  targetPosition.y + Math.sin(rad) * 15,
+                ],
+                scale: [0, 1.2, 1, 0],
+                opacity: [0, 0.9, 0.8, 0],
+              }}
+              transition={{
+                duration: FLIGHT_DURATION,
+                delay: sparkle.delay,
+                ease: [0.2, 0.6, 0.3, 1],
+                times: [0, 0.4, 0.9, 1],
+              }}
+            />
+          );
+        })}
       </AnimatePresence>
 
       {/* Impact flash on header */}
@@ -242,7 +323,7 @@ export function FlyingStars() {
           className={styles.countBadge}
           initial={{
             x: startPosition.x,
-            y: startPosition.y - 60,
+            y: startPosition.y - 70,
             scale: 0,
             opacity: 0,
           }}
@@ -251,7 +332,7 @@ export function FlyingStars() {
             opacity: [0, 1, 1, 0],
           }}
           transition={{
-            duration: 2.2,
+            duration: Math.min(2.5, (pendingStarAnimation * STAGGER_DELAY) + 1),
             times: [0, 0.15, 0.5, 1],
           }}
         >
@@ -261,3 +342,9 @@ export function FlyingStars() {
     </div>
   );
 }
+
+// Export timing constants for use in other components
+export const getStarAnimationDuration = (starCount: number): number => {
+  // Returns duration in milliseconds
+  return ((starCount - 1) * STAGGER_DELAY * 1000) + (FLIGHT_DURATION * 1000) + 1000;
+};

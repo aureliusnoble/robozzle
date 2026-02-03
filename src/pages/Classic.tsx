@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, Circle, Loader2, Star, Library } from 'lucide-react';
 import { Game, SolutionViewer } from '../components/game';
 import { PuzzleLeaderboard } from '../components/leaderboard';
 import { ShareModal } from '../components/share';
+import { getStarAnimationDuration } from '../components/ui/FlyingStars';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
@@ -193,6 +194,16 @@ export function Classic() {
     );
   }
 
+  // Calculate victory modal delay based on whether star animation will play
+  const isAlreadySolved = selectedPuzzle && progress?.classicSolved?.includes(selectedPuzzle.id);
+  const victoryDelay = useMemo(() => {
+    if (!selectedPuzzle) return 1000;
+    // If already solved, no star animation - use short delay
+    if (isAlreadySolved) return 1000;
+    // First-time solve: delay based on star count for animation
+    return getStarAnimationDuration(selectedPuzzle.stars || 1);
+  }, [selectedPuzzle, isAlreadySolved]);
+
   // Show selected puzzle
   if (selectedPuzzle) {
     return (
@@ -213,7 +224,7 @@ export function Classic() {
           savedSlots={savedSlots}
           onSave={handleSave}
           onLoad={handleLoad}
-          victoryModalDelay={4500}
+          victoryModalDelay={victoryDelay}
         />
 
         {/* Puzzle Leaderboard */}
