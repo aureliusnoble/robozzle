@@ -1,5 +1,5 @@
 import { useCallback, useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, ArrowLeft, Play, Save, Trash2, FolderOpen } from 'lucide-react';
+import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, ArrowLeft, Play, Save, Trash2, FolderOpen, Zap } from 'lucide-react';
 import type { FunctionName, Instruction, PuzzleConfig, InstructionType } from '../../engine/types';
 import { useSimulation } from '../../hooks/useSimulation';
 import { SimulationBoard } from './SimulationBoard';
@@ -8,18 +8,9 @@ import {
   getSavedPuzzles,
   savePuzzle,
   deleteSavedPuzzle,
-  getSavedConfigs,
-  saveConfig,
-  deleteSavedConfig,
-  fetchConfigsFromSupabase,
-  saveConfigToSupabase,
-  deleteConfigFromSupabase,
-  mergeConfigs,
-  syncConfigsToSupabase,
   type SavedPuzzle,
-  type SavedConfig,
 } from '../../utils/simulationStorage';
-import { useAuthStore } from '../../stores/authStore';
+import { supabase } from '../../lib/supabase';
 import styles from './SimulationMode.module.css';
 
 function getInstructionIcon(type: string, size = 16) {
@@ -119,41 +110,21 @@ function filterExecutedInstructions(
 
 export function SimulationMode() {
   const { state, config, setConfig, start, stop, reset, totalSlots } = useSimulation();
-  const { user, isAuthenticated } = useAuthStore();
   const [isPlayingThrough, setIsPlayingThrough] = useState(false);
   const [savedPuzzles, setSavedPuzzles] = useState<SavedPuzzle[]>([]);
-  const [savedConfigs, setSavedConfigs] = useState<SavedConfig[]>([]);
   const [showSavedPuzzles, setShowSavedPuzzles] = useState(false);
-  const [showSavedConfigs, setShowSavedConfigs] = useState(false);
   const [puzzleName, setPuzzleName] = useState('');
-  const [configName, setConfigName] = useState('');
   const [selectedPuzzle, setSelectedPuzzle] = useState<SavedPuzzle | null>(null);
+  const [genConfigName, setGenConfigName] = useState('');
+  const [genConfigSaveMessage, setGenConfigSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDbConfigs, setShowDbConfigs] = useState(false);
+  const [dbConfigs, setDbConfigs] = useState<Array<{ id: string; name: string; config: typeof config }>>([]);
+  const [isLoadingDbConfigs, setIsLoadingDbConfigs] = useState(false);
 
-  // Load saved items on mount and when auth state changes
+  // Load saved puzzles on mount
   useEffect(() => {
     setSavedPuzzles(getSavedPuzzles());
-
-    const loadConfigs = async () => {
-      const localConfigs = getSavedConfigs();
-
-      if (isAuthenticated && user?.id) {
-        // Fetch from Supabase and merge with local
-        const remoteConfigs = await fetchConfigsFromSupabase(user.id);
-        const merged = mergeConfigs(localConfigs, remoteConfigs);
-        setSavedConfigs(merged);
-
-        // Update localStorage with merged configs
-        localStorage.setItem('robozzle_saved_configs', JSON.stringify(merged));
-
-        // Sync any local-only configs to Supabase
-        await syncConfigsToSupabase(user.id);
-      } else {
-        setSavedConfigs(localConfigs);
-      }
-    };
-
-    loadConfigs();
-  }, [isAuthenticated, user?.id]);
+  }, []);
 
   // Create a PuzzleConfig from the simulation state for playthrough
   const puzzleConfig = useMemo((): PuzzleConfig | null => {
@@ -446,32 +417,71 @@ export function SimulationMode() {
     }
   }, [selectedPuzzle]);
 
-  const handleSaveConfig = useCallback(async () => {
-    if (!configName.trim()) return;
-    const saved = saveConfig(configName.trim(), config);
-    setSavedConfigs(prev => [saved, ...prev]);
-    setConfigName('');
+  // Load configs from database
+  const handleLoadDbConfigs = useCallback(async () => {
+    setIsLoadingDbConfigs(true);
+    try {
+      const { data, error } = await supabase
+        .from('generation_configs')
+        .select('id, name, config')
+        .order('name', { ascending: true });
 
-    // Sync to Supabase if authenticated
-    if (isAuthenticated && user?.id) {
-      await saveConfigToSupabase(user.id, saved);
+      if (error) throw error;
+      setDbConfigs(data || []);
+      setShowDbConfigs(true);
+    } catch (err) {
+      console.error('Error loading configs:', err);
+      setGenConfigSaveMessage({ type: 'error', text: 'Failed to load configs' });
+      setTimeout(() => setGenConfigSaveMessage(null), 3000);
+    } finally {
+      setIsLoadingDbConfigs(false);
     }
-  }, [config, configName, isAuthenticated, user?.id]);
+  }, []);
 
-  const handleLoadConfig = useCallback((savedConfig: SavedConfig) => {
-    setConfig(savedConfig.config);
-    setShowSavedConfigs(false);
+  // Apply a loaded config
+  const handleApplyDbConfig = useCallback((loadedConfig: typeof config) => {
+    setConfig(loadedConfig);
+    setShowDbConfigs(false);
+    setGenConfigSaveMessage({ type: 'success', text: 'Config loaded!' });
+    setTimeout(() => setGenConfigSaveMessage(null), 2000);
   }, [setConfig]);
 
-  const handleDeleteConfig = useCallback(async (id: string) => {
-    deleteSavedConfig(id);
-    setSavedConfigs(prev => prev.filter(c => c.id !== id));
-
-    // Delete from Supabase if authenticated
-    if (isAuthenticated && user?.id) {
-      await deleteConfigFromSupabase(user.id, id);
+  // Save config to generation_configs table (default to 'challenge' type, can be changed in Configs tab)
+  const handleSaveGenerationConfig = useCallback(async () => {
+    if (!genConfigName.trim()) {
+      setGenConfigSaveMessage({ type: 'error', text: 'Please enter a config name' });
+      setTimeout(() => setGenConfigSaveMessage(null), 3000);
+      return;
     }
-  }, [isAuthenticated, user?.id]);
+
+    try {
+      const { error } = await supabase
+        .from('generation_configs')
+        .insert({
+          name: genConfigName.trim(),
+          challenge_type: 'challenge', // Default type, can be changed in Configs tab
+          config: config,
+          description: `Saved from Simulation Mode`,
+          is_active: false, // Not active until assigned in Configs tab
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          setGenConfigSaveMessage({ type: 'error', text: 'Config name already exists' });
+        } else {
+          throw error;
+        }
+      } else {
+        setGenConfigSaveMessage({ type: 'success', text: 'Config saved! Assign it in the Configs tab.' });
+        setGenConfigName('');
+      }
+      setTimeout(() => setGenConfigSaveMessage(null), 4000);
+    } catch (err) {
+      console.error('Error saving generation config:', err);
+      setGenConfigSaveMessage({ type: 'error', text: 'Failed to save config' });
+      setTimeout(() => setGenConfigSaveMessage(null), 3000);
+    }
+  }, [config, genConfigName]);
 
   const isRunning = state.status === 'running' || state.status === 'retrying';
   const executedCount = state.executedSlots.size;
@@ -933,54 +943,59 @@ export function SimulationMode() {
         </div>
 
         <div className={styles.configSection}>
-          <label className={styles.label}>Save/Load Config</label>
+          <label className={styles.label}>
+            <Zap size={14} style={{ display: 'inline', marginRight: '4px' }} />
+            Database Configs
+          </label>
+          <p className={styles.helpText}>
+            Save/Load configs (assign to Easy/Challenge in Configs tab)
+          </p>
           <div className={styles.saveLoadRow}>
             <input
               type="text"
               placeholder="Config name..."
-              value={configName}
-              onChange={e => setConfigName(e.target.value)}
+              value={genConfigName}
+              onChange={e => setGenConfigName(e.target.value)}
               className={styles.nameInput}
             />
             <button
-              onClick={handleSaveConfig}
-              disabled={!configName.trim()}
+              onClick={handleSaveGenerationConfig}
+              disabled={!genConfigName.trim()}
               className={styles.saveButton}
               title="Save Config"
             >
               <Save size={14} />
             </button>
             <button
-              onClick={() => setShowSavedConfigs(!showSavedConfigs)}
+              onClick={handleLoadDbConfigs}
+              disabled={isLoadingDbConfigs}
               className={styles.loadButton}
               title="Load Config"
             >
               <FolderOpen size={14} />
             </button>
           </div>
-          {showSavedConfigs && savedConfigs.length > 0 && (
+          {showDbConfigs && dbConfigs.length > 0 && (
             <div className={styles.savedList}>
-              {savedConfigs.map(c => (
+              {dbConfigs.map(c => (
                 <div key={c.id} className={styles.savedItem}>
                   <span
                     className={styles.savedItemName}
-                    onClick={() => handleLoadConfig(c)}
+                    onClick={() => handleApplyDbConfig(c.config)}
                   >
                     {c.name}
                   </span>
-                  <button
-                    onClick={() => handleDeleteConfig(c.id)}
-                    className={styles.deleteButton}
-                    title="Delete"
-                  >
-                    <Trash2 size={12} />
-                  </button>
                 </div>
               ))}
             </div>
           )}
-          {showSavedConfigs && savedConfigs.length === 0 && (
-            <div className={styles.emptyMessage}>No saved configs</div>
+          {showDbConfigs && dbConfigs.length === 0 && (
+            <div className={styles.emptyMessage}>No configs saved yet</div>
+          )}
+          {genConfigSaveMessage && (
+            <div className={genConfigSaveMessage.type === 'success' ? styles.successMessage : styles.errorMessage}>
+              {genConfigSaveMessage.text}
+            </div>
           )}
         </div>
 

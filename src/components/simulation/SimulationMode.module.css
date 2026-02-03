@@ -592,3 +592,71 @@
   color: #94a3b8;
   font-weight: 500;
 }
+
+/* Generation Config Styles */
+.helpText {
+  font-size: 0.6875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.genConfigButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.easyConfigButton,
+.challengeConfigButton {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.easyConfigButton {
+  background: #166534;
+  color: #bbf7d0;
+}
+
+.easyConfigButton:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.easyConfigButton:disabled,
+.challengeConfigButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.challengeConfigButton {
+  background: #991b1b;
+  color: #fecaca;
+}
+
+.challengeConfigButton:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.successMessage {
+  padding: 0.5rem;
+  background: #14532d;
+  border: 1px solid #166534;
+  border-radius: 4px;
+  color: #86efac;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.errorMessage {
+  padding: 0.5rem;
+  background: #450a0a;
+  border: 1px solid #991b1b;
+  border-radius: 4px;
+  color: #fca5a5;
+  font-size: 0.75rem;
+  text-align: center;
+}

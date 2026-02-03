@@ -159,6 +159,72 @@
   cursor: pointer;
 }
 
+.success {
+  padding: 0.75rem 1rem;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  color: #15803D;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Generation Status Section */
+.generationStatus {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.statusCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+}
+
+.statusIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.statusContent {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.statusLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statusValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.statusHint {
+  font-size: 0.6875rem;
+  color: #94A3B8;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -428,6 +494,285 @@
   background: #FECACA;
 }
 
+/* Approve Easy/Challenge buttons */
+.approveEasyButton,
+.approveChallengeButton {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.approveEasyButton {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.approveEasyButton:hover {
+  background: #A7F3D0;
+}
+
+.approveChallengeButton {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.approveChallengeButton:hover {
+  background: #FECACA;
+}
+
+/* Configs Section */
+.configsSection {
+  padding: 0.5rem 0;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 0.5rem;
+}
+
+.configsHint {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 0 0 1.5rem;
+}
+
+.configGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.configGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.configGroupTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.noConfigs {
+  font-size: 0.875rem;
+  color: #94A3B8;
+  font-style: italic;
+  margin: 0;
+}
+
+.configCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+  transition: all 0.15s;
+}
+
+.configCard.activeConfig {
+  border-color: #10B981;
+  background: #F0FDF4;
+}
+
+.configInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.configName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.configDesc {
+  font-size: 0.75rem;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.configActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.activeToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+}
+
+.activeToggle input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.deleteConfigButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #FEE2E2;
+  border: none;
+  border-radius: 6px;
+  color: #DC2626;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.deleteConfigButton:hover {
+  background: #FECACA;
+}
+
+/* Manual Generation Section */
+.manualGenSection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: #F8FAFC;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+}
+
+.manualGenButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #7C3AED;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.manualGenButton:hover:not(:disabled) {
+  background: #6D28D9;
+}
+
+.manualGenButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.genMessage {
+  font-size: 0.8125rem;
+  color: #64748B;
+}
+
+/* Active Configs Row */
+.activeConfigsRow {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+}
+
+.activeConfigIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.activeValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+/* Config Type Badge */
+.configTypeBadge {
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.activeBadge {
+  padding: 0.125rem 0.375rem;
+  background: #D1FAE5;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #059669;
+  text-transform: uppercase;
+}
+
+/* Assign Buttons */
+.assignEasyButton,
+.assignChallengeButton {
+  padding: 0.375rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.assignEasyButton {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.assignEasyButton:hover {
+  background: #A7F3D0;
+}
+
+.assignChallengeButton {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.assignChallengeButton:hover {
+  background: #FECACA;
+}
+
 /* Desktop */
 @media (min-width: 768px) {
   .filters {
@@ -443,12 +788,72 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .generationStatus {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .statusCard {
+    padding: 0.625rem;
+  }
+
+  .statusIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .statusValue {
+    font-size: 0.9375rem;
+  }
+
   .puzzleCard {
     flex-direction: column;
     align-items: flex-start;
   }
 
   .puzzleStats {
+    flex-wrap: wrap;
+  }
+
+  .puzzleActions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .approveEasyButton,
+  .approveChallengeButton {
+    flex: 1;
+    justify-content: center;
+    min-width: 80px;
+  }
+
+  .viewTabs {
+    gap: 0.25rem;
+  }
+
+  .viewTab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .configCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .configActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+  .generationStatus {
+    grid-template-columns: 1fr;
+  }
+
+  .viewTabs {
     flex-wrap: wrap;
   }
 }
