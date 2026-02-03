@@ -163,7 +163,6 @@ export function Home() {
             <Download size={20} />
             Install App
           </button>
-          <p className={styles.installDesc}>Play offline anytime</p>
         </motion.section>
       )}
     </div>
