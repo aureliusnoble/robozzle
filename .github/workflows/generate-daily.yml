@@ -21,14 +21,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: robozzle/package-lock.json
 
       - name: Install dependencies
-        working-directory: robozzle
         run: npm ci
 
       - name: Run puzzle generation
-        working-directory: robozzle
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
