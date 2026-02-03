@@ -376,17 +376,20 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
     }
   }, [start, scrollToBoard, gameState]);
 
-  // Handle step - single step only, don't auto-run, no scrolling
+  // Handle step - single step only, don't auto-run
   // First step after reset shows the starting position (NEXT indicator) without executing
   const handleStep = useCallback(() => {
     if (!isRunning) {
-      // Starting fresh - show the first instruction as NEXT without executing
-      start();
-      pause();
+      // Starting fresh - scroll to board first
+      scrollToBoard();
+      setTimeout(() => {
+        start();
+        pause();
+      }, 400);
       return; // Don't step yet - let user see which instruction will execute first
     }
     step();
-  }, [isRunning, start, pause, step]);
+  }, [isRunning, start, pause, step, scrollToBoard]);
 
   if (!gameState || !program) {
     return <div className={styles.loading}>Loading puzzle...</div>;
