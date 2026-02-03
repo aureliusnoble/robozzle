@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bot, Calendar, BookOpen, Gamepad2, Flame, ChevronRight } from 'lucide-react';
+import { Bot, Calendar, BookOpen, Gamepad2, Flame, ChevronRight, Download } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import styles from './Home.module.css';
 
 export function Home() {
   const { user, isAuthenticated } = useAuthStore();
+  const { canInstall, promptInstall } = useInstallPrompt();
 
   return (
     <div className={styles.container}>
@@ -148,6 +150,22 @@ export function Home() {
           </div>
         </div>
       </motion.section>
+
+      {/* Install app prompt */}
+      {canInstall && (
+        <motion.section
+          className={styles.installPrompt}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <button className={styles.installButton} onClick={promptInstall}>
+            <Download size={20} />
+            Install App
+          </button>
+          <p className={styles.installDesc}>Play offline anytime</p>
+        </motion.section>
+      )}
     </div>
   );
 }
