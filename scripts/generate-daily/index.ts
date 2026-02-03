@@ -156,22 +156,49 @@ async function generatePuzzlesForType(
   config: SimulationConfig,
   count: number
 ): Promise<number> {
-  console.log(`\nGenerating ${count} ${challengeType} puzzles...`);
+  console.log(`\n${'='.repeat(50)}`);
+  console.log(`Generating ${count} ${challengeType.toUpperCase()} puzzles`);
+  console.log(`${'='.repeat(50)}`);
+
+  // Log config details
+  console.log('\nConfig settings:');
+  console.log(`  Grid size: ${config.gridSize}x${config.gridSize}`);
+  console.log(`  Max steps: ${config.maxSteps}`);
+  console.log(`  Functions: F1=${config.slotsPerFunction.f1}, F2=${config.slotsPerFunction.f2}, F3=${config.slotsPerFunction.f3}, F4=${config.slotsPerFunction.f4}, F5=${config.slotsPerFunction.f5}`);
+  console.log(`  Min tiles: ${config.minTiles}, Min turns: ${config.minTurns}, Min path: ${config.minPathLength}`);
+  console.log(`  Min coverage: ${config.minCoveragePercent}%, Conditional: ${config.conditionalPercent}%`);
+  console.log(`  Min stack depth: ${config.minStackDepth}, Min self calls: ${config.minSelfCalls}`);
+  console.log(`  Auto restart after: ${config.autoRestartAfter} attempts`);
 
   const engine = new SimulationEngine(config);
   let generated = 0;
 
   for (let i = 0; i < count; i++) {
-    console.log(`\nAttempting puzzle ${i + 1}/${count}...`);
+    console.log(`\n--- Puzzle ${i + 1}/${count} ---`);
 
     const startTime = Date.now();
     const result = engine.generate(MAX_GENERATION_TIME_MS);
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     if (result.success && result.puzzle && result.solution) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`Generated puzzle in ${elapsed}s after ${result.attempts} attempts`);
+      console.log(`SUCCESS in ${elapsed}s after ${result.attempts.toLocaleString()} attempts`);
+
+      // Log puzzle details
+      const totalSlots = Object.values(config.slotsPerFunction).reduce((a, b) => a + b, 0);
+      const executedCount = result.executedSlots?.size || 0;
+      const coverage = totalSlots > 0 ? ((executedCount / totalSlots) * 100).toFixed(1) : '0';
+      const pathLength = (result.robotPath?.length || 1) - 1;
+      const turns = result.turnPositions?.length || 0;
+      const stars = turns + 1; // turns + final position
+
+      console.log(`  Path length: ${pathLength} moves`);
+      console.log(`  Turns: ${turns}, Stars: ${stars}`);
+      console.log(`  Coverage: ${executedCount}/${totalSlots} slots (${coverage}%)`);
+      console.log(`  Step count: ${result.puzzle.stepCount}`);
 
       const qualityScore = calculateQualityScore(result, config);
+      console.log(`  Quality score: ${qualityScore}`);
+
       const success = await uploadPuzzle(
         result.puzzle,
         result.solution,
@@ -181,15 +208,35 @@ async function generatePuzzlesForType(
 
       if (success) {
         generated++;
+        console.log(`  Uploaded successfully!`);
+      } else {
+        console.log(`  Upload FAILED`);
       }
     } else {
-      console.log(`Failed to generate puzzle after ${result.attempts} attempts`);
-      if (result.errorType) {
-        console.log(`Last error type: ${result.errorType}`);
+      console.log(`FAILED after ${elapsed}s and ${result.attempts.toLocaleString()} attempts`);
+      console.log(`  Last error type: ${result.errorType || 'unknown'}`);
+      console.log(`  Timeout: ${MAX_GENERATION_TIME_MS / 1000}s`);
+
+      // Log error breakdown
+      if (result.errorCounts) {
+        const ec = result.errorCounts;
+        const total = ec.boundary + ec.coverage + ec.loop + ec.minTiles + ec.minBoundingBox + ec.minTurns + ec.minPathLength + ec.other;
+        if (total > 0) {
+          console.log(`  Error breakdown:`);
+          if (ec.boundary > 0) console.log(`    - boundary: ${ec.boundary} (${((ec.boundary/total)*100).toFixed(1)}%)`);
+          if (ec.coverage > 0) console.log(`    - coverage: ${ec.coverage} (${((ec.coverage/total)*100).toFixed(1)}%)`);
+          if (ec.loop > 0) console.log(`    - loop: ${ec.loop} (${((ec.loop/total)*100).toFixed(1)}%)`);
+          if (ec.minTiles > 0) console.log(`    - minTiles: ${ec.minTiles} (${((ec.minTiles/total)*100).toFixed(1)}%)`);
+          if (ec.minBoundingBox > 0) console.log(`    - minBoundingBox: ${ec.minBoundingBox} (${((ec.minBoundingBox/total)*100).toFixed(1)}%)`);
+          if (ec.minTurns > 0) console.log(`    - minTurns: ${ec.minTurns} (${((ec.minTurns/total)*100).toFixed(1)}%)`);
+          if (ec.minPathLength > 0) console.log(`    - minPathLength: ${ec.minPathLength} (${((ec.minPathLength/total)*100).toFixed(1)}%)`);
+          if (ec.other > 0) console.log(`    - other: ${ec.other} (${((ec.other/total)*100).toFixed(1)}%)`);
+        }
       }
     }
   }
 
+  console.log(`\n${challengeType.toUpperCase()} generation complete: ${generated}/${count} puzzles`);
   return generated;
 }
 

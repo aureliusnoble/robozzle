@@ -462,6 +462,17 @@ function filterExecutedInstructions(
   return filtered;
 }
 
+export interface ErrorCounts {
+  boundary: number;
+  coverage: number;
+  loop: number;
+  minTiles: number;
+  minBoundingBox: number;
+  minTurns: number;
+  minPathLength: number;
+  other: number;
+}
+
 export interface GenerationResult {
   success: boolean;
   puzzle?: any;
@@ -471,6 +482,7 @@ export interface GenerationResult {
   executedSlots?: Set<string>;
   robotPath?: Position[];
   turnPositions?: Position[];
+  errorCounts?: ErrorCounts;
 }
 
 export class SimulationEngine {
@@ -486,10 +498,34 @@ export class SimulationEngine {
     let attempts = 0;
     let lastErrorType: string | null = null;
 
+    const errorCounts: ErrorCounts = {
+      boundary: 0,
+      coverage: 0,
+      loop: 0,
+      minTiles: 0,
+      minBoundingBox: 0,
+      minTurns: 0,
+      minPathLength: 0,
+      other: 0,
+    };
+
     this.triedConfigurations.clear();
+
+    // Progress logging
+    let lastProgressLog = startTime;
+    const PROGRESS_INTERVAL = 10000; // Log every 10 seconds
 
     while (Date.now() - startTime < timeoutMs) {
       attempts++;
+
+      // Log progress periodically
+      const now = Date.now();
+      if (now - lastProgressLog >= PROGRESS_INTERVAL) {
+        const elapsed = ((now - startTime) / 1000).toFixed(0);
+        const uniqueConfigs = this.triedConfigurations.size;
+        console.log(`  [${elapsed}s] ${attempts.toLocaleString()} attempts, ${uniqueConfigs.toLocaleString()} unique configs...`);
+        lastProgressLog = now;
+      }
 
       // Generate random program
       const program = generateRandomProgram(this.config);
@@ -558,10 +594,22 @@ export class SimulationEngine {
           executedSlots: result.executedSlots,
           robotPath: result.robotPath,
           turnPositions: result.turnPositions,
+          errorCounts,
         };
       }
 
+      // Track error types
       lastErrorType = result.errorType;
+      switch (result.errorType) {
+        case 'boundary': errorCounts.boundary++; break;
+        case 'coverage': errorCounts.coverage++; break;
+        case 'loop': errorCounts.loop++; break;
+        case 'minTiles': errorCounts.minTiles++; break;
+        case 'minBoundingBox': errorCounts.minBoundingBox++; break;
+        case 'minTurns': errorCounts.minTurns++; break;
+        case 'minPathLength': errorCounts.minPathLength++; break;
+        default: errorCounts.other++; break;
+      }
 
       // Auto-restart after many failures
       if (attempts % this.config.autoRestartAfter === 0) {
@@ -573,6 +621,7 @@ export class SimulationEngine {
       success: false,
       attempts,
       errorType: lastErrorType || 'timeout',
+      errorCounts,
     };
   }
 }
