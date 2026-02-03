@@ -219,7 +219,7 @@ export function DevMode() {
     setGenerationMessage('Manual generation must be triggered from GitHub Actions.');
 
     // Open GitHub Actions page in new tab
-    window.open('https://github.com/aureliusbtc/robozzle/actions/workflows/generate-daily.yml', '_blank');
+    window.open('https://github.com/aureliusnoble/robozzle/actions/workflows/generate-daily.yml', '_blank');
 
     setTimeout(() => {
       setIsGenerating(false);
