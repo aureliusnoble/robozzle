@@ -95,6 +95,26 @@ export class GameEngine {
   }
 
   public setProgram(program: Program): void {
+    // Ensure program arrays match the puzzle's function lengths
+    // This handles cases where saved programs have different array sizes
+    const functions: (keyof Program)[] = ['f1', 'f2', 'f3', 'f4', 'f5'];
+
+    for (const func of functions) {
+      const requiredLength = this.puzzle.functionLengths[func];
+      const currentArray = program[func] || [];
+
+      if (currentArray.length < requiredLength) {
+        // Pad with nulls if array is too short
+        program[func] = [
+          ...currentArray,
+          ...new Array(requiredLength - currentArray.length).fill(null)
+        ];
+      } else if (currentArray.length > requiredLength) {
+        // Truncate if array is too long
+        program[func] = currentArray.slice(0, requiredLength);
+      }
+    }
+
     this.program = program;
   }
 

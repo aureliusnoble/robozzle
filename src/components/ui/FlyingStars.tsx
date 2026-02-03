@@ -30,8 +30,9 @@ interface ImpactParticle {
 }
 
 // Animation timing constants
-const STAGGER_DELAY = 0.25; // Delay between each star (longer for more drama)
-const FLIGHT_DURATION = 2.0; // How long each star takes to fly
+const INITIAL_DELAY = 0.8; // Wait before animation starts (let user see the board)
+const STAGGER_DELAY = 0.35; // Delay between each star (longer for more drama)
+const FLIGHT_DURATION = 2.5; // How long each star takes to fly
 
 export function FlyingStars() {
   const { pendingStarAnimation, clearStarAnimation } = useAuthStore();
@@ -118,7 +119,7 @@ export function FlyingStars() {
       const newSparkles: SparkleParticle[] = [];
 
       for (let i = 0; i < starCount; i++) {
-        const starDelay = i * STAGGER_DELAY;
+        const starDelay = INITIAL_DELAY + (i * STAGGER_DELAY);
 
         newParticles.push({
           id: i,
@@ -148,8 +149,8 @@ export function FlyingStars() {
       impactCountRef.current = 0;
 
       // Calculate total animation duration based on star count
-      // Last star starts at (starCount-1) * STAGGER_DELAY, then takes FLIGHT_DURATION
-      const totalDuration = ((starCount - 1) * STAGGER_DELAY * 1000) + (FLIGHT_DURATION * 1000) + 800;
+      // Initial delay + last star starts at (starCount-1) * STAGGER_DELAY, then takes FLIGHT_DURATION
+      const totalDuration = (INITIAL_DELAY * 1000) + ((starCount - 1) * STAGGER_DELAY * 1000) + (FLIGHT_DURATION * 1000) + 800;
 
       const timer = setTimeout(() => {
         setParticles([]);
@@ -346,5 +347,6 @@ export function FlyingStars() {
 // Export timing constants for use in other components
 export const getStarAnimationDuration = (starCount: number): number => {
   // Returns duration in milliseconds
-  return ((starCount - 1) * STAGGER_DELAY * 1000) + (FLIGHT_DURATION * 1000) + 1000;
+  // Initial delay + stagger delays + flight duration + buffer
+  return (INITIAL_DELAY * 1000) + ((starCount - 1) * STAGGER_DELAY * 1000) + (FLIGHT_DURATION * 1000) + 1000;
 };
