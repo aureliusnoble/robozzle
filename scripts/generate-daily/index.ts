@@ -21,7 +21,7 @@ import type { ChallengeType } from '../../src/engine/types';
 // Configuration
 const MIN_POOL_SIZE = 7; // Minimum puzzles in pool before generating more
 const MAX_GENERATION_TIME_MS = 30 * 60 * 1000; // 30 minutes per puzzle max
-const PUZZLES_TO_GENERATE = 3; // Generate up to this many per run
+const PUZZLES_TO_GENERATE = 7; // Generate up to this many per run
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
