@@ -299,6 +299,7 @@ function runSimulation(
     fixedGrid?: (Tile | null)[][];
     fixedStartPos?: Position;
     fixedStartDir?: Direction;
+    skipPaintCheck?: boolean; // Prevent infinite recursion in paint necessity check
   }
 ): SimulationResult {
   const grid = options?.fixedGrid
@@ -910,7 +911,8 @@ function runSimulation(
   }
 
   // Check if paint instructions meet the necessity requirement
-  if (config.maxUnnecessaryPaints >= 0 && paintedTiles.size > 0) {
+  // Skip this check if we're already in a nested paint check (prevents infinite recursion)
+  if (config.maxUnnecessaryPaints >= 0 && paintedTiles.size > 0 && !options?.skipPaintCheck) {
     // Find all executed paint slots
     const executedPaintSlots: string[] = [];
     for (const slotKey of executedSlots) {
@@ -931,6 +933,7 @@ function runSimulation(
         fixedGrid: originalGridCopy,
         fixedStartPos: startPos,
         fixedStartDir: startDir,
+        skipPaintCheck: true, // Prevent infinite recursion
       });
 
       if (testResult.success) {
@@ -1095,8 +1098,15 @@ export class SimulationEngine {
       }
       this.triedConfigurations.add(serialized);
 
-      // Run simulation
-      const result = runSimulation(program, this.config);
+      // Run simulation with error handling
+      let result: SimulationResult;
+      try {
+        result = runSimulation(program, this.config);
+      } catch (err) {
+        // Handle stack overflow or other errors - just skip this attempt
+        errorCounts.other++;
+        continue;
+      }
 
       if (result.success) {
         // Create puzzle config from result - use ORIGINAL grid (before paint operations)
