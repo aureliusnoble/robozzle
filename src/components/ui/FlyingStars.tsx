@@ -333,8 +333,9 @@ export function FlyingStars() {
             opacity: [0, 1, 1, 0],
           }}
           transition={{
-            duration: Math.min(2.5, (pendingStarAnimation * STAGGER_DELAY) + 1),
-            times: [0, 0.15, 0.5, 1],
+            delay: INITIAL_DELAY * 0.5, // Appear slightly before stars start
+            duration: Math.min(3, (pendingStarAnimation * STAGGER_DELAY) + 1.5),
+            times: [0, 0.12, 0.4, 1],
           }}
         >
           +{pendingStarAnimation}
