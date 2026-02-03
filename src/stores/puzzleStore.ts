@@ -26,6 +26,7 @@ interface PuzzleStore {
   loadDailyChallengeForDate: (date: string, challengeType?: ChallengeType) => Promise<void>;
   loadDailyArchive: () => Promise<void>;
   loadBothDailyChallenges: () => Promise<void>;
+  prefetchDailyChallenges: () => Promise<void>;
   fetchPuzzle: (id: string) => Promise<PuzzleConfig | null>;
   getPuzzleById: (id: string) => PuzzleConfig | null;
 }
@@ -276,6 +277,58 @@ export const usePuzzleStore = create<PuzzleStore>()(
         }
       },
 
+      // Prefetch daily challenges on app load - checks cache and refreshes if stale
+      prefetchDailyChallenges: async () => {
+        const { dailyEasyChallenge, dailyChallengeChallenge } = get();
+        const today = getTodayDate();
+
+        // Check if cached dailies are for today
+        const easyIsValid = dailyEasyChallenge?.date === today;
+        const challengeIsValid = dailyChallengeChallenge?.date === today;
+
+        // If both are valid, no need to fetch
+        if (easyIsValid && challengeIsValid) {
+          return;
+        }
+
+        // Fetch fresh daily challenges
+        try {
+          const { data: challenges, error } = await supabase
+            .from('daily_challenges')
+            .select('*, puzzles(*)')
+            .eq('date', today);
+
+          if (error || !challenges) {
+            return;
+          }
+
+          const stateUpdate: Partial<PuzzleStore> = {};
+
+          for (const daily of challenges) {
+            if (!daily.puzzles) continue;
+
+            const challenge: DailyChallenge = {
+              date: daily.date,
+              puzzleId: daily.puzzle_id,
+              puzzle: parsePuzzleFromDB(daily.puzzles),
+              challengeType: daily.challenge_type || 'challenge',
+            };
+
+            if (daily.challenge_type === 'easy') {
+              stateUpdate.dailyEasyChallenge = challenge;
+            } else {
+              stateUpdate.dailyChallengeChallenge = challenge;
+            }
+          }
+
+          if (Object.keys(stateUpdate).length > 0) {
+            set(stateUpdate as any);
+          }
+        } catch (e) {
+          console.error('Error prefetching daily challenges:', e);
+        }
+      },
+
       // Synchronous lookup (for already-loaded puzzles)
       getPuzzleById: (id: string) => {
         const { tutorials, loadedPuzzles, dailyChallenge, dailyArchive } = get();
@@ -300,10 +353,12 @@ export const usePuzzleStore = create<PuzzleStore>()(
       },
     }),
     {
-      name: 'robozzle-puzzles-v2', // Changed from v1 to avoid stale data
+      name: 'robozzle-puzzles-v3', // Changed from v2 to include daily challenges
       partialize: (state) => ({
-        // Only persist daily archive for offline access
-        // Classic puzzles are loaded from local JSON (metadata) and Supabase (full data)
+        // Persist daily challenges for faster loading on return visits
+        dailyEasyChallenge: state.dailyEasyChallenge,
+        dailyChallengeChallenge: state.dailyChallengeChallenge,
+        // Also persist archive for offline access
         dailyArchive: state.dailyArchive,
       }),
     }
