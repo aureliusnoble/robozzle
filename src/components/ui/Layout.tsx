@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, Calendar, BookOpen, Library, Trophy, Bot, Flame, Star, Code } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { FlyingStars } from './FlyingStars';
 import styles from './Layout.module.css';
 
 interface LayoutProps {
@@ -50,7 +51,7 @@ export function Layout({ children }: LayoutProps) {
         <div className={styles.headerRight}>
           {isAuthenticated && user ? (
             <div className={styles.userMenu}>
-              <span className={styles.stars} title="Total stars from classic puzzles">
+              <span id="header-star-counter" className={styles.stars} title="Total stars from classic puzzles">
                 <Star size={14} className={styles.starsIcon} />
                 {user.classicStars || 0}
               </span>
@@ -96,6 +97,9 @@ export function Layout({ children }: LayoutProps) {
           );
         })}
       </nav>
+
+      {/* Flying stars animation */}
+      <FlyingStars />
     </div>
   );
 }

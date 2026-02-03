@@ -63,17 +63,18 @@ export function DailyEasy() {
   }, [puzzleId, getProgram, saveProgram]);
 
   const handleComplete = useCallback(
-    async (steps: number, instructions: number) => {
+    (steps: number, instructions: number) => {
       setCompletedState({ steps, instructions });
-
-      if (isAuthenticated && !hasCompleted && dailyChallenge) {
-        const program = useGameStore.getState().getProgram();
-        if (program) {
-          await submitSolution(program, steps, instructions);
-        }
-      }
     },
-    [isAuthenticated, hasCompleted, dailyChallenge, submitSolution]
+    []
+  );
+
+  // Handle leaderboard submission (opt-in)
+  const handleSubmit = useCallback(
+    async (program: Program, steps: number, instructions: number) => {
+      await submitSolution(program, steps, instructions);
+    },
+    [submitSolution]
   );
 
   // Handle view solutions button click (from victory modal)
@@ -196,6 +197,7 @@ export function DailyEasy() {
         onComplete={handleComplete}
         onShare={completedState ? () => setShowShare(true) : undefined}
         hasSubmitted={hasCompleted}
+        onSubmit={isAuthenticated ? handleSubmit : undefined}
         onViewSolutions={handleViewSolutions}
         savedSlots={savedSlots}
         onSave={handleSave}

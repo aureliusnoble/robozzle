@@ -312,10 +312,15 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      addClassicStars: async (stars: number) => {
+      addClassicStars: async (stars: number, animate = true) => {
         try {
           const { user } = get();
           if (!user) return;
+
+          // Trigger animation if requested
+          if (animate) {
+            set({ pendingStarAnimation: stars });
+          }
 
           const newStars = (user.classicStars || 0) + stars;
 
@@ -423,6 +428,14 @@ export const useAuthStore = create<AuthStore>()(
         const { user, devModeEnabled } = get();
         const hasDevRole = user?.role === 'admin' || user?.role === 'dev';
         return hasDevRole && devModeEnabled;
+      },
+
+      triggerStarAnimation: (stars: number) => {
+        set({ pendingStarAnimation: stars });
+      },
+
+      clearStarAnimation: () => {
+        set({ pendingStarAnimation: null });
       },
     }),
     {
