@@ -15,6 +15,7 @@ interface GameBoardProps {
   puzzle?: PuzzleConfig;
   gameState: GameState;
   showFireworks?: boolean;
+  tutorialStep?: number;
 }
 
 const TILE_SIZE = 32;
@@ -116,7 +117,7 @@ function FireworksBurst({ x, y }: { x: number; y: number }) {
   );
 }
 
-export function GameBoard({ gameState, showFireworks }: GameBoardProps) {
+export function GameBoard({ gameState, showFireworks, tutorialStep }: GameBoardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate bounding box of non-null tiles
@@ -172,34 +173,45 @@ export function GameBoard({ gameState, showFireworks }: GameBoardProps) {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
-              >
-                {/* Star */}
-                <AnimatePresence mode="wait">
-                  {tile.hasStar && (
-                    <motion.img
-                      key={`star-${x}-${y}`}
-                      src={starSprite}
-                      alt="star"
-                      className={styles.star}
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{
-                        scale: 1,
-                        opacity: 1,
-                      }}
-                      exit={{
-                        scale: 0,
-                        opacity: 0,
-                      }}
-                      transition={{
-                        duration: 0.2,
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
-              </div>
+              />
             );
           })
         )}
+
+        {/* Stars - rendered separately for tutorial targeting */}
+        <div id="game-stars" className={styles.starsContainer}>
+          {gameState.grid.map((row, y) =>
+            row.map((tile, x) => {
+              if (tile === null || !tile.hasStar) return null;
+
+              return (
+                <AnimatePresence key={`star-${x}-${y}`} mode="wait">
+                  <motion.img
+                    src={starSprite}
+                    alt="star"
+                    className={`${styles.star} ${tutorialStep === 1 ? styles.starHighlight : ''}`}
+                    style={{
+                      left: BOARD_PADDING + (x - minX) * (TILE_SIZE + TILE_GAP) + (TILE_SIZE - 18) / 2,
+                      top: BOARD_PADDING + (y - minY) * (TILE_SIZE + TILE_GAP) + (TILE_SIZE - 18) / 2,
+                    }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{
+                      scale: 1,
+                      opacity: 1,
+                    }}
+                    exit={{
+                      scale: 0,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                    }}
+                  />
+                </AnimatePresence>
+              );
+            })
+          )}
+        </div>
 
         {/* Robot - use x/y for position so transforms combine with rotate */}
         <motion.div

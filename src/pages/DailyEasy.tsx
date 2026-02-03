@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Game } from '../components/game';
+import { Game, SolutionViewer } from '../components/game';
 import { DailyLeaderboard } from '../components/leaderboard';
 import { ShareModal } from '../components/share';
 import { AuthModal } from '../components/auth';
@@ -17,7 +17,7 @@ export function DailyEasy() {
   const navigate = useNavigate();
   const dateParam = searchParams.get('date');
 
-  const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution, loadSpecificDate } = useDailyPuzzle('easy');
+  const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution, loadSpecificDate, loadSolution } = useDailyPuzzle('easy');
   const { user, isAuthenticated } = useAuthStore();
   const { getProgram, setProgram: setGameProgram } = useGameStore();
   const [showShare, setShowShare] = useState(false);
@@ -25,6 +25,10 @@ export function DailyEasy() {
   const [completedState, setCompletedState] = useState<{
     steps: number;
     instructions: number;
+  } | null>(null);
+  const [viewingSolution, setViewingSolution] = useState<{
+    userId: string | null;
+    username: string;
   } | null>(null);
 
   // Ref for scrolling to leaderboard
@@ -90,6 +94,11 @@ export function DailyEasy() {
     }
     return loaded;
   }, [loadProgram, setGameProgram]);
+
+  // Handle viewing another user's solution
+  const handleViewSolution = useCallback((userId: string | null, username: string) => {
+    setViewingSolution({ userId, username });
+  }, []);
 
   const isViewingArchive = !!dateParam;
   const today = new Date().toISOString().split('T')[0];
@@ -217,8 +226,21 @@ export function DailyEasy() {
         <DailyLeaderboard
           entries={leaderboard}
           currentUsername={user?.username}
+          currentUserId={user?.id}
+          hasSubmitted={hasCompleted}
+          onViewSolution={handleViewSolution}
         />
       </div>
+
+      {/* Solution Viewer Modal */}
+      {viewingSolution && dailyChallenge && (
+        <SolutionViewer
+          puzzle={dailyChallenge.puzzle}
+          username={viewingSolution.username}
+          onLoadSolution={() => loadSolution(viewingSolution.userId)}
+          onClose={() => setViewingSolution(null)}
+        />
+      )}
 
       {/* Share Modal */}
       {dailyChallenge && completedState && (

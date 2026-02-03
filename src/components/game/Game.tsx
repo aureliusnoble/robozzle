@@ -47,6 +47,7 @@ interface GameProps {
   onBack?: () => void;
   onShare?: () => void;
   tutorialStep?: number; // For progressive disclosure and onboarding
+  suppressVictoryModal?: boolean; // Don't show victory modal on completion
   // Leaderboard submission
   hasSubmitted?: boolean;
   onSubmit?: (program: Program, steps: number, instructions: number) => Promise<void>;
@@ -118,6 +119,7 @@ export function Game({
   onBack,
   onShare,
   tutorialStep,
+  suppressVictoryModal,
   hasSubmitted,
   onSubmit,
   onViewSolutions,
@@ -251,18 +253,34 @@ export function Game({
   // Disable editing while program is running or in read-only mode
   const editingDisabled = isRunning || readOnly;
 
-  // Load puzzle on mount or change
+  // Track the last loaded puzzle ID to avoid reloading
+  const loadedPuzzleIdRef = useRef<string | null>(null);
+  // Track if we've applied the initial program for this puzzle
+  const initialProgramAppliedRef = useRef<string | null>(null);
+
+  // Load puzzle on mount or when puzzle ID changes
   useEffect(() => {
+    // Only reload if the puzzle ID actually changed
+    if (loadedPuzzleIdRef.current === puzzle.id) {
+      return;
+    }
+
+    loadedPuzzleIdRef.current = puzzle.id;
+    initialProgramAppliedRef.current = null; // Reset so initial program can be applied
     loadPuzzle(puzzle);
     setCurrentFunction('f1');
     setSelectedColor(null);
     completionCalledRef.current = false; // Reset completion tracking
+  }, [puzzle, loadPuzzle]);
 
-    // Apply initial program if provided (e.g., for solution preview)
-    if (initialProgram) {
+  // Apply initial program when it becomes available (separate from puzzle loading)
+  useEffect(() => {
+    // Only apply if we have an initial program and haven't applied one for this puzzle yet
+    if (initialProgram && initialProgramAppliedRef.current !== puzzle.id) {
       setProgram(initialProgram);
+      initialProgramAppliedRef.current = puzzle.id;
     }
-  }, [puzzle, loadPuzzle, initialProgram, setProgram]);
+  }, [puzzle.id, initialProgram, setProgram]);
 
   // Handle completion - use ref to ensure we only call onComplete once per completion
   useEffect(() => {
@@ -277,7 +295,7 @@ export function Game({
 
   // Delay victory modal to let player see the robot reach the final star
   useEffect(() => {
-    if (isComplete) {
+    if (isComplete && !suppressVictoryModal) {
       const timer = setTimeout(() => {
         setShowVictoryModal(true);
       }, 1000);
@@ -285,7 +303,7 @@ export function Game({
     } else {
       setShowVictoryModal(false);
     }
-  }, [isComplete]);
+  }, [isComplete, suppressVictoryModal]);
 
   // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -524,7 +542,7 @@ export function Game({
                   transformOrigin: 'top center',
                 }}
               >
-                <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} />
+                <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} tutorialStep={tutorialStep} />
               </div>
             </div>
 
@@ -582,18 +600,6 @@ export function Game({
 
           {/* Programming interface */}
           <div className={styles.programming}>
-            {/* Save/Load controls (only show when not read-only) */}
-            {!readOnly && savedSlots && onSave && onLoad && (
-              <div className={styles.saveLoadRow}>
-                <SaveLoadControls
-                  savedSlots={savedSlots}
-                  onSave={handleSave}
-                  onLoad={handleLoad}
-                  disabled={editingDisabled}
-                />
-              </div>
-            )}
-
             <FunctionSlots
               program={program}
               functionLengths={puzzle.functionLengths}
@@ -620,6 +626,16 @@ export function Game({
               disabled={editingDisabled}
               tutorialStep={tutorialStep}
             />
+
+            {/* Save/Load controls */}
+            {!readOnly && savedSlots && onSave && onLoad && (
+              <SaveLoadControls
+                savedSlots={savedSlots}
+                onSave={handleSave}
+                onLoad={handleLoad}
+                disabled={editingDisabled}
+              />
+            )}
           </div>
         </div>
 

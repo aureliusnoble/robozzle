@@ -440,6 +440,7 @@ export function FunctionSlots({
           </button>
         )}
       </div>
+
     </div>
   );
 }

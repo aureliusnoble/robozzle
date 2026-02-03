@@ -11,7 +11,9 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { user, isAuthenticated, signOut } = useAuthStore();
+  const { user, isAuthenticated, signOut, devModeEnabled, toggleDevMode } = useAuthStore();
+
+  const hasDevRole = user?.role === 'admin' || user?.role === 'dev';
 
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
@@ -32,10 +34,14 @@ export function Layout({ children }: LayoutProps) {
           {isAuthenticated && user && (
             <>
               <span className={styles.username}>{user.username}</span>
-              {(user.role === 'dev' || user.role === 'admin') && (
-                <span className={styles.devBadge} title="Developer">
+              {hasDevRole && (
+                <button
+                  className={`${styles.devBadge} ${!devModeEnabled ? styles.devBadgeDisabled : ''}`}
+                  onClick={toggleDevMode}
+                  title={devModeEnabled ? 'Dev mode ON - click to view as regular user' : 'Dev mode OFF - click to enable'}
+                >
                   <Code size={12} />
-                </span>
+                </button>
               )}
             </>
           )}

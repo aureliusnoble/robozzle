@@ -325,6 +325,7 @@ export const tutorialPuzzles: PuzzleConfig[] = [
     functionLengths: { f1: 2, f2: 5, f3: 2 },
     allowedInstructions: ['forward', 'left', 'right', 'f2', 'f3'],
     tutorialStep: 6,
+    advancedTopic: 'recursion',
     hint: 'F2 must: go forward, recurse on red, then turn around at green and backtrack. When you return to the near-green, F1\'s F3 takes over!',
   }),
 ];

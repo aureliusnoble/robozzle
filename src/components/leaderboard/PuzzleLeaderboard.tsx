@@ -67,6 +67,9 @@ export function PuzzleLeaderboard({
   return (
     <div className={styles.container}>
       <h3 className={styles.title}>Leaderboard</h3>
+      {!hasSubmitted && (
+        <p className={styles.subtitle}>Submit your solution to view other players' solutions</p>
+      )}
 
       <div className={styles.header}>
         <span className={styles.headerRank}>#</span>

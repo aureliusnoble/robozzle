@@ -24,6 +24,7 @@ export function useDailyLeaderboards() {
 
       if (!error && data) {
         const entries = data.map(d => ({
+          userId: d.user_id,
           username: d.profiles?.username || 'Anonymous',
           instructionsUsed: d.instructions_used,
           steps: d.steps,

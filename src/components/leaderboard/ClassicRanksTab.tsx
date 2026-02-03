@@ -112,13 +112,15 @@ export function ClassicRanksTab({ currentUsername }: ClassicRanksTabProps) {
 
       <div className={styles.footer}>
         <div className={styles.formulaBox}>
-          <h4>Scoring Formula</h4>
-          <p>Score = S² × 10 × log₂(N+1) × penalty factor</p>
+          <h4>How Scoring Works</h4>
           <p className={styles.formulaNote}>
-            S = star difficulty, N = puzzles at that level
+            Harder puzzles are worth more points, with difficulty scaling exponentially.
           </p>
           <p className={styles.formulaNote}>
-            Penalty reduces score if you've completed many easier puzzles
+            Solving multiple puzzles at each difficulty level gives bonus points, but with diminishing returns.
+          </p>
+          <p className={styles.formulaNote}>
+            The system rewards tackling a variety of difficulty levels over grinding easy puzzles.
           </p>
         </div>
       </div>

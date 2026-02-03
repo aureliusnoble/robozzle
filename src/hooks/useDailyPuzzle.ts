@@ -54,6 +54,7 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
 
       if (!error && data) {
         const entries = data.map(d => ({
+          userId: d.user_id,
           username: d.profiles?.username || 'Anonymous',
           instructionsUsed: d.instructions_used,
           steps: d.steps,
@@ -132,6 +133,30 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
     }
   };
 
+  // Load another user's solution
+  const loadSolution = useCallback(async (userId: string | null): Promise<Program | null> => {
+    if (!dailyChallenge || !hasCompleted) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('solutions')
+        .select('program')
+        .eq('puzzle_id', dailyChallenge.puzzleId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error || !data) {
+        return null;
+      }
+
+      return data.program as unknown as Program;
+    } catch {
+      return null;
+    }
+  }, [dailyChallenge, hasCompleted]);
+
   return {
     dailyChallenge,
     isLoadingDaily,
@@ -140,6 +165,7 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
     hasCompleted,
     submitSolution,
     loadSpecificDate,
+    loadSolution,
     challengeType,
   };
 }

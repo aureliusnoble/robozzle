@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 import type { UserProfile, UserProgress } from '../engine/types';
+import { calculateClassicScore, buildPuzzlesByStarsMap } from '../lib/classicScoring';
 
 interface AuthStore {
   user: UserProfile | null;
@@ -9,6 +10,7 @@ interface AuthStore {
   isLoading: boolean;
   isAuthenticated: boolean;
   needsUsername: boolean; // True when Google user needs to set username
+  devModeEnabled: boolean; // When false, devs see the site as regular users
 
   // Actions
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
@@ -21,6 +23,9 @@ interface AuthStore {
   setUsername: (username: string) => Promise<{ error?: string }>;
   addClassicStars: (stars: number) => Promise<void>;
   updateHardestPuzzle: (stars: number) => Promise<void>;
+  updateClassicRanking: () => Promise<void>;
+  toggleDevMode: () => void;
+  isDevUser: () => boolean; // Returns true if user has dev/admin role AND devModeEnabled is true
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -31,6 +36,7 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: true,
       isAuthenticated: false,
       needsUsername: false,
+      devModeEnabled: true, // Default to enabled for devs
 
       signIn: async (email: string, password: string) => {
         try {
@@ -217,16 +223,26 @@ export const useAuthStore = create<AuthStore>()(
             return { error: 'Username is already taken' };
           }
 
-          // Update or create the profile with the new username
-          const { error } = await supabase
+          // Try to update the profile first (should exist from signup trigger)
+          const { error: updateError, count } = await supabase
             .from('profiles')
-            .upsert({
-              id: user.id,
-              username: username,
-            });
+            .update({ username: username })
+            .eq('id', user.id)
+            .select();
 
-          if (error) {
-            return { error: error.message };
+          // If update didn't affect any rows, the profile might not exist - create it
+          if (updateError || count === 0) {
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                username: username,
+              });
+
+            if (insertError) {
+              // If insert also fails, return the original update error or insert error
+              return { error: insertError.message || updateError?.message || 'Failed to save username' };
+            }
           }
 
           // Fetch the updated profile
@@ -327,6 +343,62 @@ export const useAuthStore = create<AuthStore>()(
         } catch (err) {
           console.error('Error updating hardest puzzle:', err);
         }
+      },
+
+      updateClassicRanking: async () => {
+        try {
+          const { user, progress } = get();
+          if (!user || !progress) return;
+
+          const solvedPuzzles = progress.classicSolved || [];
+          if (solvedPuzzles.length === 0) return;
+
+          // Fetch star ratings for all solved puzzles
+          const { data: puzzlesData, error: puzzlesError } = await supabase
+            .from('puzzles')
+            .select('id, stars')
+            .in('id', solvedPuzzles);
+
+          if (puzzlesError || !puzzlesData) {
+            console.error('Error fetching puzzle stars:', puzzlesError);
+            return;
+          }
+
+          // Build star map
+          const puzzleStarsMap = new Map<string, number>();
+          for (const p of puzzlesData) {
+            if (p.stars) {
+              puzzleStarsMap.set(p.id, p.stars);
+            }
+          }
+
+          // Calculate score
+          const puzzlesByStars = buildPuzzlesByStarsMap(solvedPuzzles, puzzleStarsMap);
+          const score = calculateClassicScore(puzzlesByStars);
+
+          // Upsert to classic_rankings
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            await supabase
+              .from('classic_rankings')
+              .upsert({
+                user_id: authUser.id,
+                score: score,
+              }, { onConflict: 'user_id' });
+          }
+        } catch (err) {
+          console.error('Error updating classic ranking:', err);
+        }
+      },
+
+      toggleDevMode: () => {
+        set((state) => ({ devModeEnabled: !state.devModeEnabled }));
+      },
+
+      isDevUser: () => {
+        const { user, devModeEnabled } = get();
+        const hasDevRole = user?.role === 'admin' || user?.role === 'dev';
+        return hasDevRole && devModeEnabled;
       },
     }),
     {

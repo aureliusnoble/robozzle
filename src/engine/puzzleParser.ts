@@ -171,6 +171,7 @@ export function createSimplePuzzle(config: {
   category?: PuzzleConfig['category'];
   difficulty?: PuzzleConfig['difficulty'];
   tutorialStep?: number;
+  advancedTopic?: string;
   hint?: string;
   warning?: string;
 }): PuzzleConfig {
@@ -205,6 +206,7 @@ export function createSimplePuzzle(config: {
     category: config.category ?? 'tutorial',
     difficulty: config.difficulty ?? 'easy',
     tutorialStep: config.tutorialStep,
+    advancedTopic: config.advancedTopic,
     hint: config.hint,
     warning: config.warning,
   };

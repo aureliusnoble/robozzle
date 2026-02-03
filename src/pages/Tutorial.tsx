@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Check, GraduationCap, Lock, Calendar, Library } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Check, GraduationCap, Lock, Calendar, Library, Sparkles, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Game } from '../components/game';
 import { OnboardingProvider } from '../components/onboarding';
 import { usePuzzleStore } from '../stores/puzzleStore';
@@ -9,15 +10,25 @@ import { useOnboardingStore } from '../stores/onboardingStore';
 import styles from './Tutorial.module.css';
 
 export function Tutorial() {
-  const { tutorials, loadTutorials } = usePuzzleStore();
-  const { progress, updateProgress } = useAuthStore();
+  const navigate = useNavigate();
+  const { tutorials: allTutorials, loadTutorials } = usePuzzleStore();
+  const { progress, updateProgress, isDevUser } = useAuthStore();
   const { completeTutorial } = useOnboardingStore();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const initialLoadDone = useRef(false);
+  const completionSectionRef = useRef<HTMLDivElement>(null);
+
+  const devModeActive = isDevUser();
 
   useEffect(() => {
     loadTutorials();
   }, [loadTutorials]);
+
+  // Filter out tutorials with advancedTopic (they go to Advanced Concepts)
+  const tutorials = useMemo(() => {
+    return allTutorials.filter(t => !t.advancedTopic);
+  }, [allTutorials]);
 
   // Set initial step based on progress - only on first load
   useEffect(() => {
@@ -31,9 +42,15 @@ export function Tutorial() {
   }, [progress, tutorials.length]);
 
   const currentPuzzle = tutorials.find(p => p.tutorialStep === currentStep);
-  const completedCount = progress?.tutorialCompleted?.length || 0;
+  // Only count basic tutorials (1-5) for completion
+  const basicTutorialSteps = tutorials.map(t => t.tutorialStep).filter((s): s is number => s !== undefined);
+  const completedCount = basicTutorialSteps.filter(step =>
+    progress?.tutorialCompleted?.includes(step)
+  ).length;
   const isCurrentCompleted = progress?.tutorialCompleted?.includes(currentStep);
   const maxAccessible = Math.max(...(progress?.tutorialCompleted || []), 0) + 1;
+  const allBasicCompleted = completedCount === tutorials.length;
+  const isFinalTutorial = currentStep === tutorials.length;
 
   const handleComplete = async () => {
     if (!isCurrentCompleted) {
@@ -43,6 +60,13 @@ export function Tutorial() {
       // Update progress
       const newCompleted = [...(progress?.tutorialCompleted || []), currentStep];
       await updateProgress({ tutorialCompleted: newCompleted });
+
+      // On final tutorial completion, scroll to the completion section
+      if (isFinalTutorial) {
+        setTimeout(() => {
+          completionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 1200); // Wait for fireworks to finish
+      }
     }
   };
 
@@ -119,18 +143,32 @@ export function Tutorial() {
                 onComplete={handleComplete}
                 onNextPuzzle={currentStep < tutorials.length ? handleNextTutorial : undefined}
                 tutorialStep={currentStep}
+                suppressVictoryModal={isFinalTutorial}
               />
             </OnboardingProvider>
           </div>
         )}
 
         {/* Completed all tutorials */}
-        {completedCount === tutorials.length && (
-          <div className={styles.allComplete}>
+        {allBasicCompleted && (
+          <div ref={completionSectionRef} className={styles.allComplete}>
             <GraduationCap size={48} className={styles.completeIcon} />
             <h2>Congratulations!</h2>
-            <p>You've completed all tutorials. Ready for the real challenges?</p>
+            <p>You've completed all basic tutorials. Ready for the real challenges?</p>
             <div className={styles.completeButtons}>
+              <button
+                className={styles.advancedButton}
+                onClick={() => {
+                  if (devModeActive) {
+                    navigate('/tutorial/advanced');
+                  } else {
+                    setShowComingSoon(true);
+                  }
+                }}
+              >
+                <Sparkles size={20} />
+                Advanced Concepts
+              </button>
               <Link to="/daily" className={styles.dailyButton}>
                 <Calendar size={20} />
                 Daily Challenge
@@ -144,6 +182,42 @@ export function Tutorial() {
         )}
       </div>
 
+      {/* Coming Soon Popup */}
+      <AnimatePresence>
+        {showComingSoon && (
+          <motion.div
+            className={styles.popupOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowComingSoon(false)}
+          >
+            <motion.div
+              className={styles.popupContent}
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className={styles.popupClose}
+                onClick={() => setShowComingSoon(false)}
+              >
+                <X size={20} />
+              </button>
+              <Sparkles size={48} className={styles.popupIcon} />
+              <h3>Coming Soon!</h3>
+              <p>Advanced Concepts are still in development. Check back later for more challenging tutorials!</p>
+              <button
+                className={styles.popupButton}
+                onClick={() => setShowComingSoon(false)}
+              >
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

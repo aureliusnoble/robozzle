@@ -14,6 +14,13 @@ export interface OnboardingStep {
 export const tutorialOnboardingSteps: Record<number, OnboardingStep[]> = {
   1: [
     {
+      id: 'stars',
+      targetId: 'game-stars',
+      title: 'Collect the Stars!',
+      description: 'Your goal is to collect ALL the golden stars. Program the robot to visit every star on the board!',
+      position: 'right',
+    },
+    {
       id: 'board',
       targetId: 'game-board',
       title: 'The Puzzle Board',
@@ -45,7 +52,7 @@ export const tutorialOnboardingSteps: Record<number, OnboardingStep[]> = {
       id: 'play-button',
       targetId: 'play-button',
       title: 'Run Your Program',
-      description: 'Press Play to watch your robot execute!',
+      description: 'Press Play to watch your robot execute! Note: You cannot edit your program while running - press Reset first.',
       position: 'left',
     },
   ],
@@ -70,14 +77,21 @@ export const tutorialOnboardingSteps: Record<number, OnboardingStep[]> = {
       id: 'f2-tab',
       targetId: 'function-tab-f2',
       title: 'Function F2',
-      description: 'F2 is a helper function. It runs when called and returns to where it was called from.',
+      description: 'F2 is a helper function. When F2 finishes, control returns to exactly where it was called from in F1, and F1 continues with the next instruction.',
       position: 'bottom',
     },
     {
       id: 'f2-instruction',
       targetId: 'palette-f2',
       title: 'Call F2',
-      description: 'Drag F2 into F1 to call it. F2 will run, then control returns to F1.',
+      description: 'Drag F2 into F1 to call it. Watch the Stack panel during execution - when F2 returns, F1 becomes active again!',
+      position: 'top',
+    },
+    {
+      id: 'call-stack-t3',
+      targetId: 'call-stack',
+      title: 'The Call Stack',
+      description: "This shows which function is running. When F2 finishes, it 'pops' off and control returns to F1. The 'returns to' label shows where execution will continue!",
       position: 'top',
     },
   ],

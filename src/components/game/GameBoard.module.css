@@ -26,7 +26,18 @@
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
 }
 
+.starsContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
 .star {
+  position: absolute;
   width: 18px;
   height: 18px;
   object-fit: contain;
@@ -42,6 +53,22 @@
   50% {
     transform: scale(1.1);
     filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.9));
+  }
+}
+
+/* Enhanced star animation for Tutorial 1 */
+.starHighlight {
+  animation: starHighlightPulse 1s ease-in-out infinite;
+}
+
+@keyframes starHighlightPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 1)) drop-shadow(0 0 16px rgba(251, 191, 36, 0.8));
+  }
+  50% {
+    transform: scale(1.25);
+    filter: drop-shadow(0 0 14px rgba(251, 191, 36, 1)) drop-shadow(0 0 24px rgba(251, 191, 36, 0.9));
   }
 }
 

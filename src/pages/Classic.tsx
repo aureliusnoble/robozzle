@@ -28,7 +28,7 @@ export function Classic() {
   const puzzleParam = searchParams.get('puzzle');
 
   const { classicPuzzlesMeta, isLoadingClassic, isLoadingPuzzle, loadClassicPuzzles, fetchPuzzle } = usePuzzleStore();
-  const { user, progress, updateProgress, addClassicStars, updateHardestPuzzle } = useAuthStore();
+  const { user, progress, updateProgress, addClassicStars, updateHardestPuzzle, updateClassicRanking } = useAuthStore();
   const { getProgram, setProgram: setGameProgram } = useGameStore();
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [filter, setFilter] = useState<DifficultyFilter>('all');
@@ -127,9 +127,11 @@ export function Classic() {
           await addClassicStars(selectedPuzzle.stars);
           await updateHardestPuzzle(selectedPuzzle.stars);
         }
+        // Update classic ranking score
+        await updateClassicRanking();
       }
     }
-  }, [selectedPuzzle, progress, updateProgress, addClassicStars, updateHardestPuzzle]);
+  }, [selectedPuzzle, progress, updateProgress, addClassicStars, updateHardestPuzzle, updateClassicRanking]);
 
   const handleBack = () => {
     // Auto-save current program before leaving

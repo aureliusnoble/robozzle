@@ -79,6 +79,7 @@ export interface PuzzleConfig {
   category: 'daily' | 'daily_easy' | 'daily_challenge' | 'tutorial' | 'classic';
   difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'impossible';
   tutorialStep?: number;
+  advancedTopic?: string;    // Topic ID for Advanced Concepts (e.g., 'recursion', 'memory')
   hint?: string;
   warning?: string;          // Challenge warning shown prominently
   author?: string;           // Original puzzle author
@@ -125,6 +126,7 @@ export interface DailyChallenge {
 
 export interface LeaderboardEntry {
   rank: number;
+  userId: string | null;
   username: string;
   instructionsUsed: number;
   steps: number;

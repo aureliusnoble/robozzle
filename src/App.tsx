@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/ui';
-import { Home, Daily, DailyEasy, DailyChallenge, DailyArchive, Tutorial, Classic, Leaderboard, Auth, DevMode } from './pages';
+import { Home, Daily, DailyEasy, DailyChallenge, DailyArchive, Tutorial, AdvancedConcepts, AdvancedTopicTutorials, Classic, Leaderboard, Auth, DevMode } from './pages';
 import { UsernamePrompt } from './components/auth';
 import { useAuthStore } from './stores/authStore';
 import { usePuzzleStore } from './stores/puzzleStore';
@@ -28,6 +28,8 @@ function App() {
           <Route path="/daily/challenge" element={<DailyChallenge />} />
           <Route path="/daily/archive" element={<DailyArchive />} />
           <Route path="/tutorial" element={<Tutorial />} />
+          <Route path="/tutorial/advanced" element={<AdvancedConcepts />} />
+          <Route path="/tutorial/advanced/:topicId" element={<AdvancedTopicTutorials />} />
           <Route path="/classic" element={<Classic />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/auth" element={<Auth />} />

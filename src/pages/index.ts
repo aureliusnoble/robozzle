@@ -4,6 +4,8 @@ export { DailyEasy } from './DailyEasy';
 export { DailyChallenge } from './DailyChallenge';
 export { DailyArchive } from './DailyArchive';
 export { Tutorial } from './Tutorial';
+export { AdvancedConcepts } from './AdvancedConcepts';
+export { AdvancedTopicTutorials } from './AdvancedTopicTutorials';
 export { Classic } from './Classic';
 export { Leaderboard } from './Leaderboard';
 export { Auth } from './Auth';

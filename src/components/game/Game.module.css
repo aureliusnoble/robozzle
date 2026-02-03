@@ -393,13 +393,6 @@
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
-/* Save/Load row */
-.saveLoadRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: -0.25rem;
-}
-
 /* Leaderboard submission section */
 .submitSection {
   display: flex;
