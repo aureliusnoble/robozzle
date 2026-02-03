@@ -1,0 +1,97 @@
+.container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dropdownButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dropdownButton:hover:not(:disabled) {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+
+.dropdownButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropdownWrapper {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.menuItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  color: #1E293B;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.menuItem:hover {
+  background: #F8FAFC;
+}
+
+.menuItem.empty {
+  color: #94A3B8;
+  font-style: italic;
+}
+
+.menuItem.empty:hover {
+  background: none;
+}
+
+.slotInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  color: #94A3B8;
+}
+
+.timeAgo {
+  color: #CBD5E1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .dropdownButton span:not(:first-child) {
+    display: none;
+  }
+
+  .dropdownButton {
+    padding: 0.375rem 0.5rem;
+  }
+}

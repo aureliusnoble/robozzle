@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, Circle, Loader2, Star, Library } from 'lucide-react';
-import { Game } from '../components/game';
+import { Game, SolutionViewer } from '../components/game';
+import { PuzzleLeaderboard } from '../components/leaderboard';
 import { ShareModal } from '../components/share';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
-import type { PuzzleConfig, PuzzleMetadata } from '../engine/types';
+import { usePuzzleLeaderboard } from '../hooks/usePuzzleLeaderboard';
+import { useSavedPrograms } from '../hooks/useSavedPrograms';
+import type { PuzzleConfig, PuzzleMetadata, Program } from '../engine/types';
 import styles from './Classic.module.css';
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -25,8 +28,8 @@ export function Classic() {
   const puzzleParam = searchParams.get('puzzle');
 
   const { classicPuzzlesMeta, isLoadingClassic, isLoadingPuzzle, loadClassicPuzzles, fetchPuzzle } = usePuzzleStore();
-  const { progress, updateProgress } = useAuthStore();
-  const { getProgram } = useGameStore();
+  const { user, progress, updateProgress } = useAuthStore();
+  const { getProgram, setProgram: setGameProgram } = useGameStore();
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [filter, setFilter] = useState<DifficultyFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +39,29 @@ export function Classic() {
     steps: number;
     instructions: number;
   } | null>(null);
+
+  // Solution viewer state
+  const [viewingSolution, setViewingSolution] = useState<{
+    userId: string | null;
+    username: string;
+  } | null>(null);
+
+  // Leaderboard hook
+  const {
+    leaderboard,
+    hasSubmitted,
+    isLoading: isLeaderboardLoading,
+    submitSolution,
+    loadSolution,
+  } = usePuzzleLeaderboard(selectedPuzzle?.id);
+
+  // Save/Load hook
+  const {
+    savedSlots,
+    latestProgram,
+    saveProgram,
+    loadProgram,
+  } = useSavedPrograms(selectedPuzzle?.id);
 
   // Reset selected puzzle when navigating to /classic (e.g., clicking footer link)
   useEffect(() => {
@@ -98,11 +124,48 @@ export function Classic() {
   };
 
   const handleBack = () => {
+    // Auto-save current program before leaving
+    const currentProgram = getProgram();
+    if (currentProgram && selectedPuzzle) {
+      saveProgram(0, currentProgram); // Slot 0 = latest
+    }
+
     setSelectedPuzzle(null);
     setCompletedState(null);
     // Clear URL param
     window.history.replaceState({}, '', '/classic');
   };
+
+  // Handle leaderboard submission
+  const handleSubmit = useCallback(async (program: Program, steps: number, instructions: number) => {
+    await submitSolution(program, steps, instructions, false);
+  }, [submitSolution]);
+
+  // Handle save to slot
+  const handleSave = useCallback((slot: number, program: Program) => {
+    saveProgram(slot, program);
+  }, [saveProgram]);
+
+  // Handle load from slot
+  const handleLoad = useCallback((slot: number): Program | null => {
+    const loaded = loadProgram(slot);
+    if (loaded) {
+      setGameProgram(loaded);
+    }
+    return loaded;
+  }, [loadProgram, setGameProgram]);
+
+  // Handle view solution click
+  const handleViewSolution = useCallback((userId: string | null, username: string) => {
+    setViewingSolution({ userId, username });
+  }, []);
+
+  // Handle view solutions button click (from victory modal)
+  const handleViewSolutions = useCallback(() => {
+    // Show leaderboard or scroll to it
+    // For now, just close the victory modal by resetting
+    // The leaderboard is visible below the game
+  }, []);
 
   const solvedCount = progress?.classicSolved?.length || 0;
 
@@ -128,10 +191,37 @@ export function Classic() {
         </button>
         <Game
           puzzle={selectedPuzzle}
+          initialProgram={latestProgram || undefined}
           onComplete={handleComplete}
           onBack={handleBack}
           onShare={completedState ? () => setShowShare(true) : undefined}
+          hasSubmitted={hasSubmitted}
+          onSubmit={handleSubmit}
+          onViewSolutions={handleViewSolutions}
+          savedSlots={savedSlots}
+          onSave={handleSave}
+          onLoad={handleLoad}
         />
+
+        {/* Puzzle Leaderboard */}
+        <PuzzleLeaderboard
+          entries={leaderboard}
+          currentUsername={user?.username}
+          currentUserId={user?.id}
+          hasSubmitted={hasSubmitted}
+          isLoading={isLeaderboardLoading}
+          onViewSolution={handleViewSolution}
+        />
+
+        {/* Solution Viewer Modal */}
+        {viewingSolution && (
+          <SolutionViewer
+            puzzle={selectedPuzzle}
+            username={viewingSolution.username}
+            onLoadSolution={() => loadSolution(viewingSolution.userId)}
+            onClose={() => setViewingSolution(null)}
+          />
+        )}
 
         {/* Share Modal */}
         {completedState && (

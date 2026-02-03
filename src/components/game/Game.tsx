@@ -28,13 +28,14 @@ const slotCollisionDetection: CollisionDetection = (args) => {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, Zap, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2 } from 'lucide-react';
 import { usePreferencesStore, SPEED_VALUES } from '../../stores/preferencesStore';
-import type { PuzzleConfig, FunctionName, TileColor, Instruction, Program } from '../../engine/types';
+import type { PuzzleConfig, FunctionName, TileColor, Instruction, Program, SavedProgram } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import { GameBoard } from './GameBoard';
 import { InstructionPalette } from './InstructionPalette';
 import { FunctionSlots } from './FunctionSlots';
 import { ExecutionControls } from './ExecutionControls';
 import { CallStack } from './CallStack';
+import { SaveLoadControls } from './SaveLoadControls';
 import styles from './Game.module.css';
 
 interface GameProps {
@@ -46,6 +47,16 @@ interface GameProps {
   onBack?: () => void;
   onShare?: () => void;
   tutorialStep?: number; // For progressive disclosure and onboarding
+  // Leaderboard submission
+  hasSubmitted?: boolean;
+  onSubmit?: (program: Program, steps: number, instructions: number) => Promise<void>;
+  onViewSolutions?: () => void;
+  // Save/Load
+  savedSlots?: SavedProgram[];
+  onSave?: (slot: number, program: Program) => void;
+  onLoad?: (slot: number) => Program | null;
+  // Read-only mode for viewing solutions
+  readOnly?: boolean;
 }
 
 // Paint icon for drag overlay - white brush with colored drop
@@ -98,7 +109,23 @@ function getDragOverlayIcon(type: string) {
   }
 }
 
-export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextPuzzle, onBack, onShare, tutorialStep }: GameProps) {
+export function Game({
+  puzzle,
+  displayTitle,
+  initialProgram,
+  onComplete,
+  onNextPuzzle,
+  onBack,
+  onShare,
+  tutorialStep,
+  hasSubmitted,
+  onSubmit,
+  onViewSolutions,
+  savedSlots,
+  onSave,
+  onLoad,
+  readOnly,
+}: GameProps) {
   // Configure drag sensors with activation constraint
   // This allows clicks to work for color cycling, while drags need movement
   const pointerSensor = useSensor(PointerSensor, {
@@ -161,6 +188,8 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
   const [activeDrag, setActiveDrag] = useState<{ type: string; condition: TileColor | null } | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
   // Ref and state for auto-scaling the board to fit the container
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -216,8 +245,8 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
     return () => resizeObserver.disconnect();
   }, [naturalBoardWidth]);
 
-  // Disable editing while program is running
-  const editingDisabled = isRunning;
+  // Disable editing while program is running or in read-only mode
+  const editingDisabled = isRunning || readOnly;
 
   // Load puzzle on mount or change
   useEffect(() => {
@@ -391,6 +420,36 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
     step();
   }, [isRunning, start, pause, step, scrollToBoard]);
 
+  // Handle leaderboard submission
+  const handleSubmit = useCallback(async () => {
+    if (!onSubmit || !program || !gameState) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit(program, gameState.steps, instructionsUsed);
+      setJustSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [onSubmit, program, gameState, instructionsUsed]);
+
+  // Handle save to slot
+  const handleSave = useCallback((slot: number) => {
+    if (!onSave || !program) return;
+    onSave(slot, program);
+  }, [onSave, program]);
+
+  // Handle load from slot
+  const handleLoad = useCallback((slot: number) => {
+    if (!onLoad) return;
+    const loadedProgram = onLoad(slot);
+    if (loadedProgram) {
+      setProgram(loadedProgram);
+    }
+  }, [onLoad, setProgram]);
+
   if (!gameState || !program) {
     return <div className={styles.loading}>Loading puzzle...</div>;
   }
@@ -515,6 +574,18 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
 
           {/* Programming interface */}
           <div className={styles.programming}>
+            {/* Save/Load controls (only show when not read-only) */}
+            {!readOnly && savedSlots && onSave && onLoad && (
+              <div className={styles.saveLoadRow}>
+                <SaveLoadControls
+                  savedSlots={savedSlots}
+                  onSave={handleSave}
+                  onLoad={handleLoad}
+                  disabled={editingDisabled}
+                />
+              </div>
+            )}
+
             <FunctionSlots
               program={program}
               functionLengths={puzzle.functionLengths}
@@ -526,12 +597,12 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
               stepCount={gameState.steps}
               disabled={editingDisabled}
               tutorialStep={tutorialStep}
-              canUndo={canUndoProgram}
+              canUndo={canUndoProgram && !readOnly}
               onFunctionSelect={setCurrentFunction}
               onSlotClick={handleSlotClick}
               onSlotLongPress={handleSlotLongPress}
-              onUndo={undoProgramChange}
-              onClearAll={clearProgram}
+              onUndo={readOnly ? undefined : undoProgramChange}
+              onClearAll={readOnly ? undefined : clearProgram}
             />
 
             <InstructionPalette
@@ -596,6 +667,31 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
               <p className={styles.modalStats}>
                 Completed in {gameState.steps} steps using {instructionsUsed} instructions
               </p>
+
+              {/* Leaderboard submission section */}
+              {onSubmit && !hasSubmitted && !justSubmitted && (
+                <div className={styles.submitSection}>
+                  <button
+                    className={styles.submitButton}
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit to Leaderboard'}
+                  </button>
+                  <p className={styles.submitWarning}>
+                    You can only submit once per puzzle
+                  </p>
+                </div>
+              )}
+              {(hasSubmitted || justSubmitted) && onViewSolutions && (
+                <button
+                  className={styles.viewSolutionsButton}
+                  onClick={onViewSolutions}
+                >
+                  View Other Solutions
+                </button>
+              )}
+
               <div className={styles.modalButtons}>
                 {onShare && (
                   <button className={styles.shareButton} onClick={onShare}>

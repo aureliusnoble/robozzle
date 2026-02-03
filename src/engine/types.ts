@@ -130,6 +130,47 @@ export interface LeaderboardEntry {
   steps: number;
   completedAt: Date;
   points: number;
+  isLate?: boolean;
+}
+
+// Puzzle-specific leaderboard entry (for classic puzzles)
+export interface PuzzleLeaderboardEntry {
+  rank: number;
+  userId: string | null;
+  username: string;
+  instructionsUsed: number;
+  steps: number;
+  submittedAt: Date;
+  isLate: boolean;
+  program?: Program;
+}
+
+// Saved program slot
+export interface SavedProgram {
+  id: string;
+  puzzleId: string;
+  slot: number;  // 0 = latest (auto-save), 1-3 = user slots
+  program: Program;
+  instructionsUsed: number | null;
+  updatedAt: Date;
+}
+
+// Classic ranking entry
+export interface ClassicRankingEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  score: number;
+  weeklyMovement: number | null;  // positive = up, negative = down, null = new/no data
+}
+
+// Monthly daily ranking entry
+export interface MonthlyDailyRankingEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  totalPoints: number;
+  completions: number;
 }
 
 // User profile types
@@ -141,6 +182,11 @@ export interface UserProfile {
   currentStreak: number;
   longestStreak: number;
   totalPoints: number;
+  classicStars: number;
+  hardestPuzzleStars: number;
+  bestDailyEasyRank: number | null;
+  bestDailyChallengeRank: number | null;
+  lastDailyDate: string | null;
   createdAt: Date;
 }
 

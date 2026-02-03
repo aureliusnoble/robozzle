@@ -4,7 +4,7 @@
   padding: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   max-width: 700px;
-  margin: 0 auto;
+  margin: 1rem auto 0;
   box-sizing: border-box;
 }
 
@@ -37,7 +37,7 @@
 
 .header {
   display: grid;
-  grid-template-columns: 40px 1fr 60px 60px 70px;
+  grid-template-columns: 40px 1fr 60px 60px 70px 40px;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
@@ -48,14 +48,18 @@
   border-bottom: 1px solid #E2E8F0;
 }
 
+.header:has(.headerAction:empty) {
+  grid-template-columns: 40px 1fr 60px 60px 70px;
+}
+
 .list {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
 .entry {
   display: grid;
-  grid-template-columns: 40px 1fr 60px 60px 70px;
+  grid-template-columns: 40px 1fr 60px 60px 70px 40px;
   gap: 0.5rem;
   padding: 0.75rem;
   align-items: center;
@@ -73,6 +77,18 @@
 
 .entry.currentUser {
   background: #EEF2FF;
+}
+
+/* Late entry styling */
+.entry.lateEntry {
+  opacity: 0.6;
+  background: #F8FAFC;
+}
+
+.entry.lateEntry .name,
+.entry.lateEntry .instructions,
+.entry.lateEntry .steps {
+  color: #94A3B8;
 }
 
 .rank {
@@ -114,18 +130,6 @@
   border-radius: 4px;
 }
 
-/* Late entry styling */
-.entry.lateEntry {
-  opacity: 0.6;
-  background: #F8FAFC;
-}
-
-.entry.lateEntry .name,
-.entry.lateEntry .instructions,
-.entry.lateEntry .steps {
-  color: #94A3B8;
-}
-
 .instructions,
 .steps {
   font-weight: 600;
@@ -137,6 +141,29 @@
   font-size: 0.75rem;
   color: #94A3B8;
   text-align: right;
+}
+
+.action {
+  display: flex;
+  justify-content: center;
+}
+
+.viewButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #EEF2FF;
+  color: #6366F1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.viewButton:hover {
+  background: #E0E7FF;
 }
 
 .footer {
@@ -152,11 +179,19 @@
   text-align: center;
 }
 
+.footerHint {
+  font-size: 0.75rem;
+  color: #6366F1;
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-style: italic;
+}
+
 /* Responsive */
-@media (max-width: 400px) {
+@media (max-width: 500px) {
   .header,
   .entry {
-    grid-template-columns: 32px 1fr 50px 50px;
+    grid-template-columns: 32px 1fr 50px 50px 36px;
   }
 
   .headerTime,

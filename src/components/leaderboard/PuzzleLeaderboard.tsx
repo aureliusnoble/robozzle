@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion';
-import { Trophy, Medal } from 'lucide-react';
-import type { LeaderboardEntry } from '../../engine/types';
+import { Trophy, Medal, Eye } from 'lucide-react';
+import type { PuzzleLeaderboardEntry } from '../../engine/types';
 import { formatTimeDiff } from '../../lib/scoring';
-import styles from './DailyLeaderboard.module.css';
+import styles from './PuzzleLeaderboard.module.css';
 
-interface DailyLeaderboardProps {
-  entries: LeaderboardEntry[];
+interface PuzzleLeaderboardProps {
+  entries: PuzzleLeaderboardEntry[];
   currentUsername?: string;
+  currentUserId?: string | null;
+  hasSubmitted: boolean;
   isLoading?: boolean;
+  onViewSolution?: (userId: string | null, username: string) => void;
 }
 
 function getMedalColor(rank: number): string | null {
@@ -19,11 +22,14 @@ function getMedalColor(rank: number): string | null {
   }
 }
 
-export function DailyLeaderboard({
+export function PuzzleLeaderboard({
   entries,
   currentUsername,
+  currentUserId,
+  hasSubmitted,
   isLoading,
-}: DailyLeaderboardProps) {
+  onViewSolution,
+}: PuzzleLeaderboardProps) {
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -37,7 +43,7 @@ export function DailyLeaderboard({
       <div className={styles.container}>
         <div className={styles.empty}>
           <Trophy size={40} className={styles.emptyIcon} />
-          <p>No solutions yet today.</p>
+          <p>No solutions yet.</p>
           <p className={styles.emptySubtext}>Be the first to solve it!</p>
         </div>
       </div>
@@ -46,7 +52,7 @@ export function DailyLeaderboard({
 
   return (
     <div className={styles.container}>
-      <h3 className={styles.title}>Today's Leaderboard</h3>
+      <h3 className={styles.title}>Leaderboard</h3>
 
       <div className={styles.header}>
         <span className={styles.headerRank}>#</span>
@@ -54,18 +60,21 @@ export function DailyLeaderboard({
         <span className={styles.headerInstr}>Instr</span>
         <span className={styles.headerSteps}>Steps</span>
         <span className={styles.headerTime}>Time</span>
+        {hasSubmitted && onViewSolution && (
+          <span className={styles.headerAction}></span>
+        )}
       </div>
 
       <div className={styles.list}>
         {entries.map((entry, index) => {
-          const isCurrentUser = entry.username === currentUsername;
+          const isCurrentUser = entry.userId === currentUserId ||
+            (entry.username === currentUsername && entry.username !== 'Anonymous');
           const medalColor = getMedalColor(entry.rank);
-          const isLate = entry.isLate;
 
           return (
             <motion.div
-              key={entry.username}
-              className={`${styles.entry} ${isCurrentUser ? styles.currentUser : ''} ${isLate ? styles.lateEntry : ''}`}
+              key={`${entry.userId || 'anon'}-${index}`}
+              className={`${styles.entry} ${isCurrentUser ? styles.currentUser : ''} ${entry.isLate ? styles.lateEntry : ''}`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -80,11 +89,24 @@ export function DailyLeaderboard({
               <span className={styles.name}>
                 {entry.username}
                 {isCurrentUser && <span className={styles.youBadge}>You</span>}
-                {isLate && <span className={styles.lateBadge}>Late</span>}
+                {entry.isLate && <span className={styles.lateBadge}>Late</span>}
               </span>
               <span className={styles.instructions}>{entry.instructionsUsed}</span>
               <span className={styles.steps}>{entry.steps}</span>
-              <span className={styles.time}>{formatTimeDiff(entry.completedAt)}</span>
+              <span className={styles.time}>{formatTimeDiff(entry.submittedAt)}</span>
+              {hasSubmitted && onViewSolution && (
+                <span className={styles.action}>
+                  {!isCurrentUser && (
+                    <button
+                      className={styles.viewButton}
+                      onClick={() => onViewSolution(entry.userId, entry.username)}
+                      title="View solution"
+                    >
+                      <Eye size={14} />
+                    </button>
+                  )}
+                </span>
+              )}
             </motion.div>
           );
         })}
@@ -94,6 +116,11 @@ export function DailyLeaderboard({
         <p className={styles.footerText}>
           Ranked by: Instructions (primary) → Steps → Time
         </p>
+        {!hasSubmitted && (
+          <p className={styles.footerHint}>
+            Submit your solution to view others
+          </p>
+        )}
       </div>
     </div>
   );

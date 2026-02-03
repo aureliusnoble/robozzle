@@ -17,6 +17,11 @@ export interface Database {
           current_streak: number;
           longest_streak: number;
           total_points: number;
+          classic_stars: number;
+          hardest_puzzle_stars: number;
+          best_daily_easy_rank: number | null;
+          best_daily_challenge_rank: number | null;
+          last_daily_date: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -27,6 +32,11 @@ export interface Database {
           current_streak?: number;
           longest_streak?: number;
           total_points?: number;
+          classic_stars?: number;
+          hardest_puzzle_stars?: number;
+          best_daily_easy_rank?: number | null;
+          best_daily_challenge_rank?: number | null;
+          last_daily_date?: string | null;
         };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
       };
@@ -78,6 +88,8 @@ export interface Database {
           steps: number;
           points: number;
           completed_at: string;
+          challenge_type: 'easy' | 'challenge';
+          is_late: boolean;
         };
         Insert: Omit<Database['public']['Tables']['daily_leaderboard']['Row'], 'id'>;
         Update: Partial<Database['public']['Tables']['daily_leaderboard']['Insert']>;
@@ -112,6 +124,97 @@ export interface Database {
           config: Record<string, unknown>;
         };
         Update: Partial<Database['public']['Tables']['saved_simulation_configs']['Insert']>;
+      };
+      puzzle_leaderboard: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          puzzle_id: string;
+          instructions_used: number;
+          steps: number;
+          program: Record<string, unknown>;
+          submitted_at: string;
+          is_late: boolean;
+        };
+        Insert: {
+          user_id?: string | null;
+          puzzle_id: string;
+          instructions_used: number;
+          steps: number;
+          program: Record<string, unknown>;
+          is_late?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['puzzle_leaderboard']['Insert']>;
+      };
+      saved_programs: {
+        Row: {
+          id: string;
+          user_id: string;
+          puzzle_id: string;
+          slot: number;
+          program: Record<string, unknown>;
+          instructions_used: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          puzzle_id: string;
+          slot: number;
+          program: Record<string, unknown>;
+          instructions_used?: number | null;
+        };
+        Update: Partial<Database['public']['Tables']['saved_programs']['Insert']>;
+      };
+      classic_rankings: {
+        Row: {
+          id: string;
+          user_id: string;
+          score: number;
+          prev_week_rank: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          score: number;
+          prev_week_rank?: number | null;
+        };
+        Update: Partial<Database['public']['Tables']['classic_rankings']['Insert']>;
+      };
+      monthly_daily_rankings: {
+        Row: {
+          id: string;
+          user_id: string;
+          month: string;
+          challenge_type: 'easy' | 'challenge';
+          total_points: number;
+          completions: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          month: string;
+          challenge_type: 'easy' | 'challenge';
+          total_points?: number;
+          completions?: number;
+        };
+        Update: Partial<Database['public']['Tables']['monthly_daily_rankings']['Insert']>;
+      };
+      classic_rank_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          score: number;
+          rank: number;
+          snapshot_date: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          score: number;
+          rank: number;
+          snapshot_date: string;
+        };
+        Update: Partial<Database['public']['Tables']['classic_rank_history']['Insert']>;
       };
     };
   };

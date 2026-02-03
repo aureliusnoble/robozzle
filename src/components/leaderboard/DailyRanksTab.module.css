@@ -1,0 +1,215 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0;
+}
+
+.title svg {
+  color: #6366F1;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 0.5rem 0 0;
+}
+
+.monthSelector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.monthSelect {
+  padding: 0.5rem 1rem;
+  border: 2px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1E293B;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.monthSelect:hover {
+  border-color: #6366F1;
+}
+
+.monthSelect:focus {
+  outline: none;
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #64748B;
+}
+
+.rankings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .rankings {
+    grid-template-columns: 1fr;
+  }
+}
+
+.listContainer {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.listTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #E2E8F0;
+}
+
+.easyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #22C55E;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.challengeIcon {
+  color: #F59E0B;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 40px 1fr 70px 50px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 40px 1fr 70px 50px;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  align-items: center;
+  border-bottom: 1px solid #F1F5F9;
+  transition: background-color 0.15s;
+}
+
+.entry:hover {
+  background: #F8FAFC;
+}
+
+.entry:last-child {
+  border-bottom: none;
+}
+
+.entry.currentUser {
+  background: #EEF2FF;
+}
+
+.rank {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.name {
+  font-weight: 500;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.youBadge {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #6366F1;
+  color: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+.points {
+  font-weight: 700;
+  color: #6366F1;
+  text-align: right;
+}
+
+.completions {
+  font-size: 0.875rem;
+  color: #94A3B8;
+  text-align: right;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #94A3B8;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #E2E8F0;
+  text-align: center;
+}
+
+.footer p {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin: 0.25rem 0;
+}
