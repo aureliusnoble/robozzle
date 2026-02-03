@@ -74,7 +74,7 @@ export function PuzzleLeaderboard({
         <span className={styles.headerInstr}>Instr</span>
         <span className={styles.headerSteps}>Steps</span>
         <span className={styles.headerTime}>Time</span>
-        <span className={styles.headerAction}></span>
+        <span className={styles.headerAction}>View</span>
       </div>
 
       <div className={styles.list}>
@@ -107,7 +107,11 @@ export function PuzzleLeaderboard({
               <span className={styles.steps}>{entry.steps}</span>
               <span className={styles.time}>{formatTimeDiff(entry.submittedAt)}</span>
               <span className={styles.action}>
-                {!isCurrentUser && (
+                {isCurrentUser ? (
+                  <span className={styles.viewButtonDisabled} title="Your solution">
+                    <Eye size={14} />
+                  </span>
+                ) : (
                   <button
                     className={`${styles.viewButton} ${!hasSubmitted ? styles.viewButtonLocked : ''}`}
                     onClick={() => handleViewClick(entry.userId, entry.username, isCurrentUser)}

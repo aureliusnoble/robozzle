@@ -190,6 +190,15 @@
   color: #64748B;
 }
 
+.viewButtonDisabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #CBD5E1;
+}
+
 .footer {
   margin-top: 1rem;
   padding-top: 0.75rem;
