@@ -88,6 +88,7 @@ export interface Database {
           tutorial_completed: number[];
           classic_solved: string[];
           daily_solved: string[];
+          speed_preference: number | null;
           updated_at: string;
         };
         Insert: Omit<Database['public']['Tables']['user_progress']['Row'], 'updated_at'>;

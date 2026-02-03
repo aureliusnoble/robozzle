@@ -26,7 +26,8 @@ const slotCollisionDetection: CollisionDetection = (args) => {
   return pointerWithin(args);
 };
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2 } from 'lucide-react';
+import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, Zap, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2 } from 'lucide-react';
+import { usePreferencesStore, SPEED_VALUES } from '../../stores/preferencesStore';
 import type { PuzzleConfig, FunctionName, TileColor, Instruction, Program } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import { GameBoard } from './GameBoard';
@@ -125,9 +126,12 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
     currentPosition,
     callStack,
     canBackstep,
+    canUndoProgram,
     loadPuzzle,
     setInstruction,
     clearFunction,
+    clearProgram,
+    undoProgramChange,
     setProgram,
     start,
     pause,
@@ -135,8 +139,22 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
     step,
     backstep,
     reset,
-    setSpeed,
+    setSpeed: setGameSpeed,
   } = useGameEngine();
+
+  // Use preferences store for persisted speed
+  const { speed: preferredSpeed, setSpeed: setPreferredSpeed } = usePreferencesStore();
+
+  // Sync preferred speed to game engine and persist changes
+  const setSpeed = useCallback((newSpeed: number) => {
+    setGameSpeed(newSpeed);
+    setPreferredSpeed(newSpeed);
+  }, [setGameSpeed, setPreferredSpeed]);
+
+  // Initialize game speed from preferences on mount
+  useEffect(() => {
+    setGameSpeed(preferredSpeed);
+  }, [preferredSpeed, setGameSpeed]);
 
   const [currentFunction, setCurrentFunction] = useState<FunctionName>('f1');
   const [selectedColor, setSelectedColor] = useState<TileColor | null>(null);
@@ -305,7 +323,7 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
   const scrollToBoard = useCallback(() => {
     const board = document.getElementById('game-board');
     if (board) {
-      board.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      board.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, []);
 
@@ -443,25 +461,32 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
             <div className={styles.sidePanel}>
               <div className={styles.speedButtons}>
                 <button
-                  className={`${styles.speedButton} ${speed >= 1000 ? styles.speedActive : ''}`}
-                  onClick={() => setSpeed(1000)}
+                  className={`${styles.speedButton} ${speed === SPEED_VALUES.SLOW ? styles.speedActive : ''}`}
+                  onClick={() => setSpeed(SPEED_VALUES.SLOW)}
                   title="Slow"
                 >
                   <Turtle size={16} />
                 </button>
                 <button
-                  className={`${styles.speedButton} ${speed === 500 ? styles.speedActive : ''}`}
-                  onClick={() => setSpeed(500)}
+                  className={`${styles.speedButton} ${speed === SPEED_VALUES.MEDIUM ? styles.speedActive : ''}`}
+                  onClick={() => setSpeed(SPEED_VALUES.MEDIUM)}
                   title="Medium"
                 >
                   <span className={styles.speedDot} />
                 </button>
                 <button
-                  className={`${styles.speedButton} ${speed <= 250 ? styles.speedActive : ''}`}
-                  onClick={() => setSpeed(100)}
+                  className={`${styles.speedButton} ${speed === SPEED_VALUES.FAST ? styles.speedActive : ''}`}
+                  onClick={() => setSpeed(SPEED_VALUES.FAST)}
                   title="Fast"
                 >
                   <Rabbit size={16} />
+                </button>
+                <button
+                  className={`${styles.speedButton} ${speed === SPEED_VALUES.LIGHTNING ? styles.speedActive : ''}`}
+                  onClick={() => setSpeed(SPEED_VALUES.LIGHTNING)}
+                  title="Lightning"
+                >
+                  <Zap size={16} />
                 </button>
               </div>
               <span className={styles.sidePanelLabel}>Speed</span>
@@ -498,9 +523,12 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
               stepCount={gameState.steps}
               disabled={editingDisabled}
               tutorialStep={tutorialStep}
+              canUndo={canUndoProgram}
               onFunctionSelect={setCurrentFunction}
               onSlotClick={handleSlotClick}
               onSlotLongPress={handleSlotLongPress}
+              onUndo={undoProgramChange}
+              onClearAll={clearProgram}
             />
 
             <InstructionPalette

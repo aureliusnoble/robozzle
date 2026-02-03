@@ -332,26 +332,56 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.clearButton {
-  align-self: flex-start;
-  padding: 0.5rem 1rem;
+/* Action buttons container */
+.actionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
   border-radius: 8px;
   border: none;
-  background: #FEE2E2;
-  color: #DC2626;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.clearButton:hover:not(:disabled) {
-  background: #FECACA;
-}
-
-.clearButton:disabled {
+.actionButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.undoButton {
+  background: #E0E7FF;
+  color: #4F46E5;
+}
+
+.undoButton:hover:not(:disabled) {
+  background: #C7D2FE;
+}
+
+.clearButton {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.clearButton:hover:not(:disabled) {
+  background: #FDE68A;
+}
+
+.clearAllButton {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.clearAllButton:hover:not(:disabled) {
+  background: #FECACA;
 }
 
 /* Running state - red background and border around container */

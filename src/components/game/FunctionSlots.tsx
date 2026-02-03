@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
-import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush } from 'lucide-react';
+import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Undo2, Trash2 } from 'lucide-react';
 import type { FunctionName, Instruction, Program, TileColor } from '../../engine/types';
 import styles from './FunctionSlots.module.css';
 
@@ -15,9 +15,12 @@ interface FunctionSlotsProps {
   stepCount?: number; // Number of steps executed (to hide LAST on first step)
   disabled?: boolean;
   tutorialStep?: number; // For progressive disclosure
+  canUndo?: boolean; // Whether undo is available
   onFunctionSelect: (func: FunctionName) => void;
   onSlotClick: (func: FunctionName, index: number) => void;
   onSlotLongPress: (func: FunctionName, index: number) => void;
+  onUndo?: () => void;
+  onClearAll?: () => void;
 }
 
 // Paint icon with white brush and colored paint drop for clarity
@@ -200,9 +203,12 @@ export function FunctionSlots({
   stepCount = 0,
   disabled,
   tutorialStep,
+  canUndo,
   onFunctionSelect,
   onSlotClick,
   onSlotLongPress,
+  onUndo,
+  onClearAll,
 }: FunctionSlotsProps) {
   const functions: FunctionName[] = ['f1', 'f2', 'f3', 'f4', 'f5'];
 
@@ -401,15 +407,39 @@ export function FunctionSlots({
         ))}
       </div>
 
-      {/* Clear button */}
-      <button
-        className={styles.clearButton}
-        onClick={() => onSlotLongPress(currentFunction, -1)}
-        title="Clear function"
-        disabled={disabled}
-      >
-        Clear {currentFunction.toUpperCase()}
-      </button>
+      {/* Action buttons */}
+      <div className={styles.actionButtons}>
+        {onUndo && (
+          <button
+            className={`${styles.actionButton} ${styles.undoButton}`}
+            onClick={onUndo}
+            title="Undo last change"
+            disabled={disabled || !canUndo}
+          >
+            <Undo2 size={16} />
+            Undo
+          </button>
+        )}
+        <button
+          className={`${styles.actionButton} ${styles.clearButton}`}
+          onClick={() => onSlotLongPress(currentFunction, -1)}
+          title={`Clear ${currentFunction.toUpperCase()}`}
+          disabled={disabled}
+        >
+          Clear {currentFunction.toUpperCase()}
+        </button>
+        {onClearAll && (
+          <button
+            className={`${styles.actionButton} ${styles.clearAllButton}`}
+            onClick={onClearAll}
+            title="Clear all functions"
+            disabled={disabled}
+          >
+            <Trash2 size={16} />
+            Clear All
+          </button>
+        )}
+      </div>
     </div>
   );
 }
