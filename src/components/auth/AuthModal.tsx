@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LoginForm } from './LoginForm';
 import { SignupForm } from './SignupForm';
+import { ForgotPasswordForm } from './ForgotPasswordForm';
 import styles from './AuthModal.module.css';
 
 interface AuthModalProps {
@@ -11,7 +12,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, defaultView = 'login' }: AuthModalProps) {
-  const [view, setView] = useState<'login' | 'signup'>(defaultView);
+  const [view, setView] = useState<'login' | 'signup' | 'forgot'>(defaultView);
 
   const handleSuccess = () => {
     onClose();
@@ -38,15 +39,22 @@ export function AuthModal({ isOpen, onClose, defaultView = 'login' }: AuthModalP
               ✕
             </button>
 
-            {view === 'login' ? (
+            {view === 'login' && (
               <LoginForm
                 onSwitchToSignup={() => setView('signup')}
+                onSwitchToForgotPassword={() => setView('forgot')}
                 onSuccess={handleSuccess}
               />
-            ) : (
+            )}
+            {view === 'signup' && (
               <SignupForm
                 onSwitchToLogin={() => setView('login')}
                 onSuccess={handleSuccess}
+              />
+            )}
+            {view === 'forgot' && (
+              <ForgotPasswordForm
+                onBackToLogin={() => setView('login')}
               />
             )}
           </motion.div>

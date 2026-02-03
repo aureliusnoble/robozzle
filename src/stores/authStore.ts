@@ -24,6 +24,7 @@ interface AuthStore {
   addClassicStars: (stars: number) => Promise<void>;
   updateHardestPuzzle: (stars: number) => Promise<void>;
   updateClassicRanking: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error?: string }>;
   toggleDevMode: () => void;
   isDevUser: () => boolean; // Returns true if user has dev/admin role AND devModeEnabled is true
 }
@@ -109,6 +110,25 @@ export const useAuthStore = create<AuthStore>()(
       signOut: async () => {
         await supabase.auth.signOut();
         set({ user: null, progress: null, isAuthenticated: false, needsUsername: false });
+      },
+
+      resetPassword: async (email: string) => {
+        try {
+          const baseUrl = window.location.origin + window.location.pathname;
+          const redirectUrl = baseUrl.split('#')[0].split('?')[0].replace(/\/$/, '') + '/';
+
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectUrl,
+          });
+
+          if (error) {
+            return { error: error.message };
+          }
+
+          return {};
+        } catch {
+          return { error: 'An unexpected error occurred' };
+        }
       },
 
       fetchProfile: async () => {

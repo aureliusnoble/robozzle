@@ -5,10 +5,11 @@ import styles from './AuthForms.module.css';
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
+  onSwitchToForgotPassword: () => void;
   onSuccess?: () => void;
 }
 
-export function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
+export function LoginForm({ onSwitchToSignup, onSwitchToForgotPassword, onSuccess }: LoginFormProps) {
   const { signIn, signInWithGoogle } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -72,6 +73,13 @@ export function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
             placeholder="••••••••"
             required
           />
+          <button
+            type="button"
+            className={styles.forgotButton}
+            onClick={onSwitchToForgotPassword}
+          >
+            Forgot password?
+          </button>
         </div>
 
         {error && <p className={styles.error}>{error}</p>}

@@ -158,6 +158,21 @@
   text-decoration: underline;
 }
 
+.forgotButton {
+  background: none;
+  border: none;
+  color: #6366F1;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.25rem;
+  align-self: flex-end;
+}
+
+.forgotButton:hover {
+  text-decoration: underline;
+}
+
 .cancelButton {
   background: none;
   border: none;
