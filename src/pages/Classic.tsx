@@ -182,6 +182,17 @@ export function Classic() {
 
   const solvedCount = progress?.classicSolved?.length || 0;
 
+  // Calculate victory modal delay based on whether star animation will play
+  // NOTE: This must be before any early returns to satisfy React's hooks rules
+  const isAlreadySolved = selectedPuzzle && progress?.classicSolved?.includes(selectedPuzzle.id);
+  const victoryDelay = useMemo(() => {
+    if (!selectedPuzzle) return 1000;
+    // If already solved, no star animation - use short delay
+    if (isAlreadySolved) return 1000;
+    // First-time solve: delay based on star count for animation
+    return getStarAnimationDuration(selectedPuzzle.stars || 1);
+  }, [selectedPuzzle, isAlreadySolved]);
+
   // Show loading while fetching puzzle
   if (isLoadingPuzzle) {
     return (
@@ -193,16 +204,6 @@ export function Classic() {
       </div>
     );
   }
-
-  // Calculate victory modal delay based on whether star animation will play
-  const isAlreadySolved = selectedPuzzle && progress?.classicSolved?.includes(selectedPuzzle.id);
-  const victoryDelay = useMemo(() => {
-    if (!selectedPuzzle) return 1000;
-    // If already solved, no star animation - use short delay
-    if (isAlreadySolved) return 1000;
-    // First-time solve: delay based on star count for animation
-    return getStarAnimationDuration(selectedPuzzle.stars || 1);
-  }, [selectedPuzzle, isAlreadySolved]);
 
   // Show selected puzzle
   if (selectedPuzzle) {
