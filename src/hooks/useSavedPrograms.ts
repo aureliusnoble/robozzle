@@ -275,6 +275,13 @@ export function useSavedPrograms(puzzleId: string | undefined) {
     [savedSlots]
   );
 
+  // Reset state immediately when puzzleId changes (before fetch)
+  // This prevents the old puzzle's program from being applied to a new puzzle
+  useEffect(() => {
+    setSavedSlots([]);
+    setLatestProgram(null);
+  }, [puzzleId]);
+
   // Initial fetch
   useEffect(() => {
     fetchSavedPrograms();

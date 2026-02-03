@@ -26,7 +26,7 @@ const slotCollisionDetection: CollisionDetection = (args) => {
   return pointerWithin(args);
 };
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, Zap, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2, Info } from 'lucide-react';
+import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, Zap, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2, Info, Star } from 'lucide-react';
 import { usePreferencesStore, SPEED_VALUES } from '../../stores/preferencesStore';
 import type { PuzzleConfig, FunctionName, TileColor, Instruction, Program, SavedProgram } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
@@ -486,7 +486,15 @@ export function Game({
     <div className={styles.container}>
       {/* Puzzle info */}
       <div className={styles.header}>
-        <h2 className={styles.title}>{displayTitle || puzzle.title}</h2>
+        <div className={styles.titleRow}>
+          <h2 className={styles.title}>{displayTitle || puzzle.title}</h2>
+          {puzzle.stars && (
+            <span className={styles.starBadge}>
+              <Star size={14} fill="#F59E0B" color="#F59E0B" />
+              {puzzle.stars}
+            </span>
+          )}
+        </div>
         {puzzle.author && (
           <p className={styles.author}>by {puzzle.author}</p>
         )}

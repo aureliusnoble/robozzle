@@ -117,6 +117,9 @@ export function Classic() {
   const handleComplete = useCallback(async (steps: number, instructions: number) => {
     setCompletedState({ steps, instructions });
 
+    // Scroll to top so user can see the board and any star animation
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     if (selectedPuzzle && progress) {
       const newSolved = [...(progress.classicSolved || [])];
       if (!newSolved.includes(selectedPuzzle.id)) {
