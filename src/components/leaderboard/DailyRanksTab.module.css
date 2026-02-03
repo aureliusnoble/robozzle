@@ -25,30 +25,42 @@
 
 .monthSelector {
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 0.75rem;
   margin-bottom: 1rem;
 }
 
-.monthSelect {
-  padding: 0.5rem 1rem;
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border: 2px solid #E2E8F0;
   border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #1E293B;
   background: white;
+  color: #64748B;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.monthSelect:hover {
+.monthNav:hover:not(:disabled) {
   border-color: #6366F1;
+  color: #6366F1;
 }
 
-.monthSelect:focus {
-  outline: none;
-  border-color: #6366F1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+.monthNav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.monthLabel {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1E293B;
+  min-width: 140px;
+  text-align: center;
 }
 
 /* Challenge type tabs */
@@ -215,4 +227,9 @@
   font-size: 0.75rem;
   color: #94A3B8;
   margin: 0;
+}
+
+.footerNote {
+  margin-top: 0.25rem;
+  font-style: italic;
 }

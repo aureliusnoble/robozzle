@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Trophy, Medal, Sparkles } from 'lucide-react';
+import { Calendar, Trophy, Medal, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMonthlyRankings } from '../../hooks/useMonthlyRankings';
 import type { MonthlyDailyRankingEntry } from '../../engine/types';
 import styles from './DailyRanksTab.module.css';
@@ -93,6 +93,23 @@ export function DailyRanksTab({ currentUsername }: DailyRanksTabProps) {
 
   const currentRankings = activeTab === 'easy' ? easyRankings : challengeRankings;
 
+  // Get current month index for navigation
+  const currentMonthIndex = availableMonths.indexOf(selectedMonth);
+  const canGoBack = currentMonthIndex < availableMonths.length - 1;
+  const canGoForward = currentMonthIndex > 0;
+
+  const goToPreviousMonth = () => {
+    if (canGoBack) {
+      setSelectedMonth(availableMonths[currentMonthIndex + 1]);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (canGoForward) {
+      setSelectedMonth(availableMonths[currentMonthIndex - 1]);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -102,19 +119,25 @@ export function DailyRanksTab({ currentUsername }: DailyRanksTabProps) {
         </h2>
       </div>
 
-      {/* Month selector */}
+      {/* Month selector with arrows */}
       <div className={styles.monthSelector}>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className={styles.monthSelect}
+        <button
+          className={styles.monthNav}
+          onClick={goToPreviousMonth}
+          disabled={!canGoBack}
+          aria-label="Previous month"
         >
-          {availableMonths.map((month) => (
-            <option key={month} value={month}>
-              {formatMonth(month)}
-            </option>
-          ))}
-        </select>
+          <ChevronLeft size={20} />
+        </button>
+        <span className={styles.monthLabel}>{formatMonth(selectedMonth)}</span>
+        <button
+          className={styles.monthNav}
+          onClick={goToNextMonth}
+          disabled={!canGoForward}
+          aria-label="Next month"
+        >
+          <ChevronRight size={20} />
+        </button>
       </div>
 
       {/* Challenge type tabs */}
@@ -149,6 +172,7 @@ export function DailyRanksTab({ currentUsername }: DailyRanksTabProps) {
 
       <div className={styles.footer}>
         <p>Finishing higher each day grants more points</p>
+        <p className={styles.footerNote}>Rankings update at end of day</p>
       </div>
     </div>
   );
