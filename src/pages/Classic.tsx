@@ -33,6 +33,7 @@ export function Classic() {
   const { getProgram, setProgram: setGameProgram } = useGameStore();
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [filter, setFilter] = useState<DifficultyFilter>('all');
+  const [hideSolved, setHideSolved] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleCount, setVisibleCount] = useState(100);
   const [showShare, setShowShare] = useState(false);
@@ -95,7 +96,7 @@ export function Classic() {
   // Reset visible count when filter or search changes
   useEffect(() => {
     setVisibleCount(100);
-  }, [filter, searchTerm]);
+  }, [filter, searchTerm, hideSolved]);
 
   const filteredPuzzles = classicPuzzlesMeta.filter(puzzle => {
     // Defensive check for valid puzzle metadata
@@ -104,7 +105,8 @@ export function Classic() {
     const matchesDifficulty = filter === 'all' || puzzle.difficulty === filter;
     const matchesSearch = puzzle.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (puzzle.author?.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesDifficulty && matchesSearch;
+    const matchesSolvedFilter = !hideSolved || !progress?.classicSolved?.includes(puzzle.id);
+    return matchesDifficulty && matchesSearch && matchesSolvedFilter;
   });
 
   const handleSelectPuzzle = async (meta: PuzzleMetadata) => {
@@ -298,6 +300,17 @@ export function Classic() {
               {diff.charAt(0).toUpperCase() + diff.slice(1)}
             </button>
           ))}
+          <button
+            className={`${styles.filterButton} ${hideSolved ? styles.active : ''}`}
+            onClick={() => setHideSolved(!hideSolved)}
+          >
+            <Check
+              size={10}
+              color={hideSolved ? '#6366F1' : '#10B981'}
+              className={styles.difficultyDot}
+            />
+            Hide Solved
+          </button>
         </div>
 
         <input
