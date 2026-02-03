@@ -92,7 +92,7 @@ export function DailyLeaderboard({
 
       <div className={styles.footer}>
         <p className={styles.footerText}>
-          Ranked by: Instructions (primary) → Steps → Time
+          Ranked by: Instructions → Steps → Time
         </p>
       </div>
     </div>

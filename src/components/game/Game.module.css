@@ -435,8 +435,15 @@
 }
 
 .submitWarning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   font-size: 0.75rem;
-  color: #F59E0B;
+  color: #64748B;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
   margin: 0;
 }
 

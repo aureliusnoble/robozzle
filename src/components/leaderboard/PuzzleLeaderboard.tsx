@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
-import { Trophy, Medal, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Trophy, Medal, Eye, Lock, X } from 'lucide-react';
 import type { PuzzleLeaderboardEntry } from '../../engine/types';
 import { formatTimeDiff } from '../../lib/scoring';
 import styles from './PuzzleLeaderboard.module.css';
@@ -30,6 +31,8 @@ export function PuzzleLeaderboard({
   isLoading,
   onViewSolution,
 }: PuzzleLeaderboardProps) {
+  const [showLockedPopup, setShowLockedPopup] = useState(false);
+
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -50,6 +53,17 @@ export function PuzzleLeaderboard({
     );
   }
 
+  const handleViewClick = (userId: string | null, username: string, isCurrentUser: boolean) => {
+    if (isCurrentUser) return;
+
+    if (!hasSubmitted) {
+      setShowLockedPopup(true);
+      return;
+    }
+
+    onViewSolution?.(userId, username);
+  };
+
   return (
     <div className={styles.container}>
       <h3 className={styles.title}>Leaderboard</h3>
@@ -60,9 +74,7 @@ export function PuzzleLeaderboard({
         <span className={styles.headerInstr}>Instr</span>
         <span className={styles.headerSteps}>Steps</span>
         <span className={styles.headerTime}>Time</span>
-        {hasSubmitted && onViewSolution && (
-          <span className={styles.headerAction}></span>
-        )}
+        <span className={styles.headerAction}></span>
       </div>
 
       <div className={styles.list}>
@@ -94,19 +106,17 @@ export function PuzzleLeaderboard({
               <span className={styles.instructions}>{entry.instructionsUsed}</span>
               <span className={styles.steps}>{entry.steps}</span>
               <span className={styles.time}>{formatTimeDiff(entry.submittedAt)}</span>
-              {hasSubmitted && onViewSolution && (
-                <span className={styles.action}>
-                  {!isCurrentUser && (
-                    <button
-                      className={styles.viewButton}
-                      onClick={() => onViewSolution(entry.userId, entry.username)}
-                      title="View solution"
-                    >
-                      <Eye size={14} />
-                    </button>
-                  )}
-                </span>
-              )}
+              <span className={styles.action}>
+                {!isCurrentUser && (
+                  <button
+                    className={`${styles.viewButton} ${!hasSubmitted ? styles.viewButtonLocked : ''}`}
+                    onClick={() => handleViewClick(entry.userId, entry.username, isCurrentUser)}
+                    title={hasSubmitted ? 'View solution' : 'Submit to unlock'}
+                  >
+                    {hasSubmitted ? <Eye size={14} /> : <Lock size={14} />}
+                  </button>
+                )}
+              </span>
             </motion.div>
           );
         })}
@@ -114,14 +124,42 @@ export function PuzzleLeaderboard({
 
       <div className={styles.footer}>
         <p className={styles.footerText}>
-          Ranked by: Instructions (primary) → Steps → Time
+          Ranked by: Instructions → Steps → Time
         </p>
-        {!hasSubmitted && (
-          <p className={styles.footerHint}>
-            Submit your solution to view others
-          </p>
-        )}
       </div>
+
+      {/* Locked popup */}
+      <AnimatePresence>
+        {showLockedPopup && (
+          <motion.div
+            className={styles.popupOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowLockedPopup(false)}
+          >
+            <motion.div
+              className={styles.popup}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className={styles.popupClose}
+                onClick={() => setShowLockedPopup(false)}
+              >
+                <X size={18} />
+              </button>
+              <Lock size={32} className={styles.popupIcon} />
+              <h4 className={styles.popupTitle}>Solutions Locked</h4>
+              <p className={styles.popupText}>
+                Submit your solution to this puzzle to view other players' solutions.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

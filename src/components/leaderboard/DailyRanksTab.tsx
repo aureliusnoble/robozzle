@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Trophy, Medal } from 'lucide-react';
+import { Calendar, Trophy, Medal, Sparkles } from 'lucide-react';
 import { useMonthlyRankings } from '../../hooks/useMonthlyRankings';
 import type { MonthlyDailyRankingEntry } from '../../engine/types';
 import styles from './DailyRanksTab.module.css';
@@ -7,6 +8,8 @@ import styles from './DailyRanksTab.module.css';
 interface DailyRanksTabProps {
   currentUsername?: string;
 }
+
+type ChallengeTab = 'easy' | 'challenge';
 
 function getMedalColor(rank: number): string | null {
   switch (rank) {
@@ -18,38 +21,24 @@ function getMedalColor(rank: number): string | null {
 }
 
 function RankingList({
-  title,
   entries,
   currentUsername,
-  icon,
 }: {
-  title: string;
   entries: MonthlyDailyRankingEntry[];
   currentUsername?: string;
-  icon: React.ReactNode;
 }) {
   if (entries.length === 0) {
     return (
-      <div className={styles.listContainer}>
-        <h3 className={styles.listTitle}>
-          {icon}
-          {title}
-        </h3>
-        <div className={styles.empty}>
-          <p>No rankings yet this month</p>
-        </div>
+      <div className={styles.empty}>
+        <Trophy size={40} className={styles.emptyIcon} />
+        <p>No rankings yet this month</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.listContainer}>
-      <h3 className={styles.listTitle}>
-        {icon}
-        {title}
-      </h3>
-
-      <div className={styles.header}>
+    <>
+      <div className={styles.listHeader}>
         <span className={styles.headerRank}>#</span>
         <span className={styles.headerName}>Player</span>
         <span className={styles.headerPoints}>Points</span>
@@ -86,11 +75,12 @@ function RankingList({
           );
         })}
       </div>
-    </div>
+    </>
   );
 }
 
 export function DailyRanksTab({ currentUsername }: DailyRanksTabProps) {
+  const [activeTab, setActiveTab] = useState<ChallengeTab>('easy');
   const {
     selectedMonth,
     setSelectedMonth,
@@ -101,16 +91,15 @@ export function DailyRanksTab({ currentUsername }: DailyRanksTabProps) {
     formatMonth,
   } = useMonthlyRankings();
 
+  const currentRankings = activeTab === 'easy' ? easyRankings : challengeRankings;
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>
           <Calendar size={24} />
-          Monthly Daily Rankings
+          Monthly Rankings
         </h2>
-        <p className={styles.subtitle}>
-          Points are awarded based on your final placement each day
-        </p>
       </div>
 
       {/* Month selector */}
@@ -128,28 +117,38 @@ export function DailyRanksTab({ currentUsername }: DailyRanksTabProps) {
         </select>
       </div>
 
-      {isLoading ? (
-        <div className={styles.loading}>Loading rankings...</div>
-      ) : (
-        <div className={styles.rankings}>
+      {/* Challenge type tabs */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${activeTab === 'easy' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('easy')}
+        >
+          <Sparkles size={16} />
+          Easy
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'challenge' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('challenge')}
+        >
+          <Trophy size={16} />
+          Challenge
+        </button>
+      </div>
+
+      {/* Rankings list */}
+      <div className={styles.listContainer}>
+        {isLoading ? (
+          <div className={styles.loading}>Loading rankings...</div>
+        ) : (
           <RankingList
-            title="Easy Daily"
-            entries={easyRankings}
+            entries={currentRankings}
             currentUsername={currentUsername}
-            icon={<span className={styles.easyIcon}>E</span>}
           />
-          <RankingList
-            title="Challenge Daily"
-            entries={challengeRankings}
-            currentUsername={currentUsername}
-            icon={<Trophy size={18} className={styles.challengeIcon} />}
-          />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className={styles.footer}>
-        <p>Points: 1st=100, 2nd=75, 3rd=60, 4th=50, 5th=45, 6th-10th=40-36, ...</p>
-        <p>Only same-day submissions count towards monthly rankings</p>
+        <p>Finishing higher each day grants more points</p>
       </div>
     </div>
   );

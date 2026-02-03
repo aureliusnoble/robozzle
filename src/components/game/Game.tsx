@@ -26,7 +26,7 @@ const slotCollisionDetection: CollisionDetection = (args) => {
   return pointerWithin(args);
 };
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, Zap, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2 } from 'lucide-react';
+import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, Zap, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2, Info } from 'lucide-react';
 import { usePreferencesStore, SPEED_VALUES } from '../../stores/preferencesStore';
 import type { PuzzleConfig, FunctionName, TileColor, Instruction, Program, SavedProgram } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
@@ -679,6 +679,7 @@ export function Game({
                     {isSubmitting ? 'Submitting...' : 'Submit to Leaderboard'}
                   </button>
                   <p className={styles.submitWarning}>
+                    <Info size={14} />
                     You can only submit once per puzzle
                   </p>
                 </div>
