@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Star, Target } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
+import type { ChallengeType } from '../engine/types';
 import styles from './DailyArchive.module.css';
 
 interface ArchiveEntry {
   date: string;
-  puzzleTitle: string;
-  profileName?: string;
-  completed: boolean;
+  easy?: {
+    puzzleId: string;
+    puzzleTitle: string;
+    completed: boolean;
+  };
+  challenge?: {
+    puzzleId: string;
+    puzzleTitle: string;
+    completed: boolean;
+  };
 }
 
 export function DailyArchive() {
@@ -25,21 +33,54 @@ export function DailyArchive() {
 
         const { data, error } = await supabase
           .from('daily_challenges')
-          .select('date, puzzle:puzzles(title, profile_name)')
+          .select('date, challenge_type, puzzle:puzzles(id, title)')
           .lt('date', today)
           .order('date', { ascending: false })
-          .limit(30);
+          .limit(60); // 30 days * 2 types
 
         if (error) throw error;
 
-        const completedDates = new Set(progress?.dailySolved || []);
+        // Build completion set including new format and legacy format
+        const completedSet = new Set(progress?.dailySolved || []);
 
-        const archiveEntries: ArchiveEntry[] = (data || []).map((entry: any) => ({
-          date: entry.date,
-          puzzleTitle: entry.puzzle?.title || 'Daily Challenge',
-          profileName: entry.puzzle?.profile_name,
-          completed: completedDates.has(entry.date),
-        }));
+        // Group by date
+        const entriesByDate = new Map<string, ArchiveEntry>();
+
+        for (const item of data || []) {
+          const date = item.date;
+          const challengeType = (item.challenge_type || 'challenge') as ChallengeType;
+          const puzzleId = (item.puzzle as any)?.id || '';
+          const puzzleTitle = (item.puzzle as any)?.title || 'Daily Challenge';
+
+          // Check completion (new format: "date:type", legacy format: just "date" for challenge)
+          const newFormatKey = `${date}:${challengeType}`;
+          const isCompleted = completedSet.has(newFormatKey) ||
+            (challengeType === 'challenge' && completedSet.has(date));
+
+          if (!entriesByDate.has(date)) {
+            entriesByDate.set(date, { date });
+          }
+
+          const entry = entriesByDate.get(date)!;
+          if (challengeType === 'easy') {
+            entry.easy = {
+              puzzleId,
+              puzzleTitle,
+              completed: isCompleted,
+            };
+          } else {
+            entry.challenge = {
+              puzzleId,
+              puzzleTitle,
+              completed: isCompleted,
+            };
+          }
+        }
+
+        // Convert to array and sort by date descending
+        const archiveEntries = Array.from(entriesByDate.values()).sort(
+          (a, b) => b.date.localeCompare(a.date)
+        );
 
         setEntries(archiveEntries);
       } catch (err) {
@@ -70,6 +111,10 @@ export function DailyArchive() {
     return acc;
   }, {} as Record<string, ArchiveEntry[]>);
 
+  const handlePuzzleClick = (date: string, challengeType: ChallengeType) => {
+    navigate(`/daily/${challengeType}?date=${date}`);
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -98,29 +143,34 @@ export function DailyArchive() {
                 {monthEntries.map((entry) => {
                   const { day, weekday } = formatDate(entry.date);
                   return (
-                    <button
-                      key={entry.date}
-                      className={`${styles.entryCard} ${entry.completed ? styles.completed : ''}`}
-                      onClick={() => navigate(`/daily?date=${entry.date}`)}
-                    >
+                    <div key={entry.date} className={styles.entryCard}>
                       <div className={styles.entryDate}>
                         <span className={styles.entryDay}>{day}</span>
                         <span className={styles.entryWeekday}>{weekday}</span>
                       </div>
-                      <div className={styles.entryInfo}>
-                        <span className={styles.entryTitle}>{entry.puzzleTitle}</span>
-                        {entry.profileName && (
-                          <span className={styles.entryProfile}>{entry.profileName}</span>
+                      <div className={styles.entryPuzzles}>
+                        {entry.easy && (
+                          <button
+                            className={`${styles.puzzleButton} ${styles.easyButton} ${entry.easy.completed ? styles.completed : ''}`}
+                            onClick={() => handlePuzzleClick(entry.date, 'easy')}
+                          >
+                            <Star size={14} />
+                            <span>Easy</span>
+                            {entry.easy.completed && <Check size={14} className={styles.checkIcon} />}
+                          </button>
+                        )}
+                        {entry.challenge && (
+                          <button
+                            className={`${styles.puzzleButton} ${styles.challengeButton} ${entry.challenge.completed ? styles.completed : ''}`}
+                            onClick={() => handlePuzzleClick(entry.date, 'challenge')}
+                          >
+                            <Target size={14} />
+                            <span>Challenge</span>
+                            {entry.challenge.completed && <Check size={14} className={styles.checkIcon} />}
+                          </button>
                         )}
                       </div>
-                      <div className={styles.entryStatus}>
-                        {entry.completed ? (
-                          <Check size={18} className={styles.checkIcon} />
-                        ) : (
-                          <span className={styles.playIcon}>Play</span>
-                        )}
-                      </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

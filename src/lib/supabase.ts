@@ -93,6 +93,25 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['user_progress']['Row'], 'updated_at'>;
         Update: Partial<Database['public']['Tables']['user_progress']['Insert']>;
       };
+      saved_simulation_configs: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          saved_at: number;
+          config: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          user_id: string;
+          name: string;
+          saved_at: number;
+          config: Record<string, unknown>;
+        };
+        Update: Partial<Database['public']['Tables']['saved_simulation_configs']['Insert']>;
+      };
     };
   };
 }

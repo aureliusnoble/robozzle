@@ -104,6 +104,39 @@
   margin: 0.25rem 0 0;
 }
 
+.viewTabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.viewTab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 2px solid #E2E8F0;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.viewTab:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+
+.viewTab.activeTab {
+  border-color: #8B5CF6;
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+
 .error {
   display: flex;
   align-items: center;

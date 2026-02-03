@@ -11,12 +11,12 @@ import { useGameStore } from '../stores/gameStore';
 import { supabase } from '../lib/supabase';
 import styles from './DailyChallenge.module.css';
 
-export function DailyChallenge() {
+export function DailyEasy() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dateParam = searchParams.get('date');
 
-  const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution, loadSpecificDate } = useDailyPuzzle('challenge');
+  const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution, loadSpecificDate } = useDailyPuzzle('easy');
   const { user, isAuthenticated } = useAuthStore();
   const { getProgram } = useGameStore();
   const [showShare, setShowShare] = useState(false);
@@ -99,7 +99,7 @@ export function DailyChallenge() {
             <button className={styles.backButtonInline} onClick={() => navigate('/daily')}>
               <ArrowLeft size={20} />
             </button>
-            <h1 className={styles.title}>Daily Challenge</h1>
+            <h1 className={styles.title}>Daily Easy</h1>
           </div>
           <div className={styles.headerActions}>
             {isDevUser && (
@@ -114,9 +114,9 @@ export function DailyChallenge() {
           </div>
         </header>
         <div className={styles.noPuzzle}>
-          <div className={styles.noPuzzleIcon}>&#127919;</div>
-          <h2>No Challenge Today</h2>
-          <p>Today's challenge hasn't been set yet.</p>
+          <div className={styles.noPuzzleIcon}>&#11088;</div>
+          <h2>No Easy Puzzle Today</h2>
+          <p>Today's easy challenge hasn't been set yet.</p>
           <p className={styles.noPuzzleHint}>Check back soon!</p>
           <button
             className={styles.browseArchiveButton}
@@ -163,7 +163,7 @@ export function DailyChallenge() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className={styles.title}>Daily Challenge</h1>
+            <h1 className={styles.title}>Daily Easy</h1>
             <p className={styles.date}>{isToday ? 'Today' : formattedDate}</p>
           </div>
         </div>
@@ -184,7 +184,7 @@ export function DailyChallenge() {
       {isViewingArchive && (
         <div className={styles.archiveNotice}>
           <span>Viewing past challenge</span>
-          <button onClick={() => navigate('/daily/challenge')}>Back to Today</button>
+          <button onClick={() => navigate('/daily/easy')}>Back to Today</button>
         </div>
       )}
 
@@ -193,7 +193,7 @@ export function DailyChallenge() {
         <div className={styles.gameSection}>
           <Game
             puzzle={dailyChallenge.puzzle}
-            displayTitle="Daily Challenge"
+            displayTitle="Daily Easy"
             onComplete={handleComplete}
             onShare={completedState ? () => setShowShare(true) : undefined}
           />

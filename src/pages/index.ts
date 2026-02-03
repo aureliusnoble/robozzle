@@ -1,4 +1,6 @@
 export { Home } from './Home';
+export { Daily } from './Daily';
+export { DailyEasy } from './DailyEasy';
 export { DailyChallenge } from './DailyChallenge';
 export { DailyArchive } from './DailyArchive';
 export { Tutorial } from './Tutorial';

@@ -2,10 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
-import type { LeaderboardEntry, Program } from '../engine/types';
+import type { LeaderboardEntry, Program, ChallengeType } from '../engine/types';
 import { assignRanks } from '../lib/scoring';
 
-export function useDailyPuzzle() {
+export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
   const { dailyChallenge, isLoadingDaily, loadDailyChallenge, loadDailyChallengeForDate } = usePuzzleStore();
   const { user, progress, updateProgress } = useAuthStore();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -14,23 +14,28 @@ export function useDailyPuzzle() {
 
   // Load daily challenge on mount
   useEffect(() => {
-    loadDailyChallenge();
-  }, [loadDailyChallenge]);
+    loadDailyChallenge(challengeType);
+  }, [loadDailyChallenge, challengeType]);
 
   // Load a specific date's challenge
   const loadSpecificDate = useCallback((date: string) => {
     if (loadDailyChallengeForDate) {
-      loadDailyChallengeForDate(date);
+      loadDailyChallengeForDate(date, challengeType);
     }
-  }, [loadDailyChallengeForDate]);
+  }, [loadDailyChallengeForDate, challengeType]);
 
-  // Check if user has completed today's challenge
+  // Check if user has completed this challenge
   useEffect(() => {
     if (dailyChallenge && progress) {
-      const completed = progress.dailySolved.includes(dailyChallenge.date);
+      // Check if this specific date + challenge type is completed
+      // The dailySolved array format: "YYYY-MM-DD" or "YYYY-MM-DD:easy"/"YYYY-MM-DD:challenge"
+      const dateKey = `${dailyChallenge.date}:${challengeType}`;
+      const legacyKey = dailyChallenge.date; // For backwards compatibility
+      const completed = progress.dailySolved.includes(dateKey) ||
+        (challengeType === 'challenge' && progress.dailySolved.includes(legacyKey));
       setHasCompleted(completed);
     }
-  }, [dailyChallenge, progress]);
+  }, [dailyChallenge, progress, challengeType]);
 
   // Load leaderboard
   useEffect(() => {
@@ -41,6 +46,7 @@ export function useDailyPuzzle() {
         .from('daily_leaderboard')
         .select('*, profiles(username)')
         .eq('date', dailyChallenge.date)
+        .eq('challenge_type', challengeType)
         .order('instructions_used', { ascending: true })
         .order('steps', { ascending: true })
         .order('completed_at', { ascending: true })
@@ -71,7 +77,7 @@ export function useDailyPuzzle() {
 
     // Subscribe to real-time updates
     const subscription = supabase
-      .channel('daily_leaderboard')
+      .channel(`daily_leaderboard_${challengeType}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -85,13 +91,14 @@ export function useDailyPuzzle() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [dailyChallenge, user]);
+  }, [dailyChallenge, user, challengeType]);
 
   // Submit solution
   const submitSolution = async (program: Program, steps: number, instructionsUsed: number) => {
     if (!user || !dailyChallenge || hasCompleted) return;
 
     const date = dailyChallenge.date;
+    const dateKey = `${date}:${challengeType}`;
 
     // Save solution
     await supabase.from('solutions').insert({
@@ -106,15 +113,16 @@ export function useDailyPuzzle() {
     await supabase.from('daily_leaderboard').insert({
       user_id: user.id,
       date,
+      challenge_type: challengeType,
       instructions_used: instructionsUsed,
       steps,
       points: 10, // Will be recalculated
       completed_at: new Date().toISOString(),
     });
 
-    // Update user progress
+    // Update user progress with the date:challengeType format
     await updateProgress({
-      dailySolved: [...(progress?.dailySolved || []), date],
+      dailySolved: [...(progress?.dailySolved || []), dateKey],
     });
 
     setHasCompleted(true);
@@ -128,5 +136,6 @@ export function useDailyPuzzle() {
     hasCompleted,
     submitSolution,
     loadSpecificDate,
+    challengeType,
   };
 }

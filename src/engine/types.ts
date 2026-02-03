@@ -76,7 +76,7 @@ export interface PuzzleConfig {
     f5: number;
   };
   allowedInstructions: InstructionType[];
-  category: 'daily' | 'tutorial' | 'classic';
+  category: 'daily' | 'daily_easy' | 'daily_challenge' | 'tutorial' | 'classic';
   difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'impossible';
   tutorialStep?: number;
   hint?: string;
@@ -114,10 +114,13 @@ export interface ExecutionResult {
 }
 
 // Daily challenge types
+export type ChallengeType = 'easy' | 'challenge';
+
 export interface DailyChallenge {
   date: string; // YYYY-MM-DD
   puzzleId: string;
   puzzle: PuzzleConfig;
+  challengeType: ChallengeType;
 }
 
 export interface LeaderboardEntry {
@@ -150,12 +153,7 @@ export interface UserProgress {
 // Generation metadata types
 export type GenerationSource = 'classic' | 'generated' | 'user';
 
-export type MechanicCategory =
-  | 'conditionals'
-  | 'recursion'
-  | 'painting'
-  | 'multi-func'
-  | 'loop';
+export type MechanicCategory = 'easy' | 'challenge';
 
 export interface GenerationMetadata {
   generationSource: GenerationSource;

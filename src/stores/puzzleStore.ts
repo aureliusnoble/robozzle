@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { PuzzleConfig, PuzzleMetadata, DailyChallenge, InstructionType } from '../engine/types';
+import type { PuzzleConfig, PuzzleMetadata, DailyChallenge, InstructionType, ChallengeType } from '../engine/types';
 import { tutorialPuzzles } from '../engine/tutorials';
 import { supabase } from '../lib/supabase';
 
@@ -10,6 +10,8 @@ interface PuzzleStore {
   classicPuzzlesMeta: PuzzleMetadata[]; // Lightweight metadata for list display
   loadedPuzzles: Map<string, PuzzleConfig>; // Cache for full puzzle data
   dailyChallenge: DailyChallenge | null;
+  dailyEasyChallenge: DailyChallenge | null;
+  dailyChallengeChallenge: DailyChallenge | null;
   dailyArchive: DailyChallenge[];
 
   // Loading states
@@ -20,9 +22,10 @@ interface PuzzleStore {
   // Actions
   loadTutorials: () => void;
   loadClassicPuzzles: () => Promise<void>;
-  loadDailyChallenge: () => Promise<void>;
-  loadDailyChallengeForDate: (date: string) => Promise<void>;
+  loadDailyChallenge: (challengeType?: ChallengeType) => Promise<void>;
+  loadDailyChallengeForDate: (date: string, challengeType?: ChallengeType) => Promise<void>;
   loadDailyArchive: () => Promise<void>;
+  loadBothDailyChallenges: () => Promise<void>;
   fetchPuzzle: (id: string) => Promise<PuzzleConfig | null>;
   getPuzzleById: (id: string) => PuzzleConfig | null;
 }
@@ -39,6 +42,8 @@ export const usePuzzleStore = create<PuzzleStore>()(
       classicPuzzlesMeta: [],
       loadedPuzzles: new Map(),
       dailyChallenge: null,
+      dailyEasyChallenge: null,
+      dailyChallengeChallenge: null,
       dailyArchive: [],
       isLoadingClassic: false,
       isLoadingDaily: false,
@@ -119,7 +124,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
         }
       },
 
-      loadDailyChallenge: async () => {
+      loadDailyChallenge: async (challengeType: ChallengeType = 'challenge') => {
         set({ isLoadingDaily: true });
         const today = getTodayDate();
 
@@ -128,21 +133,37 @@ export const usePuzzleStore = create<PuzzleStore>()(
             .from('daily_challenges')
             .select('*, puzzles(*)')
             .eq('date', today)
+            .eq('challenge_type', challengeType)
             .single();
 
           if (error || !daily || !daily.puzzles) {
             // No daily challenge set for today - show "no puzzle" state
-            console.log('No daily challenge found for today');
-            set({ dailyChallenge: null, isLoadingDaily: false });
+            console.log(`No ${challengeType} daily challenge found for today`);
+            const stateUpdate: Partial<PuzzleStore> = { isLoadingDaily: false };
+            if (challengeType === 'easy') {
+              stateUpdate.dailyEasyChallenge = null;
+            } else {
+              stateUpdate.dailyChallengeChallenge = null;
+            }
+            stateUpdate.dailyChallenge = null;
+            set(stateUpdate as any);
           } else {
-            set({
-              dailyChallenge: {
-                date: daily.date,
-                puzzleId: daily.puzzle_id,
-                puzzle: parsePuzzleFromDB(daily.puzzles),
-              },
+            const challenge: DailyChallenge = {
+              date: daily.date,
+              puzzleId: daily.puzzle_id,
+              puzzle: parsePuzzleFromDB(daily.puzzles),
+              challengeType: daily.challenge_type || 'challenge',
+            };
+            const stateUpdate: Partial<PuzzleStore> = {
+              dailyChallenge: challenge,
               isLoadingDaily: false,
-            });
+            };
+            if (challengeType === 'easy') {
+              stateUpdate.dailyEasyChallenge = challenge;
+            } else {
+              stateUpdate.dailyChallengeChallenge = challenge;
+            }
+            set(stateUpdate as any);
           }
         } catch (e) {
           console.error('Error loading daily challenge:', e);
@@ -150,7 +171,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
         }
       },
 
-      loadDailyChallengeForDate: async (date: string) => {
+      loadDailyChallengeForDate: async (date: string, challengeType: ChallengeType = 'challenge') => {
         set({ isLoadingDaily: true });
 
         try {
@@ -158,11 +179,12 @@ export const usePuzzleStore = create<PuzzleStore>()(
             .from('daily_challenges')
             .select('*, puzzles(*)')
             .eq('date', date)
+            .eq('challenge_type', challengeType)
             .single();
 
           if (error || !daily || !daily.puzzles) {
             // No challenge found for this date
-            console.log('No daily challenge found for date:', date);
+            console.log(`No ${challengeType} daily challenge found for date:`, date);
             set({ dailyChallenge: null, isLoadingDaily: false });
           } else {
             set({
@@ -170,6 +192,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
                 date: daily.date,
                 puzzleId: daily.puzzle_id,
                 puzzle: parsePuzzleFromDB(daily.puzzles),
+                challengeType: daily.challenge_type || 'challenge',
               },
               isLoadingDaily: false,
             });
@@ -187,18 +210,69 @@ export const usePuzzleStore = create<PuzzleStore>()(
             .select('*, puzzles(*)')
             .lt('date', getTodayDate())
             .order('date', { ascending: false })
-            .limit(30);
+            .limit(60); // 30 days * 2 challenge types
 
           if (!error && archive) {
             const parsedArchive = archive.map(d => ({
               date: d.date,
               puzzleId: d.puzzle_id,
               puzzle: parsePuzzleFromDB(d.puzzles),
+              challengeType: (d.challenge_type || 'challenge') as ChallengeType,
             }));
             set({ dailyArchive: parsedArchive });
           }
         } catch (e) {
           console.error('Error loading daily archive:', e);
+        }
+      },
+
+      loadBothDailyChallenges: async () => {
+        set({ isLoadingDaily: true });
+        const today = getTodayDate();
+
+        try {
+          const { data: challenges, error } = await supabase
+            .from('daily_challenges')
+            .select('*, puzzles(*)')
+            .eq('date', today);
+
+          if (error || !challenges) {
+            console.log('No daily challenges found for today');
+            set({
+              dailyEasyChallenge: null,
+              dailyChallengeChallenge: null,
+              isLoadingDaily: false,
+            });
+            return;
+          }
+
+          const stateUpdate: Partial<PuzzleStore> = { isLoadingDaily: false };
+
+          for (const daily of challenges) {
+            if (!daily.puzzles) continue;
+
+            const challenge: DailyChallenge = {
+              date: daily.date,
+              puzzleId: daily.puzzle_id,
+              puzzle: parsePuzzleFromDB(daily.puzzles),
+              challengeType: daily.challenge_type || 'challenge',
+            };
+
+            if (daily.challenge_type === 'easy') {
+              stateUpdate.dailyEasyChallenge = challenge;
+            } else {
+              stateUpdate.dailyChallengeChallenge = challenge;
+            }
+          }
+
+          set(stateUpdate as any);
+        } catch (e) {
+          console.error('Error loading daily challenges:', e);
+          set({
+            dailyEasyChallenge: null,
+            dailyChallengeChallenge: null,
+            isLoadingDaily: false,
+          });
         }
       },
 

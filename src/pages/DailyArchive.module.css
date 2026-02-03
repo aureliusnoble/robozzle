@@ -108,25 +108,6 @@
   background: white;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-  width: 100%;
-}
-
-.entryCard:hover {
-  border-color: #CBD5E1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
-}
-
-.entryCard.completed {
-  background: #F0FDF4;
-  border-color: #BBF7D0;
-}
-
-.entryCard.completed:hover {
-  border-color: #86EFAC;
 }
 
 /* Entry Date */
@@ -151,49 +132,60 @@
   text-transform: uppercase;
 }
 
-/* Entry Info */
-.entryInfo {
+/* Entry Puzzles */
+.entryPuzzles {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
+  gap: 0.5rem;
 }
 
-.entryTitle {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #1E293B;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.entryProfile {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #64748B;
-}
-
-/* Entry Status */
-.entryStatus {
+.puzzleButton {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: 48px;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.puzzleButton:hover {
+  transform: translateY(-1px);
+}
+
+.easyButton {
+  color: #15803D;
+  background: #DCFCE7;
+}
+
+.easyButton:hover {
+  background: #BBF7D0;
+}
+
+.easyButton.completed {
+  color: #166534;
+  background: #BBF7D0;
+}
+
+.challengeButton {
+  color: #DC2626;
+  background: #FEE2E2;
+}
+
+.challengeButton:hover {
+  background: #FECACA;
+}
+
+.challengeButton.completed {
+  color: #991B1B;
+  background: #FECACA;
 }
 
 .checkIcon {
-  color: #10B981;
-}
-
-.playIcon {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #6366F1;
-  padding: 0.375rem 0.75rem;
-  background: #EEF2FF;
-  border-radius: 6px;
+  margin-left: 0.25rem;
 }
 
 /* Desktop */

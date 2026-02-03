@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Check, X, Eye, Play, Loader2, Shield } from 'lucide-react';
+import { ArrowLeft, Check, X, Eye, Play, Loader2, Shield, List, Zap } from 'lucide-react';
 import { Game } from '../components/game';
+import { SimulationMode } from '../components/simulation/SimulationMode';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
 import type { PuzzleConfig, Program } from '../engine/types';
 import styles from './DevMode.module.css';
+
+type ViewMode = 'puzzles' | 'simulation';
 
 interface GeneratedPuzzle {
   id: string;
@@ -22,15 +25,10 @@ interface GeneratedPuzzle {
   pool_id: string | null;
 }
 
-// Colors for different profiles
+// Colors for different challenge types
 const PROFILE_COLORS: Record<string, string> = {
-  'Deep Recursion': '#8B5CF6',
-  'Multi-Function': '#F59E0B',
-  'Painter': '#EC4899',
-  'Efficient Looper': '#10B981',
-  'Instruction Heavy': '#3B82F6',
-  'High Conditionals': '#EF4444',
-  'Balanced': '#6B7280',
+  'easy': '#22C55E',
+  'challenge': '#EF4444',
 };
 
 function getProfileColor(profileName: string | null): string {
@@ -41,6 +39,7 @@ function getProfileColor(profileName: string | null): string {
 export function DevMode() {
   const { user } = useAuthStore();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('puzzles');
   const [puzzles, setPuzzles] = useState<GeneratedPuzzle[]>([]);
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [selectedSolution, setSelectedSolution] = useState<Program | null>(null);
@@ -133,8 +132,9 @@ export function DevMode() {
       setSelectedPuzzle(puzzle);
 
       // If solution requested and available, pass it to Game component
-      if (withSolution && data.solution) {
-        setSelectedSolution(data.solution as Program);
+      // Check both old 'solution' field and new 'generated_solution' field
+      if (withSolution && (data.generated_solution || data.solution)) {
+        setSelectedSolution((data.generated_solution || data.solution) as Program);
       } else {
         setSelectedSolution(null);
       }
@@ -152,11 +152,14 @@ export function DevMode() {
     if (!puzzle || puzzle.pool_id) return;
 
     try {
+      // Map profile_name to mechanic_category (easy or challenge)
+      const mechanicCategory = puzzle.profile_name === 'easy' ? 'easy' : 'challenge';
+
       const { error } = await supabase
         .from('generated_puzzle_pool')
         .insert({
           puzzle_id: puzzleId,
-          profile_name: puzzle.profile_name,
+          mechanic_category: mechanicCategory,
           quality_score: puzzle.quality_score || 0,
         });
 
@@ -272,17 +275,40 @@ export function DevMode() {
           <Shield size={28} className={styles.titleIcon} />
           <h1 className={styles.title}>Dev Mode</h1>
         </div>
-        <p className={styles.subtitle}>Generated Puzzle Management</p>
+        <p className={styles.subtitle}>
+          {viewMode === 'puzzles' ? 'Generated Puzzle Management' : 'Program Simulation'}
+        </p>
+
+        <div className={styles.viewTabs}>
+          <button
+            className={`${styles.viewTab} ${viewMode === 'puzzles' ? styles.activeTab : ''}`}
+            onClick={() => setViewMode('puzzles')}
+          >
+            <List size={16} />
+            Puzzle Management
+          </button>
+          <button
+            className={`${styles.viewTab} ${viewMode === 'simulation' ? styles.activeTab : ''}`}
+            onClick={() => setViewMode('simulation')}
+          >
+            <Zap size={16} />
+            Simulation Mode
+          </button>
+        </div>
       </header>
 
-      {error && (
-        <div className={styles.error}>
-          {error}
-          <button onClick={() => setError(null)}>Dismiss</button>
-        </div>
-      )}
+      {viewMode === 'simulation' ? (
+        <SimulationMode />
+      ) : (
+        <>
+          {error && (
+            <div className={styles.error}>
+              {error}
+              <button onClick={() => setError(null)}>Dismiss</button>
+            </div>
+          )}
 
-      {/* Stats */}
+          {/* Stats */}
       <div className={styles.stats}>
         <div className={styles.stat}>
           <span className={styles.statValue}>{stats.total}</span>
@@ -433,6 +459,8 @@ export function DevMode() {
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   );
