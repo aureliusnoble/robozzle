@@ -71,7 +71,7 @@ export function usePuzzleLeaderboard(puzzleId: string | undefined) {
         .select('id')
         .eq('puzzle_id', puzzleId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       return !!data;
     }

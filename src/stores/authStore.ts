@@ -265,7 +265,7 @@ export const useAuthStore = create<AuthStore>()(
                 tutorial_completed: mergedProgress.tutorialCompleted,
                 classic_solved: mergedProgress.classicSolved,
                 daily_solved: mergedProgress.dailySolved,
-              });
+              }, { onConflict: 'user_id' });
           }
         } catch (err) {
           console.error('Error updating progress:', err);

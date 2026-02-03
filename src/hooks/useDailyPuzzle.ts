@@ -100,32 +100,36 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
     const date = dailyChallenge.date;
     const dateKey = `${date}:${challengeType}`;
 
-    // Save solution
-    await supabase.from('solutions').insert({
-      user_id: user.id,
-      puzzle_id: dailyChallenge.puzzleId,
-      program,
-      steps,
-      instructions_used: instructionsUsed,
-    });
+    try {
+      // Save solution (ignore conflict if already exists)
+      await supabase.from('solutions').upsert({
+        user_id: user.id,
+        puzzle_id: dailyChallenge.puzzleId,
+        program,
+        steps,
+        instructions_used: instructionsUsed,
+      }, { onConflict: 'user_id,puzzle_id' });
 
-    // Add to leaderboard
-    await supabase.from('daily_leaderboard').insert({
-      user_id: user.id,
-      date,
-      challenge_type: challengeType,
-      instructions_used: instructionsUsed,
-      steps,
-      points: 10, // Will be recalculated
-      completed_at: new Date().toISOString(),
-    });
+      // Add to leaderboard (ignore conflict if already exists)
+      await supabase.from('daily_leaderboard').upsert({
+        user_id: user.id,
+        date,
+        challenge_type: challengeType,
+        instructions_used: instructionsUsed,
+        steps,
+        points: 10, // Will be recalculated
+        completed_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,date,challenge_type', ignoreDuplicates: true });
 
-    // Update user progress with the date:challengeType format
-    await updateProgress({
-      dailySolved: [...(progress?.dailySolved || []), dateKey],
-    });
+      // Update user progress with the date:challengeType format
+      await updateProgress({
+        dailySolved: [...(progress?.dailySolved || []), dateKey],
+      });
 
-    setHasCompleted(true);
+      setHasCompleted(true);
+    } catch (err) {
+      console.error('Error submitting solution:', err);
+    }
   };
 
   return {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Game } from '../components/game';
@@ -6,8 +6,10 @@ import { DailyLeaderboard } from '../components/leaderboard';
 import { ShareModal } from '../components/share';
 import { AuthModal } from '../components/auth';
 import { useDailyPuzzle } from '../hooks/useDailyPuzzle';
+import { useSavedPrograms } from '../hooks/useSavedPrograms';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
+import type { Program } from '../engine/types';
 import styles from './DailyChallenge.module.css';
 
 export function DailyEasy() {
@@ -17,13 +19,27 @@ export function DailyEasy() {
 
   const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution, loadSpecificDate } = useDailyPuzzle('easy');
   const { user, isAuthenticated } = useAuthStore();
-  const { getProgram } = useGameStore();
+  const { getProgram, setProgram: setGameProgram } = useGameStore();
   const [showShare, setShowShare] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [completedState, setCompletedState] = useState<{
     steps: number;
     instructions: number;
   } | null>(null);
+
+  // Ref for scrolling to leaderboard
+  const leaderboardRef = useRef<HTMLDivElement>(null);
+
+  // Get puzzle ID for save/load
+  const puzzleId = dailyChallenge ? `daily-${dailyChallenge.date}-easy` : undefined;
+
+  // Save/Load hook
+  const {
+    savedSlots,
+    latestProgram,
+    saveProgram,
+    loadProgram,
+  } = useSavedPrograms(puzzleId);
 
   // Load specific date if provided in URL (for archive viewing)
   useEffect(() => {
@@ -45,6 +61,25 @@ export function DailyEasy() {
     },
     [isAuthenticated, hasCompleted, dailyChallenge, submitSolution]
   );
+
+  // Handle view solutions button click (from victory modal)
+  const handleViewSolutions = useCallback(() => {
+    leaderboardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  // Handle save to slot
+  const handleSave = useCallback((slot: number, program: Program) => {
+    saveProgram(slot, program);
+  }, [saveProgram]);
+
+  // Handle load from slot
+  const handleLoad = useCallback((slot: number): Program | null => {
+    const loaded = loadProgram(slot);
+    if (loaded) {
+      setGameProgram(loaded);
+    }
+    return loaded;
+  }, [loadProgram, setGameProgram]);
 
   const isViewingArchive = !!dateParam;
   const today = new Date().toISOString().split('T')[0];
@@ -138,8 +173,14 @@ export function DailyEasy() {
       {/* Game */}
       <Game
         puzzle={dailyChallenge.puzzle}
+        initialProgram={latestProgram || undefined}
         onComplete={handleComplete}
         onShare={completedState ? () => setShowShare(true) : undefined}
+        hasSubmitted={hasCompleted}
+        onViewSolutions={handleViewSolutions}
+        savedSlots={savedSlots}
+        onSave={handleSave}
+        onLoad={handleLoad}
       />
 
       {/* Completion state */}
@@ -162,10 +203,12 @@ export function DailyEasy() {
       )}
 
       {/* Leaderboard */}
-      <DailyLeaderboard
-        entries={leaderboard}
-        currentUsername={user?.username}
-      />
+      <div ref={leaderboardRef}>
+        <DailyLeaderboard
+          entries={leaderboard}
+          currentUsername={user?.username}
+        />
+      </div>
 
       {/* Share Modal */}
       {dailyChallenge && completedState && (
