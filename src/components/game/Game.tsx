@@ -695,7 +695,10 @@ export function Game({
               {(hasSubmitted || justSubmitted) && onViewSolutions && (
                 <button
                   className={styles.viewSolutionsButton}
-                  onClick={onViewSolutions}
+                  onClick={() => {
+                    setShowVictoryModal(false);
+                    onViewSolutions();
+                  }}
                 >
                   View Other Solutions
                 </button>
