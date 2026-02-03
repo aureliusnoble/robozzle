@@ -11,6 +11,7 @@ interface AuthStore {
   isAuthenticated: boolean;
   needsUsername: boolean; // True when Google user needs to set username
   devModeEnabled: boolean; // When false, devs see the site as regular users
+  pendingStarAnimation: number | null; // Number of stars to animate flying to header
 
   // Actions
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
@@ -21,12 +22,14 @@ interface AuthStore {
   fetchProgress: () => Promise<void>;
   updateProgress: (progress: Partial<UserProgress>) => Promise<void>;
   setUsername: (username: string) => Promise<{ error?: string }>;
-  addClassicStars: (stars: number) => Promise<void>;
+  addClassicStars: (stars: number, animate?: boolean) => Promise<void>;
   updateHardestPuzzle: (stars: number) => Promise<void>;
   updateClassicRanking: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
   toggleDevMode: () => void;
   isDevUser: () => boolean; // Returns true if user has dev/admin role AND devModeEnabled is true
+  triggerStarAnimation: (stars: number) => void;
+  clearStarAnimation: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -38,6 +41,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       needsUsername: false,
       devModeEnabled: true, // Default to enabled for devs
+      pendingStarAnimation: null,
 
       signIn: async (email: string, password: string) => {
         try {

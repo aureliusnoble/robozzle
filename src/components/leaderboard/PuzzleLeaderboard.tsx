@@ -102,7 +102,7 @@ export function PuzzleLeaderboard({
                 )}
               </span>
               <span className={styles.name}>
-                {entry.username}
+                <span className={styles.nameText}>{entry.username}</span>
                 {isCurrentUser && <span className={styles.youBadge}>You</span>}
                 {entry.isLate && <span className={styles.lateBadge}>Late</span>}
               </span>
