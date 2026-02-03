@@ -48,6 +48,16 @@ export function DailyChallenge() {
     }
   }, [dateParam, loadSpecificDate]);
 
+  // Auto-save program when leaving the page
+  useEffect(() => {
+    return () => {
+      const currentProgram = getProgram();
+      if (currentProgram && puzzleId) {
+        saveProgram(0, currentProgram); // Slot 0 = latest/auto-save
+      }
+    };
+  }, [puzzleId, getProgram, saveProgram]);
+
   const handleComplete = useCallback(
     async (steps: number, instructions: number) => {
       setCompletedState({ steps, instructions });
