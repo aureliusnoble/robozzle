@@ -20,6 +20,7 @@ interface AuthStore {
   updateProgress: (progress: Partial<UserProgress>) => Promise<void>;
   setUsername: (username: string) => Promise<{ error?: string }>;
   addClassicStars: (stars: number) => Promise<void>;
+  updateHardestPuzzle: (stars: number) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -139,6 +140,7 @@ export const useAuthStore = create<AuthStore>()(
                   id: profile.id,
                   username: profile.username,
                   email: user.email || '',
+                  role: profile.role || null,
                   puzzlesSolved: profile.puzzles_solved,
                   currentStreak: profile.current_streak,
                   longestStreak: profile.longest_streak,
@@ -295,6 +297,35 @@ export const useAuthStore = create<AuthStore>()(
           }
         } catch (err) {
           console.error('Error updating classic stars:', err);
+        }
+      },
+
+      updateHardestPuzzle: async (stars: number) => {
+        try {
+          const { user } = get();
+          if (!user) return;
+
+          // Only update if this puzzle is harder than previous hardest
+          if (stars <= (user.hardestPuzzleStars || 0)) return;
+
+          // Update local state
+          set({
+            user: {
+              ...user,
+              hardestPuzzleStars: stars,
+            },
+          });
+
+          // Update in Supabase
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            await supabase
+              .from('profiles')
+              .update({ hardest_puzzle_stars: stars })
+              .eq('id', authUser.id);
+          }
+        } catch (err) {
+          console.error('Error updating hardest puzzle:', err);
         }
       },
     }),

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Calendar, BookOpen, Library, Trophy, Bot, Flame, Star } from 'lucide-react';
+import { Home, Calendar, BookOpen, Library, Trophy, Bot, Flame, Star, Code } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import styles from './Layout.module.css';
 
@@ -30,7 +30,14 @@ export function Layout({ children }: LayoutProps) {
             <Bot className={styles.logoIcon} size={28} />
           </Link>
           {isAuthenticated && user && (
-            <span className={styles.username}>{user.username}</span>
+            <>
+              <span className={styles.username}>{user.username}</span>
+              {(user.role === 'dev' || user.role === 'admin') && (
+                <span className={styles.devBadge} title="Developer">
+                  <Code size={12} />
+                </span>
+              )}
+            </>
           )}
         </div>
 

@@ -174,7 +174,7 @@ export function MyStatsTab({ user, progress }: MyStatsTabProps) {
             <StatCard
               icon={<Trophy size={24} />}
               label="Total Solved"
-              value={user.puzzlesSolved || 0}
+              value={classicSolvedCount + dailySolvedCount}
               subValue="puzzles"
               color="#10B981"
             />

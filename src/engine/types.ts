@@ -178,6 +178,7 @@ export interface UserProfile {
   id: string;
   username: string;
   email: string;
+  role: string | null;
   puzzlesSolved: number;
   currentStreak: number;
   longestStreak: number;
