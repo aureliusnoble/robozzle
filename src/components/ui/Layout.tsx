@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Home, Calendar, BookOpen, Library, Trophy, Bot, Flame, Star, Code } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { FlyingStars } from './FlyingStars';
+import { StreakAnimation } from './StreakAnimation';
 import styles from './Layout.module.css';
 
 interface LayoutProps {
@@ -15,6 +16,10 @@ export function Layout({ children }: LayoutProps) {
   const { user, isAuthenticated, signOut, devModeEnabled, toggleDevMode } = useAuthStore();
 
   const hasDevRole = user?.role === 'admin' || user?.role === 'dev';
+
+  // Check if user completed a daily today (for lit flame effect)
+  const today = new Date().toISOString().split('T')[0];
+  const hasCompletedDailyToday = user?.lastDailyDate === today;
 
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
@@ -55,7 +60,11 @@ export function Layout({ children }: LayoutProps) {
                 <Star size={14} className={styles.starsIcon} />
                 {user.classicStars || 0}
               </span>
-              <span className={styles.streak} title="Current streak">
+              <span
+                id="header-streak-counter"
+                className={`${styles.streak} ${hasCompletedDailyToday ? styles.streakLit : ''}`}
+                title="Current streak"
+              >
                 <Flame size={14} className={styles.streakIcon} />
                 {user.currentStreak}
               </span>
@@ -100,6 +109,9 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Flying stars animation */}
       <FlyingStars />
+
+      {/* Streak fire animation */}
+      <StreakAnimation />
     </div>
   );
 }

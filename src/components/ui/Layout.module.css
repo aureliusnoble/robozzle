@@ -130,6 +130,20 @@
   color: #F97316;
 }
 
+.streakLit .streakIcon {
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.7));
+  animation: subtleFlicker 2s ease-in-out infinite;
+}
+
+@keyframes subtleFlicker {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.9));
+  }
+}
+
 .signOutButton {
   padding: 0.5rem 1rem;
   background: #F1F5F9;

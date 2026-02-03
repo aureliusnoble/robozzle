@@ -1,0 +1,55 @@
+.container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  margin-left: -40px;
+  margin-top: -40px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(249, 115, 22, 0.9) 0%,
+    rgba(251, 146, 60, 0.6) 40%,
+    rgba(249, 115, 22, 0) 70%
+  );
+  pointer-events: none;
+}
+
+.fireParticle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 200, 50, 1) 0%,
+    rgba(249, 115, 22, 1) 50%,
+    rgba(234, 88, 12, 0.8) 100%
+  );
+  box-shadow:
+    0 0 8px rgba(249, 115, 22, 0.9),
+    0 0 16px rgba(251, 146, 60, 0.6);
+  margin-left: -4px;
+  margin-top: -4px;
+}
+
+.flash {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 200, 50, 0.8) 40%,
+    rgba(249, 115, 22, 0) 70%
+  );
+  pointer-events: none;
+}

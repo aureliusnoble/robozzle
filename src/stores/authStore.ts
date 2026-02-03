@@ -12,6 +12,7 @@ interface AuthStore {
   needsUsername: boolean; // True when Google user needs to set username
   devModeEnabled: boolean; // When false, devs see the site as regular users
   pendingStarAnimation: number | null; // Number of stars to animate flying to header
+  pendingStreakAnimation: boolean; // Whether to show streak fire animation
 
   // Actions
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
@@ -30,6 +31,9 @@ interface AuthStore {
   isDevUser: () => boolean; // Returns true if user has dev/admin role AND devModeEnabled is true
   triggerStarAnimation: (stars: number) => void;
   clearStarAnimation: () => void;
+  triggerStreakAnimation: () => void;
+  clearStreakAnimation: () => void;
+  updateStreakFromDaily: (date: string) => Promise<{ isNewStreakDay: boolean; newStreak: number }>;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -42,6 +46,7 @@ export const useAuthStore = create<AuthStore>()(
       needsUsername: false,
       devModeEnabled: true, // Default to enabled for devs
       pendingStarAnimation: null,
+      pendingStreakAnimation: false,
 
       signIn: async (email: string, password: string) => {
         try {
@@ -436,6 +441,74 @@ export const useAuthStore = create<AuthStore>()(
 
       clearStarAnimation: () => {
         set({ pendingStarAnimation: null });
+      },
+
+      triggerStreakAnimation: () => {
+        set({ pendingStreakAnimation: true });
+      },
+
+      clearStreakAnimation: () => {
+        set({ pendingStreakAnimation: false });
+      },
+
+      updateStreakFromDaily: async (date: string) => {
+        const { user } = get();
+        if (!user) return { isNewStreakDay: false, newStreak: 0 };
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // Only count as a new streak day if:
+        // 1. This is today's puzzle (not an archive puzzle)
+        // 2. User hasn't already completed a daily today
+        if (date !== today || user.lastDailyDate === today) {
+          return { isNewStreakDay: false, newStreak: user.currentStreak };
+        }
+
+        // Calculate new streak
+        let newStreak = 1;
+        if (user.lastDailyDate) {
+          const lastDate = new Date(user.lastDailyDate);
+          const todayDate = new Date(today);
+          const diffTime = todayDate.getTime() - lastDate.getTime();
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 1) {
+            // Continue streak
+            newStreak = user.currentStreak + 1;
+          }
+          // If diffDays > 1, streak resets to 1
+        }
+
+        const newLongestStreak = Math.max(user.longestStreak, newStreak);
+
+        // Update local state immediately for instant UI feedback
+        set({
+          user: {
+            ...user,
+            currentStreak: newStreak,
+            longestStreak: newLongestStreak,
+            lastDailyDate: today,
+          },
+        });
+
+        // Update Supabase in background
+        try {
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            await supabase
+              .from('profiles')
+              .update({
+                current_streak: newStreak,
+                longest_streak: newLongestStreak,
+                last_daily_date: today,
+              })
+              .eq('id', authUser.id);
+          }
+        } catch (err) {
+          console.error('Error updating streak in Supabase:', err);
+        }
+
+        return { isNewStreakDay: true, newStreak };
       },
     }),
     {

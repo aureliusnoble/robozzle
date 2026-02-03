@@ -8,6 +8,7 @@ import { AuthModal } from '../components/auth';
 import { useDailyPuzzle } from '../hooks/useDailyPuzzle';
 import { useSavedPrograms } from '../hooks/useSavedPrograms';
 import { useAuthStore } from '../stores/authStore';
+import { getStreakAnimationDuration } from '../components/ui/StreakAnimation';
 import { useGameStore } from '../stores/gameStore';
 import type { Program } from '../engine/types';
 import styles from './DailyChallenge.module.css';
@@ -18,7 +19,7 @@ export function DailyEasy() {
   const dateParam = searchParams.get('date');
 
   const { dailyChallenge, isLoadingDaily, leaderboard, userRank, hasCompleted, submitSolution, loadSpecificDate, loadSolution } = useDailyPuzzle('easy');
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, triggerStreakAnimation, updateStreakFromDaily } = useAuthStore();
   const { getProgram, setProgram: setGameProgram } = useGameStore();
   const [showShare, setShowShare] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -30,9 +31,15 @@ export function DailyEasy() {
     userId: string | null;
     username: string;
   } | null>(null);
+  const [shouldAnimateStreak, setShouldAnimateStreak] = useState(false);
 
   // Ref for scrolling to leaderboard
   const leaderboardRef = useRef<HTMLDivElement>(null);
+
+  // Date checks (needed before callbacks)
+  const today = new Date().toISOString().split('T')[0];
+  const isToday = !dateParam || dateParam === today;
+  const isViewingArchive = !!dateParam;
 
   // Get puzzle ID for save/load
   const puzzleId = dailyChallenge ? `daily-${dailyChallenge.date}-easy` : undefined;
@@ -63,10 +70,21 @@ export function DailyEasy() {
   }, [puzzleId, getProgram, saveProgram]);
 
   const handleComplete = useCallback(
-    (steps: number, instructions: number) => {
+    async (steps: number, instructions: number) => {
+      // Check if this is today's puzzle AND first completion today
+      const isFirstCompletionToday = isToday && !hasCompleted && user?.lastDailyDate !== today;
+
+      if (isFirstCompletionToday && dailyChallenge) {
+        const result = await updateStreakFromDaily(dailyChallenge.date);
+        if (result.isNewStreakDay) {
+          setShouldAnimateStreak(true);
+          triggerStreakAnimation();
+        }
+      }
+
       setCompletedState({ steps, instructions });
     },
-    []
+    [isToday, hasCompleted, user?.lastDailyDate, today, dailyChallenge, updateStreakFromDaily, triggerStreakAnimation]
   );
 
   // Handle leaderboard submission (opt-in)
@@ -100,10 +118,6 @@ export function DailyEasy() {
   const handleViewSolution = useCallback((userId: string | null, username: string) => {
     setViewingSolution({ userId, username });
   }, []);
-
-  const isViewingArchive = !!dateParam;
-  const today = new Date().toISOString().split('T')[0];
-  const isToday = !dateParam || dateParam === today;
 
   if (isLoadingDaily) {
     return (
@@ -202,6 +216,7 @@ export function DailyEasy() {
         savedSlots={savedSlots}
         onSave={handleSave}
         onLoad={handleLoad}
+        victoryModalDelay={shouldAnimateStreak ? 1000 + getStreakAnimationDuration() : 1000}
       />
 
       {/* Completion state */}
