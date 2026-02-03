@@ -442,7 +442,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             <span style={{ color: '#22C55E', fontSize: 16 }}>{'\u2713'}</span>
             <span style={{ fontSize: 14, fontWeight: 600 }}>Solved!</span>
             <span style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.6)' }}>
-              {stats.steps} steps {'\u00B7'} {stats.instructions} instructions
+              {stats.instructions} instructions {'\u00B7'} {stats.steps} steps
             </span>
           </div>
         </div>
