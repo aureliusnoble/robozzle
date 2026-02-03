@@ -162,12 +162,16 @@ async function generatePuzzlesForType(
 
   // Log config details
   console.log('\nConfig settings:');
-  console.log(`  Grid size: ${config.gridSize}x${config.gridSize}`);
-  console.log(`  Max steps: ${config.maxSteps}`);
+  console.log(`  Grid size: ${config.gridSize}x${config.gridSize}, Max steps: ${config.maxSteps}`);
   console.log(`  Functions: F1=${config.slotsPerFunction.f1}, F2=${config.slotsPerFunction.f2}, F3=${config.slotsPerFunction.f3}, F4=${config.slotsPerFunction.f4}, F5=${config.slotsPerFunction.f5}`);
-  console.log(`  Min tiles: ${config.minTiles}, Min turns: ${config.minTurns}, Min path: ${config.minPathLength}`);
-  console.log(`  Min coverage: ${config.minCoveragePercent}%, Conditional: ${config.conditionalPercent}%`);
+  console.log(`  Min tiles: ${config.minTiles}, Min bounding box: ${config.minBoundingBox}, Max dense: ${config.maxDenseTiles}`);
+  console.log(`  Min turns: ${config.minTurns}, Min path length: ${config.minPathLength}`);
+  console.log(`  Min coverage: ${config.minCoveragePercent}%, Conditional %: ${config.conditionalPercent}%`);
   console.log(`  Min stack depth: ${config.minStackDepth}, Min self calls: ${config.minSelfCalls}`);
+  console.log(`  Path trace ratio: ${config.minPathTraceRatio}, Min conditionals: ${config.minConditionals}`);
+  console.log(`  Min paint revisits: ${config.minPaintRevisits}, Max unnecessary paints: ${config.maxUnnecessaryPaints}`);
+  console.log(`  Loop check: ${config.disableLoopCheck ? 'DISABLED' : 'enabled'}`);
+  console.log(`  Instruction weights: fwd=${config.instructionWeights.forward}, turn=${config.instructionWeights.turn}, call=${config.instructionWeights.functionCall}, paint=${config.instructionWeights.paint}`);
   console.log(`  Auto restart after: ${config.autoRestartAfter} attempts`);
 
   const engine = new SimulationEngine(config);
