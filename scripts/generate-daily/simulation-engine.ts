@@ -144,6 +144,23 @@ function createEmptyGrid(size: number): (Tile | null)[][] {
   return grid;
 }
 
+// Create a grid with original colors (before any paint operations)
+function createOriginalGrid(
+  grid: (Tile | null)[][],
+  originalColors: Map<string, TileColor>
+): (Tile | null)[][] {
+  return grid.map((row, y) =>
+    row.map((tile, x) => {
+      if (!tile) return null;
+      const originalColor = originalColors.get(`${x},${y}`);
+      return {
+        ...tile,
+        color: originalColor ?? tile.color,
+      };
+    })
+  );
+}
+
 function getOppositeDirection(dir: Direction): Direction {
   switch (dir) {
     case 'up': return 'down';
@@ -253,7 +270,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
             success: false,
             errorType: 'boundary',
             grid,
-            originalGrid: grid,
+            originalGrid: createOriginalGrid(grid, originalColors),
             robotPath,
             turnPositions,
             executedSlots,
@@ -284,7 +301,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
             success: false,
             errorType: 'loop',
             grid,
-            originalGrid: grid,
+            originalGrid: createOriginalGrid(grid, originalColors),
             robotPath,
             turnPositions,
             executedSlots,
@@ -339,7 +356,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
       success: false,
       errorType: 'coverage',
       grid,
-      originalGrid: grid,
+      originalGrid: createOriginalGrid(grid, originalColors),
       robotPath,
       turnPositions,
       executedSlots,
@@ -370,7 +387,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
       success: false,
       errorType: 'minTiles',
       grid,
-      originalGrid: grid,
+      originalGrid: createOriginalGrid(grid, originalColors),
       robotPath,
       turnPositions,
       executedSlots,
@@ -387,7 +404,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
       success: false,
       errorType: 'minBoundingBox',
       grid,
-      originalGrid: grid,
+      originalGrid: createOriginalGrid(grid, originalColors),
       robotPath,
       turnPositions,
       executedSlots,
@@ -403,7 +420,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
       success: false,
       errorType: 'minTurns',
       grid,
-      originalGrid: grid,
+      originalGrid: createOriginalGrid(grid, originalColors),
       robotPath,
       turnPositions,
       executedSlots,
@@ -420,7 +437,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
       success: false,
       errorType: 'minPathLength',
       grid,
-      originalGrid: grid,
+      originalGrid: createOriginalGrid(grid, originalColors),
       robotPath,
       turnPositions,
       executedSlots,
@@ -435,7 +452,7 @@ function runSimulation(program: Program, config: SimulationConfig): SimulationRe
     success: true,
     errorType: null,
     grid,
-    originalGrid: grid,
+    originalGrid: createOriginalGrid(grid, originalColors),
     robotPath,
     turnPositions,
     executedSlots,
@@ -541,9 +558,9 @@ export class SimulationEngine {
       const result = runSimulation(program, this.config);
 
       if (result.success) {
-        // Create puzzle config from result
+        // Create puzzle config from result - use ORIGINAL grid (before paint operations)
         const center = Math.floor(this.config.gridSize / 2);
-        const gridWithStars = result.grid.map(row =>
+        const gridWithStars = result.originalGrid.map(row =>
           row.map(tile => tile ? { ...tile, hasStar: false } : null)
         );
 
