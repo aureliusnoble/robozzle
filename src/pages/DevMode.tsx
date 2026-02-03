@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, X, Eye, Play, Loader2, Shield, List, Zap, Upload, Settings, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, X, Eye, Play, Loader2, Shield, List, Zap, Upload, Settings, Clock, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
 import { Game } from '../components/game';
 import { SimulationMode } from '../components/simulation/SimulationMode';
 import { useAuthStore } from '../stores/authStore';
@@ -327,8 +327,30 @@ export function DevMode() {
     }
   };
 
-  // Delete config
+  // Deactivate config (mark as inactive, don't delete)
+  const handleDeactivateConfig = async (configId: string) => {
+    try {
+      const { error } = await supabase
+        .from('generation_configs')
+        .update({ is_active: false })
+        .eq('id', configId);
+
+      if (error) throw error;
+
+      setConfigs(configs.map(c => c.id === configId ? { ...c, is_active: false } : c));
+      setSuccessMessage('Config deactivated');
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (err) {
+      console.error('Error deactivating config:', err);
+      setError('Failed to deactivate config');
+    }
+  };
+
+  // Delete config permanently
   const handleDeleteConfig = async (configId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this config?')) {
+      return;
+    }
     try {
       const { error } = await supabase
         .from('generation_configs')
@@ -602,12 +624,21 @@ export function DevMode() {
                     >
                       Chal
                     </button>
+                    {config.is_active && (
+                      <button
+                        className={styles.deactivateConfigButton}
+                        onClick={() => handleDeactivateConfig(config.id)}
+                        title="Deactivate config"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                     <button
                       className={styles.deleteConfigButton}
                       onClick={() => handleDeleteConfig(config.id)}
-                      title="Delete config"
+                      title="Delete config permanently"
                     >
-                      <X size={14} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>

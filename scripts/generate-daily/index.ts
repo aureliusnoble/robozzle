@@ -430,10 +430,18 @@ async function main() {
     if (count < MIN_POOL_SIZE) {
       const needed = Math.min(MIN_POOL_SIZE - count, PUZZLES_TO_GENERATE);
 
-      // Find config for this challenge type
-      const dbConfig = dbConfigs.find(c => c.challenge_type === challengeType);
-      const config = dbConfig?.config ||
-        (challengeType === 'easy' ? DEFAULT_EASY_CONFIG : DEFAULT_CHALLENGE_CONFIG);
+      // Find configs for this challenge type and randomly select one
+      const matchingConfigs = dbConfigs.filter(c => c.challenge_type === challengeType);
+      let config: SimulationConfig;
+      if (matchingConfigs.length > 0) {
+        const randomIndex = Math.floor(Math.random() * matchingConfigs.length);
+        const selectedConfig = matchingConfigs[randomIndex];
+        console.log(`Using config "${selectedConfig.name}" for ${challengeType} (${matchingConfigs.length} available)`);
+        config = selectedConfig.config;
+      } else {
+        console.log(`No active configs for ${challengeType}, using default`);
+        config = challengeType === 'easy' ? DEFAULT_EASY_CONFIG : DEFAULT_CHALLENGE_CONFIG;
+      }
 
       toGenerate.push({ challengeType, count: needed, config });
       console.log(`Will generate ${needed} ${challengeType} puzzles (pool has ${count}, min is ${MIN_POOL_SIZE})`);
