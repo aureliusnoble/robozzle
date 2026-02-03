@@ -63,22 +63,3 @@ export async function shareImage(element: HTMLElement, title: string, url: strin
     return false;
   }
 }
-
-export async function shareGif(gifBlob: Blob, title: string, url: string): Promise<boolean> {
-  if (!navigator.share) return false;
-
-  try {
-    const file = new File([gifBlob], 'robozzle-share.gif', { type: 'image/gif' });
-
-    await navigator.share({
-      title,
-      url,
-      files: [file],
-    });
-    return true;
-  } catch (error) {
-    // User cancelled or error
-    console.error('Share failed:', error);
-    return false;
-  }
-}

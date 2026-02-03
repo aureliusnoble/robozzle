@@ -20,7 +20,7 @@ export function generateShareText(
   lines.push(gridEmoji);
 
   // Stats
-  lines.push(`${state.steps} steps | ${instructionsUsed} instructions`);
+  lines.push(`${instructionsUsed} instructions | ${state.steps} steps`);
 
   // URL
   const baseUrl = window.location.origin;
