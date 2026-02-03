@@ -48,6 +48,7 @@ interface GameProps {
   onShare?: () => void;
   tutorialStep?: number; // For progressive disclosure and onboarding
   suppressVictoryModal?: boolean; // Don't show victory modal on completion
+  victoryModalDelay?: number; // Delay in ms before showing victory modal (default: 1000)
   // Leaderboard submission
   hasSubmitted?: boolean;
   onSubmit?: (program: Program, steps: number, instructions: number) => Promise<void>;
@@ -120,6 +121,7 @@ export function Game({
   onShare,
   tutorialStep,
   suppressVictoryModal,
+  victoryModalDelay = 1000,
   hasSubmitted,
   onSubmit,
   onViewSolutions,
@@ -298,12 +300,12 @@ export function Game({
     if (isComplete && !suppressVictoryModal) {
       const timer = setTimeout(() => {
         setShowVictoryModal(true);
-      }, 1000);
+      }, victoryModalDelay);
       return () => clearTimeout(timer);
     } else {
       setShowVictoryModal(false);
     }
-  }, [isComplete, suppressVictoryModal]);
+  }, [isComplete, suppressVictoryModal, victoryModalDelay]);
 
   // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {

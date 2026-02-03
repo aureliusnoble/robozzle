@@ -40,16 +40,16 @@ export function FlyingStars() {
       for (let i = 0; i < starCount; i++) {
         newParticles.push({
           id: i,
-          delay: i * 0.08,
-          offsetX: (Math.random() - 0.5) * 60,
-          offsetY: (Math.random() - 0.5) * 40,
+          delay: i * 0.15, // Slower stagger
+          offsetX: (Math.random() - 0.5) * 80,
+          offsetY: (Math.random() - 0.5) * 50,
         });
       }
 
       setParticles(newParticles);
 
       // Clear animation after all particles have animated
-      const totalDuration = (starCount * 0.08) + 800; // stagger + animation duration
+      const totalDuration = (starCount * 0.15) + 1500; // stagger + animation duration
       const timer = setTimeout(() => {
         setParticles([]);
         clearStarAnimation();
@@ -81,37 +81,37 @@ export function FlyingStars() {
             animate={{
               x: targetPosition.x,
               y: targetPosition.y,
-              scale: [0, 1.5, 1, 0.5],
+              scale: [0, 1.8, 1.2, 0.6],
               opacity: [0, 1, 1, 0],
             }}
             transition={{
-              duration: 0.8,
+              duration: 1.2,
               delay: particle.delay,
               ease: [0.2, 0.8, 0.2, 1],
             }}
           >
-            <Star size={20} fill="#F59E0B" color="#F59E0B" />
+            <Star size={28} fill="#F59E0B" color="#F59E0B" />
           </motion.div>
         ))}
       </AnimatePresence>
 
-      {/* Star count badge that appears at the end */}
-      {pendingStarAnimation > 1 && (
+      {/* Star count badge that appears at the start */}
+      {pendingStarAnimation > 0 && (
         <motion.div
           className={styles.countBadge}
           initial={{
             x: startX,
-            y: startY - 30,
+            y: startY - 40,
             scale: 0,
             opacity: 0,
           }}
           animate={{
-            scale: [0, 1.2, 1],
+            scale: [0, 1.4, 1.2],
             opacity: [0, 1, 1, 0],
           }}
           transition={{
-            duration: 1.2,
-            times: [0, 0.3, 0.6, 1],
+            duration: 1.8,
+            times: [0, 0.2, 0.6, 1],
           }}
         >
           +{pendingStarAnimation}

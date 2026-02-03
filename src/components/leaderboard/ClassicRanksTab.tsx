@@ -96,7 +96,7 @@ export function ClassicRanksTab({ currentUsername }: ClassicRanksTabProps) {
                     )}
                   </span>
                   <span className={styles.name}>
-                    {entry.username}
+                    <span className={styles.nameText}>{entry.username}</span>
                     {isCurrentUser && <span className={styles.youBadge}>You</span>}
                   </span>
                   <span className={styles.score}>{entry.score.toFixed(1)}</span>

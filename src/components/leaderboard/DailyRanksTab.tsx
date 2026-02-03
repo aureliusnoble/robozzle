@@ -66,7 +66,7 @@ function RankingList({
                 )}
               </span>
               <span className={styles.name}>
-                {entry.username}
+                <span className={styles.nameText}>{entry.username}</span>
                 {isCurrentUser && <span className={styles.youBadge}>You</span>}
               </span>
               <span className={styles.points}>{entry.totalPoints}</span>

@@ -210,6 +210,7 @@ export function Classic() {
           savedSlots={savedSlots}
           onSave={handleSave}
           onLoad={handleLoad}
+          victoryModalDelay={2500}
         />
 
         {/* Puzzle Leaderboard */}
