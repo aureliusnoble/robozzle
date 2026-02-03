@@ -19,6 +19,7 @@ interface AuthStore {
   fetchProgress: () => Promise<void>;
   updateProgress: (progress: Partial<UserProgress>) => Promise<void>;
   setUsername: (username: string) => Promise<{ error?: string }>;
+  addClassicStars: (stars: number) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -266,6 +267,34 @@ export const useAuthStore = create<AuthStore>()(
           }
         } catch (err) {
           console.error('Error updating progress:', err);
+        }
+      },
+
+      addClassicStars: async (stars: number) => {
+        try {
+          const { user } = get();
+          if (!user) return;
+
+          const newStars = (user.classicStars || 0) + stars;
+
+          // Update local state
+          set({
+            user: {
+              ...user,
+              classicStars: newStars,
+            },
+          });
+
+          // Update in Supabase
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            await supabase
+              .from('profiles')
+              .update({ classic_stars: newStars })
+              .eq('id', authUser.id);
+          }
+        } catch (err) {
+          console.error('Error updating classic stars:', err);
         }
       },
     }),

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Calendar, BookOpen, Library, Trophy, Bot, Flame } from 'lucide-react';
+import { Home, Calendar, BookOpen, Library, Trophy, Bot, Flame, Star } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import styles from './Layout.module.css';
 
@@ -25,15 +25,22 @@ export function Layout({ children }: LayoutProps) {
     <div className={styles.layout}>
       {/* Header */}
       <header className={styles.header}>
-        <Link to="/" className={styles.logo}>
-          <Bot className={styles.logoIcon} size={28} />
-          <span className={styles.logoText}>RoboZZle</span>
-        </Link>
+        <div className={styles.headerLeft}>
+          <Link to="/" className={styles.logo}>
+            <Bot className={styles.logoIcon} size={28} />
+          </Link>
+          {isAuthenticated && user && (
+            <span className={styles.username}>{user.username}</span>
+          )}
+        </div>
 
         <div className={styles.headerRight}>
           {isAuthenticated && user ? (
             <div className={styles.userMenu}>
-              <span className={styles.username}>{user.username}</span>
+              <span className={styles.stars} title="Total stars from classic puzzles">
+                <Star size={14} className={styles.starsIcon} />
+                {user.classicStars || 0}
+              </span>
               <span className={styles.streak} title="Current streak">
                 <Flame size={14} className={styles.streakIcon} />
                 {user.currentStreak}

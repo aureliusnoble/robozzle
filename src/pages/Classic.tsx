@@ -28,7 +28,7 @@ export function Classic() {
   const puzzleParam = searchParams.get('puzzle');
 
   const { classicPuzzlesMeta, isLoadingClassic, isLoadingPuzzle, loadClassicPuzzles, fetchPuzzle } = usePuzzleStore();
-  const { user, progress, updateProgress } = useAuthStore();
+  const { user, progress, updateProgress, addClassicStars } = useAuthStore();
   const { getProgram, setProgram: setGameProgram } = useGameStore();
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleConfig | null>(null);
   const [filter, setFilter] = useState<DifficultyFilter>('all');
@@ -122,9 +122,13 @@ export function Classic() {
       if (!newSolved.includes(selectedPuzzle.id)) {
         newSolved.push(selectedPuzzle.id);
         await updateProgress({ classicSolved: newSolved });
+        // Add stars for first-time completion
+        if (selectedPuzzle.stars) {
+          await addClassicStars(selectedPuzzle.stars);
+        }
       }
     }
-  }, [selectedPuzzle, progress, updateProgress]);
+  }, [selectedPuzzle, progress, updateProgress, addClassicStars]);
 
   const handleBack = () => {
     // Auto-save current program before leaving
