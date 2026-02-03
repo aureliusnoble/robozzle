@@ -195,6 +195,9 @@ export function Game({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [boardScale, setBoardScale] = useState(1);
 
+  // Ref to track if onComplete has been called for current completion
+  const completionCalledRef = useRef(false);
+
   // Calculate board dimensions (matching GameBoard constants)
   const TILE_SIZE = 32;
   const TILE_GAP = 2;
@@ -253,6 +256,7 @@ export function Game({
     loadPuzzle(puzzle);
     setCurrentFunction('f1');
     setSelectedColor(null);
+    completionCalledRef.current = false; // Reset completion tracking
 
     // Apply initial program if provided (e.g., for solution preview)
     if (initialProgram) {
@@ -260,10 +264,14 @@ export function Game({
     }
   }, [puzzle, loadPuzzle, initialProgram, setProgram]);
 
-  // Handle completion
+  // Handle completion - use ref to ensure we only call onComplete once per completion
   useEffect(() => {
-    if (isComplete && gameState && onComplete) {
+    if (isComplete && gameState && onComplete && !completionCalledRef.current) {
+      completionCalledRef.current = true;
       onComplete(gameState.steps, instructionsUsed);
+    } else if (!isComplete) {
+      // Reset when the game is reset
+      completionCalledRef.current = false;
     }
   }, [isComplete, gameState, instructionsUsed, onComplete]);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, Circle, Loader2, Star, Library } from 'lucide-react';
 import { Game, SolutionViewer } from '../components/game';
@@ -45,6 +45,9 @@ export function Classic() {
     userId: string | null;
     username: string;
   } | null>(null);
+
+  // Ref for scrolling to leaderboard
+  const leaderboardRef = useRef<HTMLDivElement>(null);
 
   // Leaderboard hook
   const {
@@ -111,7 +114,7 @@ export function Classic() {
     }
   };
 
-  const handleComplete = async (steps: number, instructions: number) => {
+  const handleComplete = useCallback(async (steps: number, instructions: number) => {
     setCompletedState({ steps, instructions });
 
     if (selectedPuzzle && progress) {
@@ -121,7 +124,7 @@ export function Classic() {
         await updateProgress({ classicSolved: newSolved });
       }
     }
-  };
+  }, [selectedPuzzle, progress, updateProgress]);
 
   const handleBack = () => {
     // Auto-save current program before leaving
@@ -162,9 +165,8 @@ export function Classic() {
 
   // Handle view solutions button click (from victory modal)
   const handleViewSolutions = useCallback(() => {
-    // Show leaderboard or scroll to it
-    // For now, just close the victory modal by resetting
-    // The leaderboard is visible below the game
+    // Scroll to the leaderboard section
+    leaderboardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   const solvedCount = progress?.classicSolved?.length || 0;
@@ -204,14 +206,16 @@ export function Classic() {
         />
 
         {/* Puzzle Leaderboard */}
-        <PuzzleLeaderboard
-          entries={leaderboard}
-          currentUsername={user?.username}
-          currentUserId={user?.id}
-          hasSubmitted={hasSubmitted}
-          isLoading={isLeaderboardLoading}
-          onViewSolution={handleViewSolution}
-        />
+        <div ref={leaderboardRef}>
+          <PuzzleLeaderboard
+            entries={leaderboard}
+            currentUsername={user?.username}
+            currentUserId={user?.id}
+            hasSubmitted={hasSubmitted}
+            isLoading={isLeaderboardLoading}
+            onViewSolution={handleViewSolution}
+          />
+        </div>
 
         {/* Solution Viewer Modal */}
         {viewingSolution && (
