@@ -9,13 +9,8 @@
       // Redirects 404s back to index.html with the path preserved in sessionStorage
       // See: https://github.com/rafgraph/spa-github-pages
       (function() {
-        var pathSegmentsToKeep = 0;
-
-        // Check if we're deployed to a subdirectory (e.g., /robozzle/)
-        var basePath = document.querySelector('base');
-        if (basePath) {
-          pathSegmentsToKeep = basePath.href.replace(/^https?:\/\/[^\/]+/, '').split('/').filter(Boolean).length;
-        }
+        // App is deployed at /robozzle/, so keep 1 path segment
+        var pathSegmentsToKeep = 1;
 
         var l = window.location;
         var path = l.pathname.split('/').slice(pathSegmentsToKeep + 1).join('/');
@@ -31,12 +26,8 @@
           }));
         }
 
-        // Redirect to the root
-        var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '');
-        if (pathSegmentsToKeep > 0) {
-          redirectUrl += '/' + l.pathname.split('/').slice(1, pathSegmentsToKeep + 1).join('/');
-        }
-        redirectUrl += '/';
+        // Redirect to /robozzle/
+        var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/robozzle/';
 
         l.replace(redirectUrl);
       })();
