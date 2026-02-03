@@ -1,19 +1,16 @@
-name: Generate Daily Puzzles
+name: Ensure Daily Challenges
 
 on:
   schedule:
-    # Run at 22:00 UTC daily
-    # - Generates new puzzles for the pool if needed
-    # - Ensures today's daily exists (fallback if missing)
-    # - Sets up tomorrow's daily (replaces any existing)
-    - cron: '0 22 * * *'
+    # Run at 00:05 UTC daily (5 minutes after midnight to ensure date has changed)
+    - cron: '5 0 * * *'
   workflow_dispatch:
     # Allow manual triggering
 
 jobs:
-  generate:
+  ensure:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 5
 
     steps:
       - name: Checkout repository
@@ -28,15 +25,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run puzzle generation
+      - name: Ensure daily challenges exist
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: npx tsx scripts/generate-daily/index.ts
+        run: npx tsx scripts/generate-daily/ensure-daily.ts
 
       - name: Summary
         if: always()
         run: |
-          echo "## Puzzle Generation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "## Daily Challenge Check Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Check the logs above for details on generated puzzles." >> $GITHUB_STEP_SUMMARY
+          echo "Verified that today's daily challenges are in place." >> $GITHUB_STEP_SUMMARY

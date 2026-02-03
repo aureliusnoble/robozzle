@@ -265,13 +265,24 @@ function calculateQualityScore(result: any, config: SimulationConfig): number {
   return Math.round(score);
 }
 
-// Check if today's daily challenge exists for a given type
-async function hasTodaysDailyChallenge(challengeType: ChallengeType): Promise<boolean> {
-  const today = new Date().toISOString().split('T')[0];
+// Get today's date in YYYY-MM-DD format (UTC)
+function getTodayDate(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+// Get tomorrow's date in YYYY-MM-DD format (UTC)
+function getTomorrowDate(): string {
+  const tomorrow = new Date();
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  return tomorrow.toISOString().split('T')[0];
+}
+
+// Check if a daily challenge exists for a given date and type
+async function hasDailyChallenge(date: string, challengeType: ChallengeType): Promise<boolean> {
   const { data, error } = await supabase
     .from('daily_challenges')
     .select('id')
-    .eq('date', today)
+    .eq('date', date)
     .eq('challenge_type', challengeType)
     .single();
 
@@ -279,6 +290,52 @@ async function hasTodaysDailyChallenge(challengeType: ChallengeType): Promise<bo
     console.error('Error checking daily challenge:', error);
   }
   return !!data;
+}
+
+// Delete existing daily challenge for a date and type (for tomorrow's swap)
+async function deleteDailyChallenge(date: string, challengeType: ChallengeType): Promise<boolean> {
+  // First get the puzzle_id so we can unmark it in the pool
+  const { data: existing, error: fetchError } = await supabase
+    .from('daily_challenges')
+    .select('puzzle_id')
+    .eq('date', date)
+    .eq('challenge_type', challengeType)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    console.error('Error fetching daily challenge to delete:', fetchError);
+    return false;
+  }
+
+  if (!existing) {
+    return true; // Nothing to delete
+  }
+
+  // Unmark the puzzle in the pool (set used_for_daily back to null)
+  const { error: poolError } = await supabase
+    .from('generated_puzzle_pool')
+    .update({ used_for_daily: null })
+    .eq('puzzle_id', existing.puzzle_id);
+
+  if (poolError) {
+    console.error('Error unmarking puzzle in pool:', poolError);
+    // Continue anyway - the puzzle might not be in the pool
+  }
+
+  // Delete the daily challenge entry
+  const { error: deleteError } = await supabase
+    .from('daily_challenges')
+    .delete()
+    .eq('date', date)
+    .eq('challenge_type', challengeType);
+
+  if (deleteError) {
+    console.error('Error deleting daily challenge:', deleteError);
+    return false;
+  }
+
+  console.log(`Deleted existing ${challengeType} daily for ${date}`);
+  return true;
 }
 
 // Get the next daily number based on archive count
@@ -295,9 +352,8 @@ async function getNextDailyNumber(challengeType: ChallengeType): Promise<number>
   return (count || 0) + 1;
 }
 
-// Select a puzzle from the pool and set it as today's daily
-async function selectDailyPuzzle(challengeType: ChallengeType): Promise<boolean> {
-  const today = new Date().toISOString().split('T')[0];
+// Select a puzzle from the pool and set it as the daily for a given date
+async function selectDailyPuzzle(challengeType: ChallengeType, targetDate: string): Promise<boolean> {
 
   // Get an available puzzle from the pool
   const { data: poolEntry, error: poolError } = await supabase
@@ -337,7 +393,7 @@ async function selectDailyPuzzle(challengeType: ChallengeType): Promise<boolean>
   // Mark as used in pool
   const { error: usedError } = await supabase
     .from('generated_puzzle_pool')
-    .update({ used_for_daily: today })
+    .update({ used_for_daily: targetDate })
     .eq('id', poolId);
 
   if (usedError) {
@@ -349,7 +405,7 @@ async function selectDailyPuzzle(challengeType: ChallengeType): Promise<boolean>
   const { error: dailyError } = await supabase
     .from('daily_challenges')
     .insert({
-      date: today,
+      date: targetDate,
       puzzle_id: puzzleId,
       challenge_type: challengeType,
     });
@@ -359,7 +415,7 @@ async function selectDailyPuzzle(challengeType: ChallengeType): Promise<boolean>
     return false;
   }
 
-  console.log(`Successfully set ${dailyTitle} for ${today}`);
+  console.log(`Successfully set ${dailyTitle} for ${targetDate}`);
   return true;
 }
 
@@ -466,30 +522,55 @@ async function main() {
     console.log(`Total puzzles generated: ${totalGenerated}`);
   }
 
-  // Check and select today's daily challenges if not already set
-  console.log('\n=== Checking Daily Challenges ===');
+  // Check and select daily challenges
+  const today = getTodayDate();
+  const tomorrow = getTomorrowDate();
 
-  const hasEasyDaily = await hasTodaysDailyChallenge('easy');
-  const hasChallengeDaily = await hasTodaysDailyChallenge('challenge');
+  console.log(`\n=== Checking Daily Challenges ===`);
+  console.log(`Today: ${today}, Tomorrow: ${tomorrow}`);
 
-  if (hasEasyDaily) {
+  // TODAY: Only set up if missing (don't replace - may have leaderboard entries)
+  console.log(`\n--- Today's Dailies (${today}) ---`);
+
+  const hasTodayEasy = await hasDailyChallenge(today, 'easy');
+  const hasTodayChallenge = await hasDailyChallenge(today, 'challenge');
+
+  if (hasTodayEasy) {
     console.log('Easy daily already set for today');
   } else {
     console.log('No easy daily set for today, selecting one...');
-    const success = await selectDailyPuzzle('easy');
+    const success = await selectDailyPuzzle('easy', today);
     if (!success) {
-      console.log('Failed to select easy daily puzzle');
+      console.log('Failed to select easy daily puzzle for today');
     }
   }
 
-  if (hasChallengeDaily) {
+  if (hasTodayChallenge) {
     console.log('Challenge daily already set for today');
   } else {
     console.log('No challenge daily set for today, selecting one...');
-    const success = await selectDailyPuzzle('challenge');
+    const success = await selectDailyPuzzle('challenge', today);
     if (!success) {
-      console.log('Failed to select challenge daily puzzle');
+      console.log('Failed to select challenge daily puzzle for today');
     }
+  }
+
+  // TOMORROW: Always swap out with fresh puzzles
+  console.log(`\n--- Tomorrow's Dailies (${tomorrow}) ---`);
+
+  // Delete existing tomorrow dailies and select fresh ones
+  await deleteDailyChallenge(tomorrow, 'easy');
+  console.log('Selecting fresh easy daily for tomorrow...');
+  const easySuccess = await selectDailyPuzzle('easy', tomorrow);
+  if (!easySuccess) {
+    console.log('Failed to select easy daily puzzle for tomorrow');
+  }
+
+  await deleteDailyChallenge(tomorrow, 'challenge');
+  console.log('Selecting fresh challenge daily for tomorrow...');
+  const challengeSuccess = await selectDailyPuzzle('challenge', tomorrow);
+  if (!challengeSuccess) {
+    console.log('Failed to select challenge daily puzzle for tomorrow');
   }
 
   console.log('\n=== Script Complete ===');
