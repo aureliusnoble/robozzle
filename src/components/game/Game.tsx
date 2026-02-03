@@ -144,48 +144,59 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
   const [showHint, setShowHint] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
 
-  // Ref and state for conditional horizontal scroll (only when tiles overflow, not padding)
+  // Ref and state for auto-scaling the board to fit the container
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [needsHorizontalScroll, setNeedsHorizontalScroll] = useState(false);
+  const [boardScale, setBoardScale] = useState(1);
 
-  // Calculate tiles-only width (matching GameBoard constants)
-  const tilesWidth = useMemo(() => {
-    if (!gameState) return 0;
+  // Calculate board dimensions (matching GameBoard constants)
+  const TILE_SIZE = 32;
+  const TILE_GAP = 2;
+  const BOARD_PADDING = 20;
 
-    const TILE_SIZE = 32;
-    const TILE_GAP = 2;
+  const { tilesWidth, tilesHeight } = useMemo(() => {
+    if (!gameState) return { tilesWidth: 0, tilesHeight: 0 };
 
     let minX = Infinity, maxX = -Infinity;
-    gameState.grid.forEach((row) => {
+    let minY = Infinity, maxY = -Infinity;
+    gameState.grid.forEach((row, y) => {
       row.forEach((tile, x) => {
         if (tile !== null) {
           minX = Math.min(minX, x);
           maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
         }
       });
     });
 
-    if (minX === Infinity) return 0;
-    return (maxX - minX + 1) * (TILE_SIZE + TILE_GAP) - TILE_GAP;
+    if (minX === Infinity) return { tilesWidth: 0, tilesHeight: 0 };
+    return {
+      tilesWidth: (maxX - minX + 1) * (TILE_SIZE + TILE_GAP) - TILE_GAP,
+      tilesHeight: (maxY - minY + 1) * (TILE_SIZE + TILE_GAP) - TILE_GAP,
+    };
   }, [gameState]);
 
-  // Check if tiles overflow container (ignoring padding)
+  const naturalBoardWidth = tilesWidth + BOARD_PADDING * 2;
+  const naturalBoardHeight = tilesHeight + BOARD_PADDING * 2;
+
+  // Calculate scale factor to fit board in container
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || !tilesWidth) return;
+    if (!container || !naturalBoardWidth) return;
 
-    const checkOverflow = () => {
+    const updateScale = () => {
       const containerWidth = container.clientWidth;
-      setNeedsHorizontalScroll(tilesWidth > containerWidth);
+      const newScale = Math.min(1, containerWidth / naturalBoardWidth);
+      setBoardScale(newScale);
     };
 
-    checkOverflow();
+    updateScale();
 
-    const resizeObserver = new ResizeObserver(checkOverflow);
+    const resizeObserver = new ResizeObserver(updateScale);
     resizeObserver.observe(container);
 
     return () => resizeObserver.disconnect();
-  }, [tilesWidth]);
+  }, [naturalBoardWidth]);
 
   // Disable editing while program is running
   const editingDisabled = isRunning;
@@ -200,21 +211,6 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
     if (initialProgram) {
       setProgram(initialProgram);
     }
-
-    // Center the board scroll after puzzle loads (wait for DOM to update)
-    setTimeout(() => {
-      const scrollContainer = document.getElementById('board-scroll-container');
-      if (scrollContainer) {
-        const scrollWidth = scrollContainer.scrollWidth;
-        const clientWidth = scrollContainer.clientWidth;
-        if (scrollWidth > clientWidth) {
-          scrollContainer.scrollTo({
-            left: (scrollWidth - clientWidth) / 2,
-            behavior: 'auto' // Instant on initial load
-          });
-        }
-      }
-    }, 50);
   }, [puzzle, loadPuzzle, initialProgram, setProgram]);
 
   // Handle completion
@@ -305,25 +301,11 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
     [setInstruction, editingDisabled, program]
   );
 
-  // Scroll to game board and center the board horizontally when starting execution
+  // Scroll to game board when starting execution
   const scrollToBoard = useCallback(() => {
     const board = document.getElementById('game-board');
     if (board) {
       board.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    // Also center the horizontal scroll of the board container
-    const scrollContainer = document.getElementById('board-scroll-container');
-    if (scrollContainer) {
-      const scrollWidth = scrollContainer.scrollWidth;
-      const clientWidth = scrollContainer.clientWidth;
-      if (scrollWidth > clientWidth) {
-        // Center the scroll position
-        scrollContainer.scrollTo({
-          left: (scrollWidth - clientWidth) / 2,
-          behavior: 'smooth'
-        });
-      }
     }
   }, []);
 
@@ -445,9 +427,17 @@ export function Game({ puzzle, displayTitle, initialProgram, onComplete, onNextP
               id="board-scroll-container"
               ref={scrollContainerRef}
               className={styles.boardScrollContainer}
-              style={{ overflowX: needsHorizontalScroll ? 'auto' : 'hidden' }}
+              style={{ height: naturalBoardHeight * boardScale }}
             >
-              <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} />
+              <div
+                className={styles.boardScaleWrapper}
+                style={{
+                  transform: `scale(${boardScale})`,
+                  transformOrigin: 'top center',
+                }}
+              >
+                <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} />
+              </div>
             </div>
 
             <div className={styles.sidePanel}>

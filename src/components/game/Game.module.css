@@ -116,12 +116,14 @@
 }
 
 .boardScrollContainer {
-  /* overflow-x is set dynamically: 'auto' when tiles overflow, 'hidden' when they fit */
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  padding: 4px;
-  margin: -4px;
+  display: flex;
+  justify-content: center;
+  overflow: visible;
   min-width: 0; /* Allow flexbox to shrink below content size */
+}
+
+.boardScaleWrapper {
+  display: inline-block;
 }
 
 .sidePanel {
