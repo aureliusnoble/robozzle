@@ -17,17 +17,24 @@ interface ShareModalProps {
     instructions: number;
   };
   category: 'daily' | 'classic';
+  challengeType?: 'easy' | 'challenge';
   dailyNumber?: number;
   date?: string;
 }
 
-// Get day number since launch
-function getDayNumber(date: string): number {
-  const launch = new Date('2025-01-01');
-  const current = new Date(date);
-  const diffTime = Math.abs(current.getTime() - launch.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
+// Get day number since launch for each challenge type
+// Daily Easy and Daily Challenge have different launch dates
+function getDayNumber(date: string, challengeType: 'easy' | 'challenge' = 'challenge'): number {
+  // Daily Challenge launched 2025-02-02, Daily Easy launched 2025-02-03
+  const launchDates = {
+    challenge: '2025-02-02',
+    easy: '2025-02-03',
+  };
+  const launch = new Date(launchDates[challengeType] + 'T00:00:00');
+  const current = new Date(date + 'T00:00:00');
+  const diffTime = current.getTime() - launch.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 because first day is #1
+  return Math.max(1, diffDays);
 }
 
 export function ShareModal({
@@ -37,6 +44,7 @@ export function ShareModal({
   program,
   stats,
   category,
+  challengeType = 'challenge',
   dailyNumber,
   date,
 }: ShareModalProps) {
@@ -58,7 +66,7 @@ export function ShareModal({
     : `aureliusnoble.github.io/robozzle/classic?puzzle=${puzzle.id}`;
 
   // Calculate daily number if not provided
-  const effectiveDailyNumber = dailyNumber ?? (date ? getDayNumber(date) : undefined);
+  const effectiveDailyNumber = dailyNumber ?? (date ? getDayNumber(date, challengeType) : undefined);
 
   // Generate image when modal opens or toggle changes
   const generateImage = useCallback(async () => {
@@ -198,6 +206,7 @@ export function ShareModal({
             showSolution={includeSolution}
             shareUrl={displayUrl}
             category={category}
+            challengeType={challengeType}
             dailyNumber={effectiveDailyNumber}
             date={date}
           />

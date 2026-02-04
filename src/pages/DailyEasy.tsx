@@ -268,6 +268,7 @@ export function DailyEasy() {
           program={getProgram() || undefined}
           stats={completedState}
           category="daily"
+          challengeType="easy"
           date={dailyChallenge.date}
         />
       )}

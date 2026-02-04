@@ -19,6 +19,7 @@ interface ShareCardProps {
   showSolution: boolean;
   shareUrl: string;
   category: 'daily' | 'classic';
+  challengeType?: 'easy' | 'challenge';
   dailyNumber?: number;
   date?: string;
 }
@@ -144,7 +145,7 @@ function getDifficultyLabel(difficulty: string): string {
 }
 
 export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
-  ({ puzzle, program, stats, showSolution, shareUrl, category, dailyNumber, date }, ref) => {
+  ({ puzzle, program, stats, showSolution, shareUrl, category, challengeType = 'challenge', dailyNumber, date }, ref) => {
     // Calculate grid bounds
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     puzzle.grid.forEach((row, y) => {
@@ -233,7 +234,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           {category === 'daily' ? (
             <>
               <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
-                Daily Challenge #{dailyNumber}
+                Daily {challengeType === 'easy' ? 'Easy' : 'Challenge'} #{dailyNumber}
               </div>
               <div style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.6)' }}>
                 {formattedDate}
