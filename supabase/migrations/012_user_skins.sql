@@ -2,7 +2,7 @@
 CREATE TABLE user_skins (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  purchased_skins TEXT[] DEFAULT ARRAY['green'],
+  purchased_skins TEXT[] DEFAULT ARRAY['default'],
   stars_spent INTEGER DEFAULT 0,
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id)

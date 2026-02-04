@@ -1,3 +1,4 @@
+import robotDefault from '../assets/sprites/robot.png';
 import robotGreen from '../assets/sprites/skins/robot_3Dgreen.png';
 import robotRed from '../assets/sprites/skins/robot_3Dred.png';
 import robotYellow from '../assets/sprites/skins/robot_3Dyellow.png';
@@ -10,9 +11,10 @@ export interface Skin {
 }
 
 export const SKINS: Skin[] = [
-  { id: 'green', name: 'Classic Green', cost: 0, image: robotGreen },
-  { id: 'red', name: 'Red Robot', cost: 25, image: robotRed },
-  { id: 'yellow', name: 'Golden', cost: 50, image: robotYellow },
+  { id: 'default', name: 'Classic', cost: 0, image: robotDefault },
+  { id: 'green', name: '3D Green', cost: 25, image: robotGreen },
+  { id: 'red', name: '3D Red', cost: 50, image: robotRed },
+  { id: 'yellow', name: '3D Golden', cost: 75, image: robotYellow },
 ];
 
-export const DEFAULT_SKIN_ID = 'green';
+export const DEFAULT_SKIN_ID = 'default';
