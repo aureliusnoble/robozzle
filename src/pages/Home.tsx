@@ -9,6 +9,10 @@ export function Home() {
   const { user, isAuthenticated } = useAuthStore();
   const { canInstall, promptInstall } = useInstallPrompt();
 
+  // Check if user completed a daily today (for lit flame effect)
+  const today = new Date().toISOString().split('T')[0];
+  const hasCompletedDailyToday = user?.lastDailyDate === today;
+
   return (
     <div className={styles.container}>
       {/* Hero section */}
@@ -90,7 +94,11 @@ export function Home() {
             </div>
             <div className={styles.statCard}>
               <span className={styles.statValue}>
-                <Flame size={20} className={styles.streakIcon} />
+                <Flame
+                  size={20}
+                  className={hasCompletedDailyToday ? styles.streakIconLit : styles.streakIcon}
+                  fill={hasCompletedDailyToday ? 'currentColor' : 'none'}
+                />
                 {user.currentStreak}
               </span>
               <span className={styles.statLabel}>Day Streak</span>
