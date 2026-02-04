@@ -167,6 +167,7 @@ interface OnboardingState {
   hasCompletedTutorial: (step: number) => boolean;
   startOnboarding: (tutorialStep: number) => void;
   resetOnboarding: () => void;
+  syncWithProgress: (tutorialCompleted: number[]) => void;
 }
 
 export const useOnboardingStore = create<OnboardingState>()(
@@ -287,6 +288,13 @@ export const useOnboardingStore = create<OnboardingState>()(
           currentStepIndex: 0,
           tutorialStep: 0,
         });
+      },
+
+      syncWithProgress: (tutorialCompleted: number[]) => {
+        // Merge incoming progress with local completedTutorials
+        const { completedTutorials } = get();
+        const merged = [...new Set([...completedTutorials, ...tutorialCompleted])];
+        set({ completedTutorials: merged });
       },
     }),
     {

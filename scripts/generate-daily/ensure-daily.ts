@@ -29,6 +29,77 @@ function getTodayDate(): string {
   return new Date().toISOString().split('T')[0];
 }
 
+// Get yesterday's date in YYYY-MM-DD format (UTC)
+function getYesterdayDate(): string {
+  const yesterday = new Date();
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  return yesterday.toISOString().split('T')[0];
+}
+
+// Check if rankings have already been finalized for a given date and type
+// After finalization, points range from 5-100 based on rank (default is 10)
+async function isAlreadyFinalized(date: string, challengeType: ChallengeType): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('daily_leaderboard')
+    .select('points')
+    .eq('date', date)
+    .eq('challenge_type', challengeType)
+    .eq('is_late', false)
+    .neq('points', 10)
+    .limit(1);
+
+  if (error) {
+    console.error('Error checking finalization status:', error);
+    return false; // Assume not finalized if we can't check
+  }
+
+  return data && data.length > 0;
+}
+
+// Finalize daily rankings for a given date and challenge type
+async function finalizeDailyRankings(date: string, challengeType: ChallengeType): Promise<boolean> {
+  // Check if already finalized (idempotency)
+  const alreadyFinalized = await isAlreadyFinalized(date, challengeType);
+  if (alreadyFinalized) {
+    console.log(`Rankings for ${date} ${challengeType} already finalized, skipping`);
+    return true;
+  }
+
+  // Check if there are any entries to finalize
+  const { count, error: countError } = await supabase
+    .from('daily_leaderboard')
+    .select('*', { count: 'exact', head: true })
+    .eq('date', date)
+    .eq('challenge_type', challengeType)
+    .eq('is_late', false);
+
+  if (countError) {
+    console.error('Error counting leaderboard entries:', countError);
+    return false;
+  }
+
+  if (!count || count === 0) {
+    console.log(`No entries to finalize for ${date} ${challengeType}`);
+    return true;
+  }
+
+  console.log(`Finalizing ${count} entries for ${date} ${challengeType}...`);
+
+  // Call the database function via RPC
+  const { error } = await supabase.rpc('finalize_daily_rankings', {
+    p_date: date,
+    p_challenge_type: challengeType,
+  });
+
+  if (error) {
+    console.error(`Error finalizing ${challengeType} rankings for ${date}:`, error);
+    return false;
+  }
+
+  console.log(`Successfully finalized ${challengeType} rankings for ${date}`);
+  return true;
+}
+
 // Check if a daily challenge exists for a given date and type
 async function hasDailyChallenge(date: string, challengeType: ChallengeType): Promise<boolean> {
   const { data, error } = await supabase
@@ -128,8 +199,21 @@ async function main() {
   console.log('=== Daily Challenge Safety Check ===');
   console.log(`Timestamp: ${new Date().toISOString()}`);
 
+  // Step 1: Finalize yesterday's rankings
+  const yesterday = getYesterdayDate();
+  console.log(`\n--- Finalizing Rankings for ${yesterday} ---`);
+
+  const easyFinalized = await finalizeDailyRankings(yesterday, 'easy');
+  const challengeFinalized = await finalizeDailyRankings(yesterday, 'challenge');
+
+  if (!easyFinalized || !challengeFinalized) {
+    console.warn('Warning: Some rankings could not be finalized. Check logs above.');
+    // Continue anyway - don't block daily setup
+  }
+
+  // Step 2: Ensure today's dailies exist
   const today = getTodayDate();
-  console.log(`Checking dailies for: ${today}`);
+  console.log(`\n--- Checking Dailies for ${today} ---`);
 
   // Check and ensure today's dailies exist
   const hasTodayEasy = await hasDailyChallenge(today, 'easy');

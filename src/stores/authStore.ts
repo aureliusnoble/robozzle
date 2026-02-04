@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 import type { UserProfile, UserProgress } from '../engine/types';
 import { calculateClassicScore, buildPuzzlesByStarsMap } from '../lib/classicScoring';
+import { useOnboardingStore } from './onboardingStore';
 
 interface AuthStore {
   user: UserProfile | null;
@@ -212,20 +213,51 @@ export const useAuthStore = create<AuthStore>()(
 
           if (!user) return;
 
-          const { data: progress } = await supabase
+          const { data: remoteProgress } = await supabase
             .from('user_progress')
             .select('*')
             .eq('user_id', user.id)
             .maybeSingle();
 
-          if (progress) {
-            set({
-              progress: {
-                tutorialCompleted: progress.tutorial_completed || [],
-                classicSolved: progress.classic_solved || [],
-                dailySolved: progress.daily_solved || [],
-              },
-            });
+          // Get current local progress
+          const localProgress = get().progress;
+
+          // Merge local and remote progress (union of arrays, keeping unique values)
+          const mergeArrays = <T>(local: T[] | undefined, remote: T[] | undefined): T[] => {
+            const combined = [...(local || []), ...(remote || [])];
+            return [...new Set(combined)];
+          };
+
+          const remoteTutorialCompleted = remoteProgress?.tutorial_completed || [];
+          const remoteClassicSolved = remoteProgress?.classic_solved || [];
+          const remoteDailySolved = remoteProgress?.daily_solved || [];
+
+          const mergedProgress: UserProgress = {
+            tutorialCompleted: mergeArrays(localProgress?.tutorialCompleted, remoteTutorialCompleted),
+            classicSolved: mergeArrays(localProgress?.classicSolved, remoteClassicSolved),
+            dailySolved: mergeArrays(localProgress?.dailySolved, remoteDailySolved),
+          };
+
+          // Update local state with merged progress
+          set({ progress: mergedProgress });
+
+          // Sync onboarding store with merged tutorial progress
+          useOnboardingStore.getState().syncWithProgress(mergedProgress.tutorialCompleted);
+
+          // Check if local had data that remote didn't - if so, push merged data back to Supabase
+          const hasNewTutorials = localProgress?.tutorialCompleted?.some(t => !remoteTutorialCompleted.includes(t));
+          const hasNewClassic = localProgress?.classicSolved?.some(c => !remoteClassicSolved.includes(c));
+          const hasNewDaily = localProgress?.dailySolved?.some(d => !remoteDailySolved.includes(d));
+
+          if (hasNewTutorials || hasNewClassic || hasNewDaily) {
+            await supabase
+              .from('user_progress')
+              .upsert({
+                user_id: user.id,
+                tutorial_completed: mergedProgress.tutorialCompleted,
+                classic_solved: mergedProgress.classicSolved,
+                daily_solved: mergedProgress.dailySolved,
+              }, { onConflict: 'user_id' });
           }
         } catch (err) {
           console.error('Error fetching progress:', err);
