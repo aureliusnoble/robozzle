@@ -324,3 +324,140 @@
   color: #64748B;
   margin: 0;
 }
+
+/* Customize Your Robot section */
+.customizeSection {
+  margin-bottom: 2rem;
+}
+
+.customizeButton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.25rem;
+  background: white;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s, box-shadow 0.15s;
+  text-align: left;
+}
+
+.customizeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.customizeIcon {
+  flex-shrink: 0;
+  color: #8B5CF6;
+}
+
+.customizeContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.customizeTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.customizeDesc {
+  font-size: 0.875rem;
+  color: #64748B;
+}
+
+.customizeArrow {
+  flex-shrink: 0;
+  color: #94A3B8;
+}
+
+/* Popup styles */
+.popupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.popupContent {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.popupClose {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F1F5F9;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748B;
+  transition: all 0.15s;
+}
+
+.popupClose:hover {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+
+.popupIcon {
+  color: #F59E0B;
+  margin-bottom: 0.5rem;
+}
+
+.popupContent h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 0.5rem;
+}
+
+.popupContent p {
+  font-size: 0.9375rem;
+  color: #64748B;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.popupButton {
+  display: block;
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.popupButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}

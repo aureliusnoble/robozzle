@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/ui';
-import { Home, Daily, DailyEasy, DailyChallenge, DailyArchive, Tutorial, AdvancedConcepts, AdvancedTopicTutorials, Classic, Leaderboard, Auth, DevMode } from './pages';
+import { Home, Daily, DailyEasy, DailyChallenge, DailyArchive, Tutorial, AdvancedConcepts, AdvancedTopicTutorials, Classic, Leaderboard, Auth, DevMode, RobotShop } from './pages';
 import { UsernamePrompt } from './components/auth';
 import { useAuthStore } from './stores/authStore';
 import { usePuzzleStore } from './stores/puzzleStore';
@@ -34,6 +34,7 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dev" element={<DevMode />} />
+          <Route path="/shop" element={<RobotShop />} />
         </Routes>
       </Layout>
       {/* Username prompt for Google OAuth users who need to set a username */}

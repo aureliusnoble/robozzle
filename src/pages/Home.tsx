@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Bot, Calendar, BookOpen, Gamepad2, Flame, ChevronRight, Download } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bot, Calendar, BookOpen, Gamepad2, Flame, ChevronRight, Download, Palette, X, Sparkles, LogIn } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { supabase } from '../lib/supabase';
 import styles from './Home.module.css';
 
 export function Home() {
-  const { user, isAuthenticated, progress } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, progress, isDevUser } = useAuthStore();
   const { canInstall, promptInstall } = useInstallPrompt();
   const [classicScore, setClassicScore] = useState<number | null>(null);
+  const [showSignInPopup, setShowSignInPopup] = useState(false);
+  const [showComingSoonPopup, setShowComingSoonPopup] = useState(false);
+
+  const devModeActive = isDevUser();
 
   // Check if user completed a daily today (for lit flame effect)
   const today = new Date().toISOString().split('T')[0];
@@ -38,6 +43,16 @@ export function Home() {
 
   // Calculate puzzles solved from progress
   const puzzlesSolved = (progress?.classicSolved?.length || 0) + (progress?.dailySolved?.length || 0);
+
+  const handleCustomizeClick = () => {
+    if (!isAuthenticated) {
+      setShowSignInPopup(true);
+    } else if (devModeActive) {
+      navigate('/shop');
+    } else {
+      setShowComingSoonPopup(true);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -103,6 +118,23 @@ export function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* Customize Your Robot */}
+      <motion.section
+        className={styles.customizeSection}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+      >
+        <button className={styles.customizeButton} onClick={handleCustomizeClick}>
+          <Palette size={24} className={styles.customizeIcon} />
+          <div className={styles.customizeContent}>
+            <span className={styles.customizeTitle}>Customize Your Robot</span>
+            <span className={styles.customizeDesc}>Unlock new looks with your stars</span>
+          </div>
+          <ChevronRight size={20} className={styles.customizeArrow} />
+        </button>
+      </motion.section>
 
       {/* User stats or sign up prompt */}
       {isAuthenticated && user ? (
@@ -201,6 +233,81 @@ export function Home() {
           </button>
         </motion.section>
       )}
+
+      {/* Sign In Required Popup */}
+      <AnimatePresence>
+        {showSignInPopup && (
+          <motion.div
+            className={styles.popupOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSignInPopup(false)}
+          >
+            <motion.div
+              className={styles.popupContent}
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className={styles.popupClose}
+                onClick={() => setShowSignInPopup(false)}
+              >
+                <X size={20} />
+              </button>
+              <LogIn size={48} className={styles.popupIcon} />
+              <h3>Sign In Required</h3>
+              <p>Create an account or sign in to customize your robot and track your progress!</p>
+              <Link
+                to="/auth"
+                className={styles.popupButton}
+                onClick={() => setShowSignInPopup(false)}
+              >
+                Sign In
+              </Link>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Coming Soon Popup */}
+      <AnimatePresence>
+        {showComingSoonPopup && (
+          <motion.div
+            className={styles.popupOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowComingSoonPopup(false)}
+          >
+            <motion.div
+              className={styles.popupContent}
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className={styles.popupClose}
+                onClick={() => setShowComingSoonPopup(false)}
+              >
+                <X size={20} />
+              </button>
+              <Sparkles size={48} className={styles.popupIcon} />
+              <h3>Coming Soon!</h3>
+              <p>Robot customization is still in development. Check back later to unlock new skins with your earned stars!</p>
+              <button
+                className={styles.popupButton}
+                onClick={() => setShowComingSoonPopup(false)}
+              >
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

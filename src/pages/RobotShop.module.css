@@ -1,0 +1,345 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #64748B;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s;
+}
+
+.backButton:hover {
+  color: #1E293B;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1E293B;
+  margin: 0;
+  flex: 1;
+}
+
+.starsCard {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.starsTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748B;
+  margin: 0 0 0.75rem;
+}
+
+.totalStars {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 0.5rem;
+}
+
+.starIcon {
+  color: #F59E0B;
+}
+
+.starsBreakdown {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #64748B;
+}
+
+.spentStars {
+  color: #EF4444;
+}
+
+.availableStars {
+  color: #10B981;
+  font-weight: 600;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skinsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.skinCard {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.15s;
+}
+
+.skinCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.skinImageWrapper {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  background: #F8FAFC;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.skinImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.skinName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0 0 0.25rem;
+  text-align: center;
+}
+
+.skinCost {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #F59E0B;
+  margin-bottom: 0.75rem;
+}
+
+.skinCostFree {
+  color: #10B981;
+}
+
+.buyButton {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.buyButtonPurchase {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+}
+
+.buyButtonPurchase:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.buyButtonOwned {
+  background: #D1FAE5;
+  color: #065F46;
+  cursor: default;
+}
+
+.buyButtonInsufficient {
+  background: #F1F5F9;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.ownedIcon {
+  display: inline-flex;
+  margin-right: 0.25rem;
+}
+
+/* Loading and empty states */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #64748B;
+}
+
+/* Purchase confirmation popup */
+.popupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.popupContent {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.popupClose {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F1F5F9;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748B;
+  transition: all 0.15s;
+}
+
+.popupClose:hover {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+
+.popupIcon {
+  color: #10B981;
+  margin-bottom: 0.5rem;
+}
+
+.popupContent h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 0.5rem;
+}
+
+.popupContent p {
+  font-size: 0.9375rem;
+  color: #64748B;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.popupButtons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.popupCancelButton {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  background: #F1F5F9;
+  color: #64748B;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.popupCancelButton:hover {
+  background: #E2E8F0;
+  color: #1E293B;
+}
+
+.popupConfirmButton {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.popupConfirmButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.popupButton {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.popupButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.popupSkinPreview {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem;
+  background: #F8FAFC;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popupSkinImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}

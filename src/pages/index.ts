@@ -10,3 +10,4 @@ export { Classic } from './Classic';
 export { Leaderboard } from './Leaderboard';
 export { Auth } from './Auth';
 export { DevMode } from './DevMode';
+export { RobotShop } from './RobotShop';
