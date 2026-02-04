@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import type { UserProfile, UserProgress } from '../engine/types';
 import { calculateClassicScore, buildPuzzlesByStarsMap } from '../lib/classicScoring';
 import { useOnboardingStore } from './onboardingStore';
+import { getUserLocalDate, getBrowserTimezone, daysBetween } from '../lib/dateUtils';
 
 interface AuthStore {
   user: UserProfile | null;
@@ -183,6 +184,10 @@ export const useAuthStore = create<AuthStore>()(
                 ? (localDate > remoteDate ? localDate : remoteDate)
                 : localDate || remoteDate || null;
 
+              // Get user's browser timezone and check if we need to update it
+              const browserTimezone = getBrowserTimezone();
+              const profileTimezone = profile.timezone || 'UTC';
+
               set({
                 user: {
                   id: profile.id,
@@ -199,6 +204,7 @@ export const useAuthStore = create<AuthStore>()(
                   bestDailyChallengeRank: profile.best_daily_challenge_rank,
                   lastDailyDate: profile.last_daily_date,
                   lastClassicStarsDate: mergedLastClassicStarsDate,
+                  timezone: browserTimezone, // Always use browser timezone
                   createdAt: new Date(profile.created_at),
                 },
                 lastClassicStarsDate: mergedLastClassicStarsDate,
@@ -207,11 +213,18 @@ export const useAuthStore = create<AuthStore>()(
                 needsUsername: false,
               });
 
-              // If local date was newer, push it to Supabase
-              if (localDate && (!remoteDate || localDate > remoteDate)) {
+              // Update Supabase if timezone changed or last classic stars date needs sync
+              const needsTimezoneUpdate = profileTimezone !== browserTimezone;
+              const needsDateUpdate = localDate && (!remoteDate || localDate > remoteDate);
+
+              if (needsTimezoneUpdate || needsDateUpdate) {
+                const updateData: Record<string, string> = {};
+                if (needsTimezoneUpdate) updateData.timezone = browserTimezone;
+                if (needsDateUpdate) updateData.last_classic_stars_date = localDate;
+
                 supabase
                   .from('profiles')
-                  .update({ last_classic_stars_date: localDate })
+                  .update(updateData)
                   .eq('id', profile.id)
                   .then(() => {});
               }
@@ -517,7 +530,9 @@ export const useAuthStore = create<AuthStore>()(
         const { user } = get();
         if (!user) return { isNewStreakDay: false, newStreak: 0 };
 
-        const today = new Date().toISOString().split('T')[0];
+        // Use user's timezone for all date calculations
+        const userTimezone = user.timezone || 'UTC';
+        const today = getUserLocalDate(userTimezone);
 
         // Only count as a new streak day if:
         // 1. This is today's puzzle (not an archive puzzle)
@@ -526,13 +541,10 @@ export const useAuthStore = create<AuthStore>()(
           return { isNewStreakDay: false, newStreak: user.currentStreak };
         }
 
-        // Calculate new streak
+        // Calculate new streak using timezone-aware date comparison
         let newStreak = 1;
         if (user.lastDailyDate) {
-          const lastDate = new Date(user.lastDailyDate);
-          const todayDate = new Date(today);
-          const diffTime = todayDate.getTime() - lastDate.getTime();
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          const diffDays = daysBetween(user.lastDailyDate, today);
 
           if (diffDays === 1) {
             // Continue streak
