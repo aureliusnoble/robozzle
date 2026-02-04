@@ -15,7 +15,6 @@ interface FireParticle {
 // Animation timing constants
 const GLOW_DURATION = 400; // Glow pulse duration
 const PARTICLE_START = 100; // When particles start
-const PARTICLE_DURATION = 1100; // How long particles animate
 const COUNTER_BOUNCE_START = 600; // When counter bounces
 const TOTAL_DURATION = 1800; // Total animation duration
 
