@@ -285,16 +285,25 @@ export function Game({
   }, [puzzle.id, initialProgram, setProgram]);
 
   // Handle completion - use ref to ensure we only call onComplete once per completion
-  // The steps > 0 check prevents false triggers when switching puzzles (stale isComplete from previous puzzle)
+  // CRITICAL: Validate puzzle ID matches to prevent stale completion from race conditions
+  // when switching puzzles (gameState may still have old puzzle's data)
   useEffect(() => {
-    if (isComplete && gameState && gameState.steps > 0 && onComplete && !completionCalledRef.current) {
+    const isValidCompletion =
+      isComplete &&
+      gameState &&
+      gameState.puzzleId === puzzle.id &&  // Puzzle ID must match
+      gameState.steps > 0 &&
+      onComplete &&
+      !completionCalledRef.current;
+
+    if (isValidCompletion) {
       completionCalledRef.current = true;
       onComplete(gameState.steps, instructionsUsed);
     } else if (!isComplete) {
       // Reset when the game is reset
       completionCalledRef.current = false;
     }
-  }, [isComplete, gameState, instructionsUsed, onComplete]);
+  }, [isComplete, gameState, instructionsUsed, onComplete, puzzle.id]);
 
   // Delay victory modal to let player see the robot reach the final star
   useEffect(() => {

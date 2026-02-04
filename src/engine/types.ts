@@ -39,6 +39,7 @@ export interface RobotState {
 }
 
 export interface GameState {
+  puzzleId: string;  // Track which puzzle this state belongs to
   robot: RobotState;
   grid: (Tile | null)[][]; // null = void/empty space
   starsCollected: number;

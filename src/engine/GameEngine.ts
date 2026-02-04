@@ -80,6 +80,7 @@ export class GameEngine {
     }
 
     return {
+      puzzleId: this.puzzle.id,
       robot: { ...this.puzzle.robotStart },
       grid,
       starsCollected: 0,
