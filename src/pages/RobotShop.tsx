@@ -3,44 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Check, X, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
-import { supabase } from '../lib/supabase';
-import { SKINS, DEFAULT_SKIN_ID, type Skin } from '../data/skins';
+import { useSkinStore } from '../stores/skinStore';
+import { SKINS, type Skin } from '../data/skins';
 import styles from './RobotShop.module.css';
-
-const STORAGE_KEY = 'robozzle-user-skins';
-
-interface UserSkins {
-  purchasedSkins: string[];
-  starsSpent: number;
-}
-
-function loadLocalSkins(): UserSkins {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return {
-        purchasedSkins: parsed.purchasedSkins || [DEFAULT_SKIN_ID],
-        starsSpent: parsed.starsSpent || 0,
-      };
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return { purchasedSkins: [DEFAULT_SKIN_ID], starsSpent: 0 };
-}
-
-function saveLocalSkins(skins: UserSkins): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(skins));
-}
 
 export function RobotShop() {
   const navigate = useNavigate();
   const { user, isAuthenticated, isDevUser } = useAuthStore();
   const devModeActive = isDevUser();
 
-  const [userSkins, setUserSkins] = useState<UserSkins>(loadLocalSkins);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    selectedSkin,
+    purchasedSkins,
+    starsSpent,
+    isLoading,
+    setSelectedSkin,
+    purchaseSkin,
+    fetchSkins,
+  } = useSkinStore();
+
   const [confirmPurchase, setConfirmPurchase] = useState<Skin | null>(null);
   const [successPurchase, setSuccessPurchase] = useState<Skin | null>(null);
 
@@ -51,64 +32,18 @@ export function RobotShop() {
     }
   }, [devModeActive, navigate]);
 
-  // Fetch and merge skins from Supabase
+  // Fetch skins on mount if authenticated
   useEffect(() => {
-    async function fetchSkins() {
-      if (!isAuthenticated || !user?.id) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { data } = await supabase
-          .from('user_skins')
-          .select('purchased_skins, stars_spent')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (data) {
-          // Merge local and remote (union of purchased skins, max of stars spent)
-          const localSkins = loadLocalSkins();
-          const remoteSkins = data.purchased_skins || [DEFAULT_SKIN_ID];
-          const mergedPurchased = [...new Set([...localSkins.purchasedSkins, ...remoteSkins])];
-          const mergedSpent = Math.max(localSkins.starsSpent, data.stars_spent || 0);
-
-          const merged: UserSkins = {
-            purchasedSkins: mergedPurchased,
-            starsSpent: mergedSpent,
-          };
-
-          setUserSkins(merged);
-          saveLocalSkins(merged);
-
-          // If local had data remote didn't, push back to Supabase
-          const hasNewLocal = localSkins.purchasedSkins.some(s => !remoteSkins.includes(s)) ||
-                              localSkins.starsSpent > (data.stars_spent || 0);
-          if (hasNewLocal) {
-            await supabase
-              .from('user_skins')
-              .upsert({
-                user_id: user.id,
-                purchased_skins: mergedPurchased,
-                stars_spent: mergedSpent,
-              }, { onConflict: 'user_id' });
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching skins:', err);
-      } finally {
-        setIsLoading(false);
-      }
+    if (isAuthenticated) {
+      fetchSkins();
     }
-
-    fetchSkins();
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, fetchSkins]);
 
   const totalStars = user?.classicStars || 0;
-  const availableStars = totalStars - userSkins.starsSpent;
+  const availableStars = totalStars - starsSpent;
 
   const handlePurchase = async (skin: Skin) => {
-    if (userSkins.purchasedSkins.includes(skin.id)) return;
+    if (purchasedSkins.includes(skin.id)) return;
     if (skin.cost > availableStars) return;
 
     setConfirmPurchase(skin);
@@ -118,48 +53,41 @@ export function RobotShop() {
     if (!confirmPurchase) return;
 
     const skin = confirmPurchase;
-    const newPurchased = [...userSkins.purchasedSkins, skin.id];
-    const newSpent = userSkins.starsSpent + skin.cost;
-
-    const updated: UserSkins = {
-      purchasedSkins: newPurchased,
-      starsSpent: newSpent,
-    };
-
-    // Update local state and storage immediately
-    setUserSkins(updated);
-    saveLocalSkins(updated);
+    await purchaseSkin(skin.id, skin.cost);
     setConfirmPurchase(null);
     setSuccessPurchase(skin);
-
-    // Sync to Supabase if authenticated
-    if (isAuthenticated && user?.id) {
-      try {
-        await supabase
-          .from('user_skins')
-          .upsert({
-            user_id: user.id,
-            purchased_skins: newPurchased,
-            stars_spent: newSpent,
-          }, { onConflict: 'user_id' });
-      } catch (err) {
-        console.error('Error syncing skins to Supabase:', err);
-      }
-    }
   };
 
-  const getSkinStatus = (skin: Skin): 'owned' | 'buyable' | 'insufficient' => {
-    if (userSkins.purchasedSkins.includes(skin.id)) return 'owned';
+  const handleSelect = (skin: Skin) => {
+    if (!purchasedSkins.includes(skin.id)) return;
+    setSelectedSkin(skin.id);
+  };
+
+  const getSkinStatus = (skin: Skin): 'selected' | 'owned' | 'buyable' | 'insufficient' => {
+    if (skin.id === selectedSkin && purchasedSkins.includes(skin.id)) return 'selected';
+    if (purchasedSkins.includes(skin.id)) return 'owned';
     if (skin.cost <= availableStars) return 'buyable';
     return 'insufficient';
   };
 
   const getButtonText = (skin: Skin): string => {
     const status = getSkinStatus(skin);
-    if (status === 'owned') return 'Owned';
+    if (status === 'selected') return 'Selected';
+    if (status === 'owned') return 'Select';
     if (status === 'buyable') return 'Buy';
     const needed = skin.cost - availableStars;
     return `Need ${needed}`;
+  };
+
+  const handleButtonClick = (skin: Skin) => {
+    const status = getSkinStatus(skin);
+    if (status === 'selected') return; // Already selected, do nothing
+    if (status === 'owned') {
+      handleSelect(skin);
+    } else if (status === 'buyable') {
+      handlePurchase(skin);
+    }
+    // Do nothing for insufficient
   };
 
   if (!devModeActive) {
@@ -192,7 +120,7 @@ export function RobotShop() {
           Total: {totalStars}
         </div>
         <div className={styles.starsBreakdown}>
-          <span className={styles.spentStars}>Spent: {userSkins.starsSpent}</span>
+          <span className={styles.spentStars}>Spent: {starsSpent}</span>
           <span>•</span>
           <span className={styles.availableStars}>Available: {availableStars}</span>
         </div>
@@ -203,10 +131,19 @@ export function RobotShop() {
       <div className={styles.skinsGrid}>
         {SKINS.map((skin) => {
           const status = getSkinStatus(skin);
+          const isSelected = status === 'selected';
           return (
-            <div key={skin.id} className={styles.skinCard}>
+            <div
+              key={skin.id}
+              className={`${styles.skinCard} ${isSelected ? styles.skinCardSelected : ''}`}
+            >
               <div className={styles.skinImageWrapper}>
                 <img src={skin.image} alt={skin.name} className={styles.skinImage} />
+                {isSelected && (
+                  <div className={styles.selectedBadge}>
+                    <Check size={12} />
+                  </div>
+                )}
               </div>
               <h3 className={styles.skinName}>{skin.name}</h3>
               <div className={`${styles.skinCost} ${skin.cost === 0 ? styles.skinCostFree : ''}`}>
@@ -220,16 +157,18 @@ export function RobotShop() {
               </div>
               <button
                 className={`${styles.buyButton} ${
-                  status === 'owned'
+                  status === 'selected'
+                    ? styles.buyButtonSelected
+                    : status === 'owned'
                     ? styles.buyButtonOwned
                     : status === 'buyable'
                     ? styles.buyButtonPurchase
                     : styles.buyButtonInsufficient
                 }`}
-                onClick={() => handlePurchase(skin)}
-                disabled={status === 'owned' || status === 'insufficient'}
+                onClick={() => handleButtonClick(skin)}
+                disabled={status === 'selected' || status === 'insufficient'}
               >
-                {status === 'owned' && (
+                {(status === 'selected' || status === 'owned') && (
                   <span className={styles.ownedIcon}>
                     <Check size={14} />
                   </span>
@@ -321,14 +260,18 @@ export function RobotShop() {
               <ShoppingBag size={48} className={styles.popupIcon} />
               <h3>Purchase Complete!</h3>
               <p>
-                You now own <strong>{successPurchase.name}</strong>. Check your collection to equip
-                it!
+                You now own <strong>{successPurchase.name}</strong>. Select it below to use it in
+                the game!
               </p>
               <button
                 className={styles.popupButton}
-                onClick={() => setSuccessPurchase(null)}
+                onClick={() => {
+                  // Auto-select the newly purchased skin
+                  setSelectedSkin(successPurchase.id);
+                  setSuccessPurchase(null);
+                }}
               >
-                Awesome!
+                Use Now
               </button>
             </motion.div>
           </motion.div>

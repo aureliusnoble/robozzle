@@ -134,6 +134,7 @@ export interface LeaderboardEntry {
   completedAt: Date;
   points: number;
   isLate?: boolean;
+  selectedSkin?: string;
 }
 
 // Puzzle-specific leaderboard entry (for classic puzzles)
@@ -146,6 +147,7 @@ export interface PuzzleLeaderboardEntry {
   submittedAt: Date;
   isLate: boolean;
   program?: Program;
+  selectedSkin?: string;
 }
 
 // Saved program slot
@@ -192,6 +194,7 @@ export interface UserProfile {
   bestDailyChallengeRank: number | null;
   lastDailyDate: string | null;
   lastClassicStarsDate: string | null;
+  timezone: string;
   createdAt: Date;
 }
 

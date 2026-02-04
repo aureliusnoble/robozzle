@@ -5,6 +5,7 @@ import type { PuzzleConfig, Program } from '../../engine/types';
 import { ShareCard } from './ShareCard';
 import { generateShareDataUrl } from '../../lib/shareImageGenerator';
 import { copyToClipboard } from '../../lib/shareGenerator';
+import { useSkinStore } from '../../stores/skinStore';
 import styles from './ShareModal.module.css';
 
 interface ShareModalProps {
@@ -53,6 +54,10 @@ export function ShareModal({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Get user's selected skin
+  const { getSkinImage } = useSkinStore();
+  const userSkinImage = getSkinImage();
 
   // Build share URL - use BASE_URL to handle GitHub Pages deployment
   const baseUrl = `${window.location.origin}${import.meta.env.BASE_URL}`;
@@ -209,6 +214,7 @@ export function ShareModal({
             challengeType={challengeType}
             dailyNumber={effectiveDailyNumber}
             date={date}
+            skinImage={userSkinImage}
           />
         </div>
       )}

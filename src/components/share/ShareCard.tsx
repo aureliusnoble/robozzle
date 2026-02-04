@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import type { PuzzleConfig, Program, FunctionName, Instruction } from '../../engine/types';
 
 // Import sprite images
-import robotSprite from '../../assets/sprites/robot.png';
+import defaultRobotSprite from '../../assets/sprites/robot.png';
 import starSprite from '../../assets/sprites/star.png';
 import tileRed from '../../assets/sprites/tile_red.png';
 import tileGreen from '../../assets/sprites/tile_green.png';
@@ -22,6 +22,7 @@ interface ShareCardProps {
   challengeType?: 'easy' | 'challenge';
   dailyNumber?: number;
   date?: string;
+  skinImage?: string;
 }
 
 const TILE_SPRITES: Record<string, string> = {
@@ -145,7 +146,8 @@ function getDifficultyLabel(difficulty: string): string {
 }
 
 export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
-  ({ puzzle, program, stats, showSolution, shareUrl, category, challengeType = 'challenge', dailyNumber, date }, ref) => {
+  ({ puzzle, program, stats, showSolution, shareUrl, category, challengeType = 'challenge', dailyNumber, date, skinImage }, ref) => {
+    const robotSprite = skinImage || defaultRobotSprite;
     // Calculate grid bounds
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     puzzle.grid.forEach((row, y) => {

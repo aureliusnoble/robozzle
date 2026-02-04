@@ -2,7 +2,7 @@ import type { Direction, Position, Tile } from '../../engine/types';
 import styles from './SimulationBoard.module.css';
 
 // Import sprite images
-import robotSprite from '../../assets/sprites/robot.png';
+import defaultRobotSprite from '../../assets/sprites/robot.png';
 import starSprite from '../../assets/sprites/star.png';
 import tileRed from '../../assets/sprites/tile_red.png';
 import tileGreen from '../../assets/sprites/tile_green.png';
@@ -15,6 +15,7 @@ interface SimulationBoardProps {
   robotDirection: Direction;
   robotPath: Position[];
   turnPositions: Position[];
+  skinImage?: string;
 }
 
 const TILE_SIZE = 24;
@@ -41,7 +42,9 @@ export function SimulationBoard({
   robotDirection,
   robotPath,
   turnPositions,
+  skinImage,
 }: SimulationBoardProps) {
+  const robotSprite = skinImage || defaultRobotSprite;
   // Calculate bounding box of non-null tiles
   let minX = Infinity,
     minY = Infinity,

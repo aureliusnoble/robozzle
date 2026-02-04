@@ -93,7 +93,7 @@ export function usePuzzleLeaderboard(puzzleId: string | undefined) {
     try {
       const { data, error: fetchError } = await supabase
         .from('puzzle_leaderboard')
-        .select('*, profiles(username)')
+        .select('*, profiles(username), user_skins(selected_skin)')
         .eq('puzzle_id', puzzleId)
         .order('instructions_used', { ascending: true })
         .order('steps', { ascending: true })
@@ -111,6 +111,7 @@ export function usePuzzleLeaderboard(puzzleId: string | undefined) {
           steps: d.steps,
           submittedAt: new Date(d.submitted_at),
           isLate: d.is_late,
+          selectedSkin: d.user_skins?.selected_skin || 'default',
         }));
 
         setLeaderboard(assignPuzzleRanks(entries));
@@ -189,24 +190,35 @@ export function usePuzzleLeaderboard(puzzleId: string | undefined) {
 
   // Load another user's solution (only if current user has submitted)
   const loadSolution = useCallback(
-    async (userId: string | null): Promise<Program | null> => {
+    async (userId: string | null): Promise<{ program: Program; selectedSkin: string } | null> => {
       if (!puzzleId || !hasSubmitted) {
         return null;
       }
 
       try {
-        const { data, error: fetchError } = await supabase
+        // Fetch the program
+        const { data: solutionData, error: fetchError } = await supabase
           .from('puzzle_leaderboard')
           .select('program')
           .eq('puzzle_id', puzzleId)
           .eq('user_id', userId)
           .single();
 
-        if (fetchError || !data) {
+        if (fetchError || !solutionData) {
           return null;
         }
 
-        return data.program as unknown as Program;
+        // Fetch the user's skin
+        const { data: skinData } = await supabase
+          .from('user_skins')
+          .select('selected_skin')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        return {
+          program: solutionData.program as unknown as Program,
+          selectedSkin: skinData?.selected_skin || 'default',
+        };
       } catch {
         return null;
       }

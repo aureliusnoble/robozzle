@@ -18,3 +18,12 @@ export const SKINS: Skin[] = [
 ];
 
 export const DEFAULT_SKIN_ID = 'default';
+
+/**
+ * Get the skin image URL by skin ID.
+ * Falls back to default skin if the ID is not found.
+ */
+export function getSkinImageById(skinId: string | undefined): string {
+  const skin = SKINS.find(s => s.id === skinId);
+  return skin?.image || SKINS[0].image; // Fallback to default
+}

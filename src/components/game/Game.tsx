@@ -28,6 +28,7 @@ const slotCollisionDetection: CollisionDetection = (args) => {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, CornerUpLeft, CornerUpRight, Circle, Paintbrush, Footprints, Turtle, Rabbit, Zap, HelpCircle, Trophy, XCircle, RotateCcw, AlertTriangle, Library, Share2, Info, Star } from 'lucide-react';
 import { usePreferencesStore, SPEED_VALUES } from '../../stores/preferencesStore';
+import { useSkinStore } from '../../stores/skinStore';
 import type { PuzzleConfig, FunctionName, TileColor, Instruction, Program, SavedProgram } from '../../engine/types';
 import { useGameEngine } from '../../hooks/useGameEngine';
 import { GameBoard } from './GameBoard';
@@ -59,6 +60,8 @@ interface GameProps {
   onLoad?: (slot: number) => Program | null;
   // Read-only mode for viewing solutions
   readOnly?: boolean;
+  // Custom robot skin (for viewing other players' solutions)
+  skinImage?: string;
 }
 
 // Paint icon for drag overlay - white brush with colored drop
@@ -129,6 +132,7 @@ export function Game({
   onSave,
   onLoad,
   readOnly,
+  skinImage,
 }: GameProps) {
   // Configure drag sensors with activation constraint
   // This allows clicks to work for color cycling, while drags need movement
@@ -175,6 +179,10 @@ export function Game({
 
   // Use preferences store for persisted speed
   const { speed: preferredSpeed, setSpeed: setPreferredSpeed } = usePreferencesStore();
+
+  // Get robot skin from store (or use prop for viewing other players' solutions)
+  const { getSkinImage } = useSkinStore();
+  const robotSkinImage = skinImage || getSkinImage();
 
   // Sync preferred speed to game engine and persist changes
   const setSpeed = useCallback((newSpeed: number) => {
@@ -562,7 +570,7 @@ export function Game({
                   transformOrigin: 'top center',
                 }}
               >
-                <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} tutorialStep={tutorialStep} />
+                <GameBoard puzzle={puzzle} gameState={gameState} showFireworks={isComplete} tutorialStep={tutorialStep} skinImage={robotSkinImage} />
               </div>
             </div>
 

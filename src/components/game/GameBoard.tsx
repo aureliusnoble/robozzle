@@ -4,7 +4,7 @@ import type { GameState, PuzzleConfig, Direction } from '../../engine/types';
 import styles from './GameBoard.module.css';
 
 // Import sprite images
-import robotSprite from '../../assets/sprites/robot.png';
+import defaultRobotSprite from '../../assets/sprites/robot.png';
 import starSprite from '../../assets/sprites/star.png';
 import tileRed from '../../assets/sprites/tile_red.png';
 import tileGreen from '../../assets/sprites/tile_green.png';
@@ -16,6 +16,7 @@ interface GameBoardProps {
   gameState: GameState;
   showFireworks?: boolean;
   tutorialStep?: number;
+  skinImage?: string;
 }
 
 const TILE_SIZE = 32;
@@ -117,7 +118,8 @@ function FireworksBurst({ x, y }: { x: number; y: number }) {
   );
 }
 
-export function GameBoard({ gameState, showFireworks, tutorialStep }: GameBoardProps) {
+export function GameBoard({ gameState, showFireworks, tutorialStep, skinImage }: GameBoardProps) {
+  const robotSprite = skinImage || defaultRobotSprite;
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate bounding box of non-null tiles

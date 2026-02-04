@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
 import type { PuzzleConfig, Program } from '../../engine/types';
+import { getSkinImageById } from '../../data/skins';
 import { Game } from './Game';
 import styles from './SolutionViewer.module.css';
 
 interface SolutionViewerProps {
   puzzle: PuzzleConfig;
   username: string;
-  onLoadSolution: () => Promise<Program | null>;
+  onLoadSolution: () => Promise<{ program: Program; selectedSkin: string } | null>;
   onClose: () => void;
 }
 
@@ -19,6 +20,7 @@ export function SolutionViewer({
   onClose,
 }: SolutionViewerProps) {
   const [program, setProgram] = useState<Program | null>(null);
+  const [skinImage, setSkinImage] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,9 +30,10 @@ export function SolutionViewer({
       setError(null);
 
       try {
-        const loadedProgram = await onLoadSolution();
-        if (loadedProgram) {
-          setProgram(loadedProgram);
+        const result = await onLoadSolution();
+        if (result) {
+          setProgram(result.program);
+          setSkinImage(getSkinImageById(result.selectedSkin));
         } else {
           setError('Failed to load solution');
         }
@@ -96,6 +99,7 @@ export function SolutionViewer({
                   displayTitle={puzzle.title}
                   initialProgram={program}
                   readOnly={true}
+                  skinImage={skinImage}
                 />
               </div>
             )}

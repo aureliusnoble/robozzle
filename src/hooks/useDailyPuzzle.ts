@@ -5,9 +5,15 @@ import { supabase } from '../lib/supabase';
 import type { LeaderboardEntry, Program, ChallengeType } from '../engine/types';
 import { assignRanks } from '../lib/scoring';
 
+// Star values for daily puzzles
+export const DAILY_STAR_VALUES = {
+  easy: 5,
+  challenge: 10,
+} as const;
+
 export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
   const { dailyChallenge, isLoadingDaily, loadDailyChallenge, loadDailyChallengeForDate } = usePuzzleStore();
-  const { user, progress, updateProgress } = useAuthStore();
+  const { user, progress, updateProgress, addClassicStars, updateHardestPuzzle } = useAuthStore();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [hasCompleted, setHasCompleted] = useState(false);
@@ -44,7 +50,7 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
     const fetchLeaderboard = async () => {
       const { data, error } = await supabase
         .from('daily_leaderboard')
-        .select('*, profiles(username)')
+        .select('*, profiles(username), user_skins(selected_skin)')
         .eq('date', dailyChallenge.date)
         .eq('challenge_type', challengeType)
         .order('instructions_used', { ascending: true })
@@ -61,6 +67,7 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
           completedAt: new Date(d.completed_at),
           rank: 0,
           points: 0,
+          selectedSkin: d.user_skins?.selected_skin || 'default',
         }));
 
         const rankedEntries = assignRanks(entries);
@@ -127,6 +134,11 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
         dailySolved: [...(progress?.dailySolved || []), dateKey],
       });
 
+      // Grant stars for first-time completion (5 for easy, 10 for challenge)
+      const stars = DAILY_STAR_VALUES[challengeType];
+      await addClassicStars(stars);
+      await updateHardestPuzzle(stars);
+
       setHasCompleted(true);
     } catch (err) {
       console.error('Error submitting solution:', err);
@@ -134,7 +146,7 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
   };
 
   // Load another user's solution
-  const loadSolution = useCallback(async (userId: string | null): Promise<Program | null> => {
+  const loadSolution = useCallback(async (userId: string | null): Promise<{ program: Program; selectedSkin: string } | null> => {
     if (!dailyChallenge || !hasCompleted) {
       return null;
     }
@@ -151,7 +163,17 @@ export function useDailyPuzzle(challengeType: ChallengeType = 'challenge') {
         return null;
       }
 
-      return data.program as unknown as Program;
+      // Fetch the user's skin
+      const { data: skinData } = await supabase
+        .from('user_skins')
+        .select('selected_skin')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      return {
+        program: data.program as unknown as Program,
+        selectedSkin: skinData?.selected_skin || 'default',
+      };
     } catch {
       return null;
     }
