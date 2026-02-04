@@ -15,6 +15,7 @@ interface AuthStore {
   pendingStarAnimation: number | null; // Number of stars to animate flying to header
   starsAnimatedSoFar: number; // Counter for stars that have landed during animation
   pendingStreakAnimation: boolean; // Whether to show streak fire animation
+  lastClassicStarsDate: string | null; // Date when user last earned classic stars (YYYY-MM-DD)
 
   // Actions
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
@@ -51,6 +52,7 @@ export const useAuthStore = create<AuthStore>()(
       pendingStarAnimation: null,
       starsAnimatedSoFar: 0,
       pendingStreakAnimation: false,
+      lastClassicStarsDate: null,
 
       signIn: async (email: string, password: string) => {
         try {
@@ -363,6 +365,7 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           const newStars = (user.classicStars || 0) + stars;
+          const today = new Date().toISOString().split('T')[0];
 
           // Update local state
           set({
@@ -370,6 +373,7 @@ export const useAuthStore = create<AuthStore>()(
               ...user,
               classicStars: newStars,
             },
+            lastClassicStarsDate: today,
           });
 
           // Update in Supabase
@@ -556,6 +560,7 @@ export const useAuthStore = create<AuthStore>()(
         // Only persist these fields
         user: state.user,
         progress: state.progress,
+        lastClassicStarsDate: state.lastClassicStarsDate,
       }),
     }
   )

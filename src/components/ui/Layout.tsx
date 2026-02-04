@@ -13,13 +13,14 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { user, isAuthenticated, signOut, devModeEnabled, toggleDevMode, pendingStarAnimation, starsAnimatedSoFar } = useAuthStore();
+  const { user, isAuthenticated, signOut, devModeEnabled, toggleDevMode, pendingStarAnimation, starsAnimatedSoFar, lastClassicStarsDate } = useAuthStore();
 
   const hasDevRole = user?.role === 'admin' || user?.role === 'dev';
 
   // Check if user completed a daily today (for lit flame effect)
   const today = new Date().toISOString().split('T')[0];
   const hasCompletedDailyToday = user?.lastDailyDate === today;
+  const hasEarnedStarsToday = lastClassicStarsDate === today;
 
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
@@ -57,7 +58,12 @@ export function Layout({ children }: LayoutProps) {
           {isAuthenticated && user ? (
             <div className={styles.userMenu}>
               <span id="header-star-counter" className={styles.stars} title="Total stars from classic puzzles">
-                <Star id="header-star-icon" size={14} className={styles.starsIcon} />
+                <Star
+                  id="header-star-icon"
+                  size={14}
+                  className={styles.starsIcon}
+                  fill={hasEarnedStarsToday ? 'currentColor' : 'none'}
+                />
                 {(user.classicStars || 0) - (pendingStarAnimation || 0) + starsAnimatedSoFar}
               </span>
               <span
