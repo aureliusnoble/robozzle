@@ -132,7 +132,7 @@
 
 .streakLit .streakIcon {
   filter: drop-shadow(0 0 6px rgba(249, 115, 22, 1)) drop-shadow(0 0 12px rgba(249, 115, 22, 0.8));
-  animation: flameFlicker 1.2s ease-in-out infinite;
+  animation: flameFlicker 3s ease-in-out infinite;
 }
 
 @keyframes flameFlicker {

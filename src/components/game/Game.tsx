@@ -285,8 +285,9 @@ export function Game({
   }, [puzzle.id, initialProgram, setProgram]);
 
   // Handle completion - use ref to ensure we only call onComplete once per completion
+  // The steps > 0 check prevents false triggers when switching puzzles (stale isComplete from previous puzzle)
   useEffect(() => {
-    if (isComplete && gameState && onComplete && !completionCalledRef.current) {
+    if (isComplete && gameState && gameState.steps > 0 && onComplete && !completionCalledRef.current) {
       completionCalledRef.current = true;
       onComplete(gameState.steps, instructionsUsed);
     } else if (!isComplete) {
