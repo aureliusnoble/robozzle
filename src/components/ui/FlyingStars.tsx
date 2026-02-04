@@ -31,8 +31,8 @@ interface ImpactParticle {
 
 // Animation timing constants
 const INITIAL_DELAY = 0.8; // Wait before animation starts (let user see the board)
-const STAGGER_DELAY = 0.35; // Delay between each star (longer for more drama)
 const FLIGHT_DURATION = 2.5; // How long each star takes to fly
+const STAGGER_DELAY = FLIGHT_DURATION * 0.5; // Each star appears when previous is 50% through flight
 
 export function FlyingStars() {
   const { pendingStarAnimation, clearStarAnimation, incrementAnimatedStars } = useAuthStore();
@@ -209,7 +209,7 @@ export function FlyingStars() {
                 targetPosition.y,
               ],
               scale: [2.5, 2.0, 0.5],
-              opacity: [0, 1, 1, 0.8],
+              opacity: [0, 1, 1, 0],
               rotate: [particle.rotation, particle.rotation + 180, particle.rotation + 360],
             }}
             transition={{
