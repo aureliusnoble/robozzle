@@ -1,17 +1,43 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bot, Calendar, BookOpen, Gamepad2, Flame, ChevronRight, Download } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
+import { supabase } from '../lib/supabase';
 import styles from './Home.module.css';
 
 export function Home() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, progress } = useAuthStore();
   const { canInstall, promptInstall } = useInstallPrompt();
+  const [classicScore, setClassicScore] = useState<number | null>(null);
 
   // Check if user completed a daily today (for lit flame effect)
   const today = new Date().toISOString().split('T')[0];
   const hasCompletedDailyToday = user?.lastDailyDate === today;
+
+  // Fetch user's classic score
+  useEffect(() => {
+    if (!user?.id) {
+      setClassicScore(null);
+      return;
+    }
+
+    const fetchScore = async () => {
+      const { data } = await supabase
+        .from('classic_rankings')
+        .select('score')
+        .eq('user_id', user.id)
+        .single();
+
+      setClassicScore(data?.score ? parseFloat(data.score) : 0);
+    };
+
+    fetchScore();
+  }, [user?.id]);
+
+  // Calculate puzzles solved from progress
+  const puzzlesSolved = (progress?.classicSolved?.length || 0) + (progress?.dailySolved?.length || 0);
 
   return (
     <div className={styles.container}>
@@ -89,7 +115,7 @@ export function Home() {
           <h2 className={styles.statsTitle}>Your Progress</h2>
           <div className={styles.statGrid}>
             <div className={styles.statCard}>
-              <span className={styles.statValue}>{user.puzzlesSolved}</span>
+              <span className={styles.statValue}>{puzzlesSolved}</span>
               <span className={styles.statLabel}>Puzzles Solved</span>
             </div>
             <div className={styles.statCard}>
@@ -104,8 +130,10 @@ export function Home() {
               <span className={styles.statLabel}>Day Streak</span>
             </div>
             <div className={styles.statCard}>
-              <span className={styles.statValue}>{user.totalPoints}</span>
-              <span className={styles.statLabel}>Total Points</span>
+              <span className={styles.statValue}>
+                {classicScore !== null ? classicScore.toFixed(1) : '-'}
+              </span>
+              <span className={styles.statLabel}>Classic Score</span>
             </div>
           </div>
         </motion.section>

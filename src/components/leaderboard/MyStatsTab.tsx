@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Star, Calendar, Flame, Trophy, Library, Award } from 'lucide-react';
 import type { UserProfile, UserProgress } from '../../engine/types';
+import { supabase } from '../../lib/supabase';
 import styles from './MyStatsTab.module.css';
 
 interface MyStatsTabProps {
@@ -42,6 +44,28 @@ function StatCard({
 }
 
 export function MyStatsTab({ user, progress }: MyStatsTabProps) {
+  const [classicScore, setClassicScore] = useState<number | null>(null);
+
+  // Fetch user's classic score
+  useEffect(() => {
+    if (!user?.id) {
+      setClassicScore(null);
+      return;
+    }
+
+    const fetchScore = async () => {
+      const { data } = await supabase
+        .from('classic_rankings')
+        .select('score')
+        .eq('user_id', user.id)
+        .single();
+
+      setClassicScore(data?.score ? parseFloat(data.score) : 0);
+    };
+
+    fetchScore();
+  }, [user?.id]);
+
   if (!user) {
     return (
       <div className={styles.container}>
@@ -167,8 +191,8 @@ export function MyStatsTab({ user, progress }: MyStatsTabProps) {
           <div className={styles.statsRow}>
             <StatCard
               icon={<Star size={24} />}
-              label="Total Points"
-              value={user.totalPoints || 0}
+              label="Classic Score"
+              value={classicScore !== null ? classicScore.toFixed(1) : '-'}
               color="#6366F1"
             />
             <StatCard
