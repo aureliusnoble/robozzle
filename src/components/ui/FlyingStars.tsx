@@ -139,7 +139,7 @@ export function FlyingStars() {
             offsetAngle: (j * (360 / sparkleCount)) + (Math.random() - 0.5) * 30,
             offsetDistance: 20 + Math.random() * 25,
             size: 4 + Math.random() * 6,
-            delay: starDelay + 0.1, // Slightly after the star appears
+            delay: starDelay, // Same timing as parent star
           });
         }
       }
@@ -257,14 +257,14 @@ export function FlyingStars() {
                   startPosition.y + parentStar.offsetY - 80 + Math.sin(rad) * (sparkle.offsetDistance * 0.8),
                   targetPosition.y + Math.sin(rad) * 15,
                 ],
-                scale: [0, 1.2, 1, 0],
-                opacity: [0, 0.9, 0.8, 0],
+                scale: [0, 1.2, 0],
+                opacity: [0, 0.9, 0],
               }}
               transition={{
                 duration: FLIGHT_DURATION,
                 delay: sparkle.delay,
                 ease: [0.2, 0.6, 0.3, 1],
-                times: [0, 0.4, 0.9, 1],
+                times: [0, 0.4, 1],
               }}
             />
           );
