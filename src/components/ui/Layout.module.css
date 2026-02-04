@@ -131,16 +131,26 @@
 }
 
 .streakLit .streakIcon {
-  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.7));
-  animation: subtleFlicker 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 1)) drop-shadow(0 0 12px rgba(249, 115, 22, 0.8));
+  animation: flameFlicker 1.2s ease-in-out infinite;
 }
 
-@keyframes subtleFlicker {
+@keyframes flameFlicker {
   0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.7));
+    filter: drop-shadow(0 0 6px rgba(249, 115, 22, 1)) drop-shadow(0 0 12px rgba(249, 115, 22, 0.8));
+    transform: scale(1);
+  }
+  25% {
+    filter: drop-shadow(0 0 8px rgba(255, 150, 50, 1)) drop-shadow(0 0 16px rgba(249, 115, 22, 0.9));
+    transform: scale(1.1);
   }
   50% {
-    filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.9));
+    filter: drop-shadow(0 0 5px rgba(249, 115, 22, 1)) drop-shadow(0 0 10px rgba(249, 115, 22, 0.7));
+    transform: scale(1.05);
+  }
+  75% {
+    filter: drop-shadow(0 0 9px rgba(255, 160, 60, 1)) drop-shadow(0 0 18px rgba(249, 115, 22, 0.95));
+    transform: scale(1.12);
   }
 }
 
