@@ -122,14 +122,17 @@
   background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, white 100%);
 }
 
-.skinImageWrapper {
+.skinImageContainer {
   position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.skinImageWrapper {
   width: 80px;
   height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.75rem;
   background: #F8FAFC;
   border-radius: 12px;
   overflow: hidden;

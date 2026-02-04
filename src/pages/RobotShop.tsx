@@ -137,8 +137,10 @@ export function RobotShop() {
               key={skin.id}
               className={`${styles.skinCard} ${isSelected ? styles.skinCardSelected : ''}`}
             >
-              <div className={styles.skinImageWrapper}>
-                <img src={skin.image} alt={skin.name} className={styles.skinImage} />
+              <div className={styles.skinImageContainer}>
+                <div className={styles.skinImageWrapper}>
+                  <img src={skin.image} alt={skin.name} className={styles.skinImage} />
+                </div>
                 {isSelected && (
                   <div className={styles.selectedBadge}>
                     <Check size={12} />
