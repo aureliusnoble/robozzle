@@ -45,7 +45,12 @@ function countInstructions(program: Program): number {
 
 export function useSavedPrograms(puzzleId: string | undefined) {
   const [savedSlots, setSavedSlots] = useState<SavedProgram[]>([]);
-  const [latestProgram, setLatestProgram] = useState<Program | null>(null);
+ // Store latestProgram with the puzzleId it was loaded for
+  // This prevents returning stale data when puzzleId changes
+  const [latestProgramData, setLatestProgramData] = useState<{
+    puzzleId: string | undefined;
+    program: Program | null;
+  }>({ puzzleId: undefined, program: null });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +60,7 @@ export function useSavedPrograms(puzzleId: string | undefined) {
   const fetchSavedPrograms = useCallback(async () => {
     if (!puzzleId) {
       setSavedSlots([]);
-      setLatestProgram(null);
+      setLatestProgramData({ puzzleId: undefined, program: null });
       setIsLoading(false);
       return;
     }
@@ -136,9 +141,12 @@ export function useSavedPrograms(puzzleId: string | undefined) {
 
       setSavedSlots(mergedSlots.sort((a, b) => a.slot - b.slot));
 
-      // Set latest program (slot 0)
+      // Set latest program (slot 0) with the puzzleId it was loaded for
       const latest = mergedSlots.find((s) => s.slot === 0);
-      setLatestProgram(latest?.program || null);
+      setLatestProgramData({
+        puzzleId,
+        program: latest?.program || null,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch saved programs');
     } finally {
@@ -275,17 +283,20 @@ export function useSavedPrograms(puzzleId: string | undefined) {
     [savedSlots]
   );
 
-  // Reset state immediately when puzzleId changes (before fetch)
-  // This prevents the old puzzle's program from being applied to a new puzzle
+  // Reset savedSlots when puzzleId changes
+  // Note: latestProgram doesn't need reset here because we check puzzleId match in return
   useEffect(() => {
     setSavedSlots([]);
-    setLatestProgram(null);
   }, [puzzleId]);
 
   // Initial fetch
   useEffect(() => {
     fetchSavedPrograms();
   }, [fetchSavedPrograms]);
+
+  // Only return latestProgram if it was loaded for the current puzzleId
+  // This prevents returning stale data when navigating between puzzles
+  const latestProgram = latestProgramData.puzzleId === puzzleId ? latestProgramData.program : null;
 
   return {
     savedSlots,

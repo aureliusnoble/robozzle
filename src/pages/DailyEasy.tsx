@@ -42,7 +42,9 @@ export function DailyEasy() {
   const isViewingArchive = !!dateParam;
 
   // Get puzzle ID for save/load
-  const puzzleId = dailyChallenge ? `daily-${dailyChallenge.date}-easy` : undefined;
+  // Derive from URL date param directly (not dailyChallenge.date) so it changes immediately on navigation
+  const effectiveDate = dateParam || today;
+  const puzzleId = `daily-${effectiveDate}-easy`;
 
   // Save/Load hook
   const {
