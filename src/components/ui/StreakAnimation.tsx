@@ -13,10 +13,10 @@ interface FireParticle {
 }
 
 // Animation timing constants
-const GLOW_DURATION = 400; // Glow pulse duration
-const PARTICLE_START = 100; // When particles start
-const COUNTER_BOUNCE_START = 600; // When counter bounces
-const TOTAL_DURATION = 1800; // Total animation duration
+const GLOW_DURATION = 600; // Glow pulse duration
+const PARTICLE_START = 150; // When particles start
+const COUNTER_BOUNCE_START = 900; // When counter bounces
+const TOTAL_DURATION = 2800; // Total animation duration
 
 export function StreakAnimation() {
   const { pendingStreakAnimation, clearStreakAnimation } = useAuthStore();

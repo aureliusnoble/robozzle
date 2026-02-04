@@ -13,6 +13,7 @@ interface AuthStore {
   needsUsername: boolean; // True when Google user needs to set username
   devModeEnabled: boolean; // When false, devs see the site as regular users
   pendingStarAnimation: number | null; // Number of stars to animate flying to header
+  starsAnimatedSoFar: number; // Counter for stars that have landed during animation
   pendingStreakAnimation: boolean; // Whether to show streak fire animation
 
   // Actions
@@ -31,6 +32,7 @@ interface AuthStore {
   toggleDevMode: () => void;
   isDevUser: () => boolean; // Returns true if user has dev/admin role AND devModeEnabled is true
   triggerStarAnimation: (stars: number) => void;
+  incrementAnimatedStars: () => void;
   clearStarAnimation: () => void;
   triggerStreakAnimation: () => void;
   clearStreakAnimation: () => void;
@@ -47,6 +49,7 @@ export const useAuthStore = create<AuthStore>()(
       needsUsername: false,
       devModeEnabled: true, // Default to enabled for devs
       pendingStarAnimation: null,
+      starsAnimatedSoFar: 0,
       pendingStreakAnimation: false,
 
       signIn: async (email: string, password: string) => {
@@ -468,11 +471,15 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       triggerStarAnimation: (stars: number) => {
-        set({ pendingStarAnimation: stars });
+        set({ pendingStarAnimation: stars, starsAnimatedSoFar: 0 });
+      },
+
+      incrementAnimatedStars: () => {
+        set((state) => ({ starsAnimatedSoFar: state.starsAnimatedSoFar + 1 }));
       },
 
       clearStarAnimation: () => {
-        set({ pendingStarAnimation: null });
+        set({ pendingStarAnimation: null, starsAnimatedSoFar: 0 });
       },
 
       triggerStreakAnimation: () => {

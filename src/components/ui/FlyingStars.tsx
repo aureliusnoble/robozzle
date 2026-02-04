@@ -35,7 +35,7 @@ const STAGGER_DELAY = 0.35; // Delay between each star (longer for more drama)
 const FLIGHT_DURATION = 2.5; // How long each star takes to fly
 
 export function FlyingStars() {
-  const { pendingStarAnimation, clearStarAnimation } = useAuthStore();
+  const { pendingStarAnimation, clearStarAnimation, incrementAnimatedStars } = useAuthStore();
   const [particles, setParticles] = useState<StarParticle[]>([]);
   const [sparkles, setSparkles] = useState<SparkleParticle[]>([]);
   const [impactParticles, setImpactParticles] = useState<ImpactParticle[]>([]);
@@ -84,6 +84,9 @@ export function FlyingStars() {
   const handleStarImpact = useCallback(() => {
     impactCountRef.current += 1;
 
+    // Increment the displayed star counter
+    incrementAnimatedStars();
+
     // Trigger header bounce
     setHeaderBounce(true);
     setTimeout(() => setHeaderBounce(false), 200);
@@ -108,7 +111,7 @@ export function FlyingStars() {
     // Show impact flash
     setShowImpact(true);
     setTimeout(() => setShowImpact(false), 150);
-  }, []);
+  }, [incrementAnimatedStars]);
 
   // Generate particles when animation is triggered
   useEffect(() => {

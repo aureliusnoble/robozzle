@@ -13,7 +13,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { user, isAuthenticated, signOut, devModeEnabled, toggleDevMode } = useAuthStore();
+  const { user, isAuthenticated, signOut, devModeEnabled, toggleDevMode, pendingStarAnimation, starsAnimatedSoFar } = useAuthStore();
 
   const hasDevRole = user?.role === 'admin' || user?.role === 'dev';
 
@@ -58,14 +58,18 @@ export function Layout({ children }: LayoutProps) {
             <div className={styles.userMenu}>
               <span id="header-star-counter" className={styles.stars} title="Total stars from classic puzzles">
                 <Star id="header-star-icon" size={14} className={styles.starsIcon} />
-                {user.classicStars || 0}
+                {(user.classicStars || 0) - (pendingStarAnimation || 0) + starsAnimatedSoFar}
               </span>
               <span
                 id="header-streak-counter"
                 className={`${styles.streak} ${hasCompletedDailyToday ? styles.streakLit : ''}`}
                 title="Current streak"
               >
-                <Flame size={14} className={styles.streakIcon} />
+                <Flame
+                  size={14}
+                  className={styles.streakIcon}
+                  fill={hasCompletedDailyToday ? 'currentColor' : 'none'}
+                />
                 {user.currentStreak}
               </span>
               <button className={styles.signOutButton} onClick={signOut}>
