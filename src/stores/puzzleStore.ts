@@ -4,6 +4,12 @@ import type { PuzzleConfig, PuzzleMetadata, DailyChallenge, InstructionType, Cha
 import { tutorialPuzzles } from '../engine/tutorials';
 import { supabase } from '../lib/supabase';
 
+// Star values for daily puzzles (matches useDailyPuzzle.ts)
+const DAILY_STAR_VALUES: Record<ChallengeType, number> = {
+  easy: 5,
+  challenge: 10,
+};
+
 interface PuzzleStore {
   // Puzzle collections
   tutorials: PuzzleConfig[];
@@ -149,11 +155,15 @@ export const usePuzzleStore = create<PuzzleStore>()(
             stateUpdate.dailyChallenge = null;
             set(stateUpdate as any);
           } else {
+            const parsedPuzzle = parseDailyPuzzleFromDB(daily.puzzles);
+            const effectiveChallengeType = (daily.challenge_type || 'challenge') as ChallengeType;
+            // Set stars based on challenge type for display
+            parsedPuzzle.stars = DAILY_STAR_VALUES[effectiveChallengeType];
             const challenge: DailyChallenge = {
               date: daily.date,
               puzzleId: daily.puzzle_id,
-              puzzle: parseDailyPuzzleFromDB(daily.puzzles),
-              challengeType: daily.challenge_type || 'challenge',
+              puzzle: parsedPuzzle,
+              challengeType: effectiveChallengeType,
             };
             const stateUpdate: Partial<PuzzleStore> = {
               dailyChallenge: challenge,
@@ -188,12 +198,16 @@ export const usePuzzleStore = create<PuzzleStore>()(
             console.log(`No ${challengeType} daily challenge found for date:`, date);
             set({ dailyChallenge: null, isLoadingDaily: false });
           } else {
+            const parsedPuzzle = parseDailyPuzzleFromDB(daily.puzzles);
+            const effectiveChallengeType = (daily.challenge_type || 'challenge') as ChallengeType;
+            // Set stars based on challenge type for display
+            parsedPuzzle.stars = DAILY_STAR_VALUES[effectiveChallengeType];
             set({
               dailyChallenge: {
                 date: daily.date,
                 puzzleId: daily.puzzle_id,
-                puzzle: parseDailyPuzzleFromDB(daily.puzzles),
-                challengeType: daily.challenge_type || 'challenge',
+                puzzle: parsedPuzzle,
+                challengeType: effectiveChallengeType,
               },
               isLoadingDaily: false,
             });
@@ -214,12 +228,18 @@ export const usePuzzleStore = create<PuzzleStore>()(
             .limit(60); // 30 days * 2 challenge types
 
           if (!error && archive) {
-            const parsedArchive = archive.map(d => ({
-              date: d.date,
-              puzzleId: d.puzzle_id,
-              puzzle: parseDailyPuzzleFromDB(d.puzzles),
-              challengeType: (d.challenge_type || 'challenge') as ChallengeType,
-            }));
+            const parsedArchive = archive.map(d => {
+              const parsedPuzzle = parseDailyPuzzleFromDB(d.puzzles);
+              const effectiveChallengeType = (d.challenge_type || 'challenge') as ChallengeType;
+              // Set stars based on challenge type for display
+              parsedPuzzle.stars = DAILY_STAR_VALUES[effectiveChallengeType];
+              return {
+                date: d.date,
+                puzzleId: d.puzzle_id,
+                puzzle: parsedPuzzle,
+                challengeType: effectiveChallengeType,
+              };
+            });
             set({ dailyArchive: parsedArchive });
           }
         } catch (e) {
@@ -252,11 +272,15 @@ export const usePuzzleStore = create<PuzzleStore>()(
           for (const daily of challenges) {
             if (!daily.puzzles) continue;
 
+            const parsedPuzzle = parseDailyPuzzleFromDB(daily.puzzles);
+            const effectiveChallengeType = (daily.challenge_type || 'challenge') as ChallengeType;
+            // Set stars based on challenge type for display
+            parsedPuzzle.stars = DAILY_STAR_VALUES[effectiveChallengeType];
             const challenge: DailyChallenge = {
               date: daily.date,
               puzzleId: daily.puzzle_id,
-              puzzle: parseDailyPuzzleFromDB(daily.puzzles),
-              challengeType: daily.challenge_type || 'challenge',
+              puzzle: parsedPuzzle,
+              challengeType: effectiveChallengeType,
             };
 
             if (daily.challenge_type === 'easy') {
@@ -307,11 +331,15 @@ export const usePuzzleStore = create<PuzzleStore>()(
           for (const daily of challenges) {
             if (!daily.puzzles) continue;
 
+            const parsedPuzzle = parseDailyPuzzleFromDB(daily.puzzles);
+            const effectiveChallengeType = (daily.challenge_type || 'challenge') as ChallengeType;
+            // Set stars based on challenge type for display
+            parsedPuzzle.stars = DAILY_STAR_VALUES[effectiveChallengeType];
             const challenge: DailyChallenge = {
               date: daily.date,
               puzzleId: daily.puzzle_id,
-              puzzle: parseDailyPuzzleFromDB(daily.puzzles),
-              challengeType: daily.challenge_type || 'challenge',
+              puzzle: parsedPuzzle,
+              challengeType: effectiveChallengeType,
             };
 
             if (daily.challenge_type === 'easy') {

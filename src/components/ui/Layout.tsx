@@ -5,6 +5,8 @@ import { Home, Calendar, BookOpen, Library, Trophy, Bot, Flame, Star, Code } fro
 import { useAuthStore } from '../../stores/authStore';
 import { FlyingStars } from './FlyingStars';
 import { StreakAnimation } from './StreakAnimation';
+import { NotificationPrompt } from './NotificationPrompt';
+import { getUserLocalDate } from '../../lib/dateUtils';
 import styles from './Layout.module.css';
 
 interface LayoutProps {
@@ -18,7 +20,9 @@ export function Layout({ children }: LayoutProps) {
   const hasDevRole = user?.role === 'admin' || user?.role === 'dev';
 
   // Check if user completed a daily today (for lit flame effect)
-  const today = new Date().toISOString().split('T')[0];
+  // Use timezone-aware date comparison
+  const userTimezone = user?.timezone || 'UTC';
+  const today = getUserLocalDate(userTimezone);
   const hasCompletedDailyToday = user?.lastDailyDate === today;
   const hasEarnedStarsToday = (user?.lastClassicStarsDate || lastClassicStarsDate) === today;
 
@@ -122,6 +126,9 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Streak fire animation */}
       <StreakAnimation />
+
+      {/* Notification opt-in prompt (shows for 3+ day streaks) */}
+      <NotificationPrompt />
     </div>
   );
 }

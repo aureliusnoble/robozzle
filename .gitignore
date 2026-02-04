@@ -41,3 +41,8 @@ scripts/upload-batch.ts
 
 # Rust build artifacts
 crates/*/target/
+
+# Assets
+src/assets/downloads
+src/assets/sounds
+src/assets/sprites/test_skins

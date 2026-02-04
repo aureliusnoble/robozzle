@@ -308,6 +308,11 @@ export function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Credit */}
+      <footer className={styles.credit}>
+        Based on the original RoboZZle game by Igor Ostrovsky
+      </footer>
     </div>
   );
 }
