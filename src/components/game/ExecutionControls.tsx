@@ -42,6 +42,7 @@ export function ExecutionControls({
     <div className={styles.container}>
       <div className={styles.labeledButton}>
         <motion.button
+          id="reset-button"
           className={`${styles.button} ${styles.resetButton}`}
           onClick={onReset}
           whileTap={{ scale: 0.95 }}
@@ -94,6 +95,7 @@ export function ExecutionControls({
 
       <div className={styles.labeledButton}>
         <motion.button
+          id="step-button"
           className={styles.button}
           onClick={onStep}
           whileTap={{ scale: 0.95 }}

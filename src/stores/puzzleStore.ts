@@ -152,7 +152,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
             const challenge: DailyChallenge = {
               date: daily.date,
               puzzleId: daily.puzzle_id,
-              puzzle: parsePuzzleFromDB(daily.puzzles),
+              puzzle: parseDailyPuzzleFromDB(daily.puzzles),
               challengeType: daily.challenge_type || 'challenge',
             };
             const stateUpdate: Partial<PuzzleStore> = {
@@ -192,7 +192,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
               dailyChallenge: {
                 date: daily.date,
                 puzzleId: daily.puzzle_id,
-                puzzle: parsePuzzleFromDB(daily.puzzles),
+                puzzle: parseDailyPuzzleFromDB(daily.puzzles),
                 challengeType: daily.challenge_type || 'challenge',
               },
               isLoadingDaily: false,
@@ -217,7 +217,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
             const parsedArchive = archive.map(d => ({
               date: d.date,
               puzzleId: d.puzzle_id,
-              puzzle: parsePuzzleFromDB(d.puzzles),
+              puzzle: parseDailyPuzzleFromDB(d.puzzles),
               challengeType: (d.challenge_type || 'challenge') as ChallengeType,
             }));
             set({ dailyArchive: parsedArchive });
@@ -255,7 +255,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
             const challenge: DailyChallenge = {
               date: daily.date,
               puzzleId: daily.puzzle_id,
-              puzzle: parsePuzzleFromDB(daily.puzzles),
+              puzzle: parseDailyPuzzleFromDB(daily.puzzles),
               challengeType: daily.challenge_type || 'challenge',
             };
 
@@ -310,7 +310,7 @@ export const usePuzzleStore = create<PuzzleStore>()(
             const challenge: DailyChallenge = {
               date: daily.date,
               puzzleId: daily.puzzle_id,
-              puzzle: parsePuzzleFromDB(daily.puzzles),
+              puzzle: parseDailyPuzzleFromDB(daily.puzzles),
               challengeType: daily.challenge_type || 'challenge',
             };
 
@@ -364,6 +364,26 @@ export const usePuzzleStore = create<PuzzleStore>()(
     }
   )
 );
+
+// Helper to ensure paint instructions are available (used for daily puzzles)
+function ensurePaintInstructions(puzzle: PuzzleConfig): PuzzleConfig {
+  const paintInstructions: InstructionType[] = ['paint_red', 'paint_green', 'paint_blue'];
+  const missingPaint = paintInstructions.filter(p => !puzzle.allowedInstructions.includes(p));
+
+  if (missingPaint.length === 0) {
+    return puzzle;
+  }
+
+  return {
+    ...puzzle,
+    allowedInstructions: [...puzzle.allowedInstructions, ...missingPaint],
+  };
+}
+
+// Wrapper for parsing daily puzzles - always includes paint instructions
+function parseDailyPuzzleFromDB(dbPuzzle: any): PuzzleConfig {
+  return ensurePaintInstructions(parsePuzzleFromDB(dbPuzzle));
+}
 
 function parsePuzzleFromDB(dbPuzzle: any): PuzzleConfig {
   // Parse function lengths with fallback defaults

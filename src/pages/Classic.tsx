@@ -103,8 +103,10 @@ export function Classic() {
     if (!puzzle || typeof puzzle.title !== 'string') return false;
 
     const matchesDifficulty = filter === 'all' || puzzle.difficulty === filter;
-    const matchesSearch = puzzle.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (puzzle.author?.toLowerCase().includes(searchTerm.toLowerCase()));
+    const searchLower = searchTerm.toLowerCase();
+    const authorName = typeof puzzle.author === 'string' ? puzzle.author : '';
+    const matchesSearch = puzzle.title.toLowerCase().includes(searchLower) ||
+      authorName.toLowerCase().includes(searchLower);
     const matchesSolvedFilter = !hideSolved || !progress?.classicSolved?.includes(puzzle.id);
     return matchesDifficulty && matchesSearch && matchesSolvedFilter;
   });

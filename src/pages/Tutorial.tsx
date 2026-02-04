@@ -16,6 +16,7 @@ export function Tutorial() {
   const { completeTutorial } = useOnboardingStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [justCompletedFinal, setJustCompletedFinal] = useState(false);
   const initialLoadDone = useRef(false);
   const completionSectionRef = useRef<HTMLDivElement>(null);
 
@@ -61,14 +62,23 @@ export function Tutorial() {
       const newCompleted = [...(progress?.tutorialCompleted || []), currentStep];
       await updateProgress({ tutorialCompleted: newCompleted });
 
-      // On final tutorial completion, scroll to the completion section
+      // Flag that we just completed the final tutorial (scroll handled by useEffect)
       if (isFinalTutorial) {
-        setTimeout(() => {
-          completionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 1200); // Wait for fireworks to finish
+        setJustCompletedFinal(true);
       }
     }
   };
+
+  // Scroll to completion section after final tutorial is completed and section is rendered
+  useEffect(() => {
+    if (justCompletedFinal && allBasicCompleted) {
+      const timer = setTimeout(() => {
+        completionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setJustCompletedFinal(false);
+      }, 1200); // Wait for fireworks to finish
+      return () => clearTimeout(timer);
+    }
+  }, [justCompletedFinal, allBasicCompleted]);
 
   const handleNextTutorial = () => {
     if (currentStep < tutorials.length) {

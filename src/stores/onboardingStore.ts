@@ -52,8 +52,22 @@ export const tutorialOnboardingSteps: Record<number, OnboardingStep[]> = {
       id: 'play-button',
       targetId: 'play-button',
       title: 'Run Your Program',
-      description: 'Press Play to watch your robot execute! Note: You cannot edit your program while running - press Reset first.',
+      description: 'Press Play to watch your robot execute!',
       position: 'left',
+    },
+    {
+      id: 'step-button',
+      targetId: 'step-button',
+      title: 'Step Through',
+      description: 'You can also step through your program one step at a time.',
+      position: 'left',
+    },
+    {
+      id: 'reset-button',
+      targetId: 'reset-button',
+      title: 'Reset to Edit',
+      description: 'Once your program is running, you cannot edit it until you reset the player.',
+      position: 'right',
     },
   ],
   2: [
@@ -66,13 +80,6 @@ export const tutorialOnboardingSteps: Record<number, OnboardingStep[]> = {
     },
   ],
   3: [
-    {
-      id: 'wide-puzzle',
-      targetId: 'game-board',
-      title: 'Wide Puzzles',
-      description: 'Some puzzles are wider than the screen. Swipe left/right on the board to see the full path!',
-      position: 'bottom',
-    },
     {
       id: 'f2-tab',
       targetId: 'function-tab-f2',
