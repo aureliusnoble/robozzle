@@ -131,7 +131,7 @@ export function Home() {
             </div>
             <div className={styles.statCard}>
               <span className={styles.statValue}>
-                {classicScore !== null ? classicScore.toFixed(1) : '-'}
+                {classicScore !== null ? Math.round(classicScore) : '-'}
               </span>
               <span className={styles.statLabel}>Classic Score</span>
             </div>

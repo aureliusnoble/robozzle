@@ -192,7 +192,7 @@ export function MyStatsTab({ user, progress }: MyStatsTabProps) {
             <StatCard
               icon={<Star size={24} />}
               label="Classic Score"
-              value={classicScore !== null ? classicScore.toFixed(1) : '-'}
+              value={classicScore !== null ? Math.round(classicScore) : '-'}
               color="#6366F1"
             />
             <StatCard
