@@ -114,6 +114,19 @@
   color: #10B981;
 }
 
+.congratsButton {
+  width: 44px;
+}
+
+.congratsButton.completed {
+  background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+  border-color: #10B981;
+}
+
+.congratsButton.completed .stepNumber {
+  color: #065F46;
+}
+
 .completeBadge {
   position: absolute;
   top: -4px;

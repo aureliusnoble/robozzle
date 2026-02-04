@@ -16,9 +16,7 @@ export function Tutorial() {
   const { completeTutorial } = useOnboardingStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [showComingSoon, setShowComingSoon] = useState(false);
-  const [justCompletedFinal, setJustCompletedFinal] = useState(false);
   const initialLoadDone = useRef(false);
-  const completionSectionRef = useRef<HTMLDivElement>(null);
 
   const devModeActive = isDevUser();
 
@@ -36,7 +34,12 @@ export function Tutorial() {
     if (!initialLoadDone.current && tutorials.length > 0) {
       if (progress?.tutorialCompleted && progress.tutorialCompleted.length > 0) {
         const maxCompleted = Math.max(...progress.tutorialCompleted, 0);
-        setCurrentStep(Math.min(maxCompleted + 1, tutorials.length));
+        // If all tutorials completed, go to congratulations tab
+        if (maxCompleted >= tutorials.length) {
+          setCurrentStep(tutorials.length + 1); // Congrats tab
+        } else {
+          setCurrentStep(Math.min(maxCompleted + 1, tutorials.length));
+        }
       }
       initialLoadDone.current = true;
     }
@@ -53,6 +56,10 @@ export function Tutorial() {
   const allBasicCompleted = completedCount === tutorials.length;
   const isFinalTutorial = currentStep === tutorials.length;
 
+  // Congratulations is a virtual "step" after all tutorials
+  const congratsStep = tutorials.length + 1;
+  const isOnCongratsTab = currentStep === congratsStep;
+
   const handleComplete = async () => {
     if (!isCurrentCompleted) {
       // Mark tutorial complete in onboarding store
@@ -63,23 +70,14 @@ export function Tutorial() {
       await updateProgress({ tutorialCompleted: newCompleted });
     }
 
-    // Always scroll to completion section when finishing the final tutorial
-    // (even if it was previously completed)
+    // Switch to congratulations tab when finishing the final tutorial
     if (isFinalTutorial) {
-      setJustCompletedFinal(true);
+      // Delay to let victory animation play
+      setTimeout(() => {
+        setCurrentStep(congratsStep);
+      }, 1200);
     }
   };
-
-  // Scroll to completion section after final tutorial is completed and section is rendered
-  useEffect(() => {
-    if (justCompletedFinal && allBasicCompleted) {
-      const timer = setTimeout(() => {
-        completionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setJustCompletedFinal(false);
-      }, 1200); // Wait for fireworks to finish
-      return () => clearTimeout(timer);
-    }
-  }, [justCompletedFinal, allBasicCompleted]);
 
   const handleNextTutorial = () => {
     if (currentStep < tutorials.length) {
@@ -141,28 +139,23 @@ export function Tutorial() {
                 </button>
               );
             })}
+            {/* Congratulations tab - shown after all tutorials completed */}
+            <button
+              className={`${styles.stepButton} ${styles.congratsButton} ${isOnCongratsTab ? styles.current : ''} ${allBasicCompleted ? styles.completed : ''} ${!allBasicCompleted ? styles.locked : ''}`}
+              onClick={() => allBasicCompleted && setCurrentStep(congratsStep)}
+              disabled={!allBasicCompleted}
+              title={allBasicCompleted ? 'Congratulations!' : 'Complete all tutorials to unlock'}
+            >
+              <span className={styles.stepNumber}>
+                {allBasicCompleted ? <GraduationCap size={16} /> : <Lock size={14} />}
+              </span>
+            </button>
           </div>
         </div>
 
-        {/* Current tutorial */}
-        {currentPuzzle && (
-          <div className={styles.gameArea}>
-            <OnboardingProvider key={`onboarding-${currentStep}`} tutorialStep={currentStep}>
-              <Game
-                key={`game-${currentStep}`}
-                puzzle={currentPuzzle}
-                onComplete={handleComplete}
-                onNextPuzzle={currentStep < tutorials.length ? handleNextTutorial : undefined}
-                tutorialStep={currentStep}
-                suppressVictoryModal={isFinalTutorial}
-              />
-            </OnboardingProvider>
-          </div>
-        )}
-
-        {/* Completed all tutorials */}
-        {allBasicCompleted && (
-          <div ref={completionSectionRef} className={styles.allComplete}>
+        {/* Current tutorial or Congratulations */}
+        {isOnCongratsTab ? (
+          <div className={styles.allComplete}>
             <GraduationCap size={48} className={styles.completeIcon} />
             <h2>Congratulations!</h2>
             <p>You've completed all basic tutorials. Ready for the real challenges?</p>
@@ -189,6 +182,19 @@ export function Tutorial() {
                 Classic Puzzles
               </Link>
             </div>
+          </div>
+        ) : currentPuzzle && (
+          <div className={styles.gameArea}>
+            <OnboardingProvider key={`onboarding-${currentStep}`} tutorialStep={currentStep}>
+              <Game
+                key={`game-${currentStep}`}
+                puzzle={currentPuzzle}
+                onComplete={handleComplete}
+                onNextPuzzle={currentStep < tutorials.length ? handleNextTutorial : undefined}
+                tutorialStep={currentStep}
+                suppressVictoryModal={isFinalTutorial}
+              />
+            </OnboardingProvider>
           </div>
         )}
       </div>
