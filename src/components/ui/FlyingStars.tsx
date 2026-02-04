@@ -210,7 +210,13 @@ export function FlyingStars() {
               ],
               scale: [2.5, 2.0, 0.5],
               opacity: [0, 1, 1, 0],
-              rotate: [particle.rotation, particle.rotation + 180, particle.rotation + 360],
+              // End at 0° (point up) to match header star orientation
+              // Use 360 or 720 to ensure smooth forward rotation of at least 270°
+              rotate: (() => {
+                const endRotation = particle.rotation > 90 ? 720 : 360;
+                const midRotation = particle.rotation + (endRotation - particle.rotation) / 2;
+                return [particle.rotation, midRotation, endRotation];
+              })(),
             }}
             transition={{
               duration: FLIGHT_DURATION,
