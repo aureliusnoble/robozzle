@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Calendar, BookOpen, Gamepad2, Flame, ChevronRight, Download, Palette, X, Sparkles, LogIn } from 'lucide-react';
+import { Bot, Calendar, BookOpen, Gamepad2, Flame, ChevronRight, Download, Palette, X, Sparkles, LogIn, MessageSquare } from 'lucide-react';
+import { FeedbackModal } from '../components/feedback/FeedbackModal';
 import { useAuthStore } from '../stores/authStore';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { supabase } from '../lib/supabase';
@@ -14,6 +15,7 @@ export function Home() {
   const [classicScore, setClassicScore] = useState<number | null>(null);
   const [showSignInPopup, setShowSignInPopup] = useState(false);
   const [showComingSoonPopup, setShowComingSoonPopup] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const devModeActive = isDevUser();
 
@@ -51,6 +53,14 @@ export function Home() {
       navigate('/shop');
     } else {
       setShowComingSoonPopup(true);
+    }
+  };
+
+  const handleFeedbackClick = () => {
+    if (!isAuthenticated) {
+      setShowSignInPopup(true);
+    } else {
+      setShowFeedbackModal(true);
     }
   };
 
@@ -311,8 +321,18 @@ export function Home() {
 
       {/* Credit */}
       <footer className={styles.credit}>
-        Based on the original RoboZZle game by Igor Ostrovsky
+        <p>Based on the original RoboZZle game by Igor Ostrovsky</p>
+        <button className={styles.feedbackLink} onClick={handleFeedbackClick}>
+          <MessageSquare size={14} />
+          Send Feedback
+        </button>
       </footer>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </div>
   );
 }

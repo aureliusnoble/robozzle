@@ -216,6 +216,22 @@ export interface Database {
         };
         Update: Partial<Database['public']['Tables']['classic_rank_history']['Insert']>;
       };
+      feedback: {
+        Row: {
+          id: string;
+          user_id: string;
+          category: 'bug' | 'feature' | 'other';
+          description: string;
+          created_at: string;
+          status: string;
+        };
+        Insert: {
+          user_id: string;
+          category: 'bug' | 'feature' | 'other';
+          description: string;
+        };
+        Update: Partial<Database['public']['Tables']['feedback']['Insert']>;
+      };
     };
   };
 }
