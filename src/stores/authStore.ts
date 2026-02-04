@@ -176,6 +176,13 @@ export const useAuthStore = create<AuthStore>()(
                 needsUsername: true,
               });
             } else {
+              // Merge local and remote lastClassicStarsDate (take the more recent)
+              const localDate = get().lastClassicStarsDate;
+              const remoteDate = profile.last_classic_stars_date;
+              const mergedLastClassicStarsDate = localDate && remoteDate
+                ? (localDate > remoteDate ? localDate : remoteDate)
+                : localDate || remoteDate || null;
+
               set({
                 user: {
                   id: profile.id,
@@ -191,12 +198,23 @@ export const useAuthStore = create<AuthStore>()(
                   bestDailyEasyRank: profile.best_daily_easy_rank,
                   bestDailyChallengeRank: profile.best_daily_challenge_rank,
                   lastDailyDate: profile.last_daily_date,
+                  lastClassicStarsDate: mergedLastClassicStarsDate,
                   createdAt: new Date(profile.created_at),
                 },
+                lastClassicStarsDate: mergedLastClassicStarsDate,
                 isAuthenticated: true,
                 isLoading: false,
                 needsUsername: false,
               });
+
+              // If local date was newer, push it to Supabase
+              if (localDate && (!remoteDate || localDate > remoteDate)) {
+                supabase
+                  .from('profiles')
+                  .update({ last_classic_stars_date: localDate })
+                  .eq('id', profile.id)
+                  .then(() => {});
+              }
             }
           } else {
             // No profile yet - if Google user, they need to create username
@@ -372,6 +390,7 @@ export const useAuthStore = create<AuthStore>()(
             user: {
               ...user,
               classicStars: newStars,
+              lastClassicStarsDate: today,
             },
             lastClassicStarsDate: today,
           });
@@ -381,7 +400,7 @@ export const useAuthStore = create<AuthStore>()(
           if (authUser) {
             await supabase
               .from('profiles')
-              .update({ classic_stars: newStars })
+              .update({ classic_stars: newStars, last_classic_stars_date: today })
               .eq('id', authUser.id);
           }
         } catch (err) {

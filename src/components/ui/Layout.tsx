@@ -20,7 +20,7 @@ export function Layout({ children }: LayoutProps) {
   // Check if user completed a daily today (for lit flame effect)
   const today = new Date().toISOString().split('T')[0];
   const hasCompletedDailyToday = user?.lastDailyDate === today;
-  const hasEarnedStarsToday = lastClassicStarsDate === today;
+  const hasEarnedStarsToday = (user?.lastClassicStarsDate || lastClassicStarsDate) === today;
 
   const navItems = [
     { path: '/', label: 'Home', icon: Home },

@@ -191,6 +191,7 @@ export interface UserProfile {
   bestDailyEasyRank: number | null;
   bestDailyChallengeRank: number | null;
   lastDailyDate: string | null;
+  lastClassicStarsDate: string | null;
   createdAt: Date;
 }
 
