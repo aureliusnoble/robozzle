@@ -57,7 +57,7 @@ export function Layout({ children }: LayoutProps) {
           {isAuthenticated && user ? (
             <div className={styles.userMenu}>
               <span id="header-star-counter" className={styles.stars} title="Total stars from classic puzzles">
-                <Star size={14} className={styles.starsIcon} />
+                <Star id="header-star-icon" size={14} className={styles.starsIcon} />
                 {user.classicStars || 0}
               </span>
               <span

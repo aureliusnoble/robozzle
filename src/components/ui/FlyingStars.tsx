@@ -53,9 +53,9 @@ export function FlyingStars() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Get target position (star counter in header)
-      const starCounter = document.getElementById('header-star-counter');
-      if (starCounter) {
-        const rect = starCounter.getBoundingClientRect();
+      const starIcon = document.getElementById('header-star-icon');
+      if (starIcon) {
+        const rect = starIcon.getBoundingClientRect();
         setTargetPosition({
           x: rect.left + rect.width / 2,
           y: rect.top + rect.height / 2,
