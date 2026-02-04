@@ -61,11 +61,12 @@ export function Tutorial() {
       // Update progress
       const newCompleted = [...(progress?.tutorialCompleted || []), currentStep];
       await updateProgress({ tutorialCompleted: newCompleted });
+    }
 
-      // Flag that we just completed the final tutorial (scroll handled by useEffect)
-      if (isFinalTutorial) {
-        setJustCompletedFinal(true);
-      }
+    // Always scroll to completion section when finishing the final tutorial
+    // (even if it was previously completed)
+    if (isFinalTutorial) {
+      setJustCompletedFinal(true);
     }
   };
 
