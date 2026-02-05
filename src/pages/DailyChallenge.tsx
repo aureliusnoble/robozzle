@@ -73,6 +73,9 @@ export function DailyChallenge() {
 
   const handleComplete = useCallback(
     async (steps: number, instructions: number) => {
+      // Track hard puzzle completion for difficulty note on Daily page
+      localStorage.setItem('robozzle-completed-hard-puzzle', 'true');
+
       // Check if this is today's puzzle AND first completion today
       const isFirstCompletionToday = isToday && !hasCompleted && user?.lastDailyDate !== today;
 

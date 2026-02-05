@@ -125,6 +125,11 @@ export function Classic() {
     // Scroll to top so user can see the board and any star animation
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    // Track hard puzzle completion for difficulty note on Daily page
+    if (selectedPuzzle && (selectedPuzzle.stars ?? 0) >= 5) {
+      localStorage.setItem('robozzle-completed-hard-puzzle', 'true');
+    }
+
     if (selectedPuzzle && progress) {
       const newSolved = [...(progress.classicSolved || [])];
       if (!newSolved.includes(selectedPuzzle.id)) {

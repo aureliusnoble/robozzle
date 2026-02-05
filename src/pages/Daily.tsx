@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Target, Calendar, Check, ChevronRight, Settings } from 'lucide-react';
+import { Star, Target, Calendar, Check, ChevronRight, Settings, Info } from 'lucide-react';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useAuthStore } from '../stores/authStore';
 import { useDailyLeaderboards } from '../hooks/useDailyLeaderboards';
@@ -15,12 +15,21 @@ export function Daily() {
   const { loadBothDailyChallenges, dailyEasyChallenge, dailyChallengeChallenge, isLoadingDaily } = usePuzzleStore();
   const [activeTab, setActiveTab] = useState<'easy' | 'challenge'>('easy');
   const [isDevUser, setIsDevUser] = useState(false);
+  const [hasCompletedHardPuzzle, setHasCompletedHardPuzzle] = useState(true); // Default true to avoid flash
   const { easyLeaderboard, challengeLeaderboard, isLoading: isLoadingLeaderboards } = useDailyLeaderboards();
 
   // Load both challenges on mount
   useEffect(() => {
     loadBothDailyChallenges();
   }, [loadBothDailyChallenges]);
+
+  // Check if user has completed a hard puzzle (for difficulty note)
+  useEffect(() => {
+    const localFlag = localStorage.getItem('robozzle-completed-hard-puzzle') === 'true';
+    const profileFlag = (user?.hardestPuzzleStars ?? 0) >= 5;
+    const hasDailySolves = (progress?.dailySolved?.length ?? 0) > 0;
+    setHasCompletedHardPuzzle(localFlag || profileFlag || hasDailySolves);
+  }, [user?.hardestPuzzleStars, progress?.dailySolved]);
 
   // Check dev access
   useEffect(() => {
@@ -94,6 +103,20 @@ export function Daily() {
           )}
         </div>
       </header>
+
+      {/* Difficulty Note */}
+      {!hasCompletedHardPuzzle && (
+        <div className={styles.difficultyNote}>
+          <Info size={18} className={styles.difficultyNoteIcon} />
+          <p>
+            Daily puzzles can be tricky! If you're new, try some{' '}
+            <button className={styles.difficultyNoteLink} onClick={() => navigate('/classic')}>
+              Classic puzzles
+            </button>{' '}
+            first to build your skills.
+          </p>
+        </div>
+      )}
 
       {/* Puzzle Cards */}
       <div className={styles.puzzleCards}>

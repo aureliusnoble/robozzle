@@ -213,6 +213,19 @@ export const useAuthStore = create<AuthStore>()(
                 needsUsername: false,
               });
 
+              // Bidirectional sync of hard puzzle completion flag
+              if ((profile.hardest_puzzle_stars || 0) >= 5) {
+                localStorage.setItem('robozzle-completed-hard-puzzle', 'true');
+              }
+              const localHardFlag = localStorage.getItem('robozzle-completed-hard-puzzle') === 'true';
+              if (localHardFlag && (profile.hardest_puzzle_stars || 0) < 5) {
+                supabase
+                  .from('profiles')
+                  .update({ hardest_puzzle_stars: 5 })
+                  .eq('id', profile.id)
+                  .then(() => {});
+              }
+
               // Update Supabase if timezone changed or last classic stars date needs sync
               const needsTimezoneUpdate = profileTimezone !== browserTimezone;
               const needsDateUpdate = localDate && (!remoteDate || localDate > remoteDate);

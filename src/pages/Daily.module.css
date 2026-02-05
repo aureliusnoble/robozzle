@@ -84,6 +84,48 @@
   transform: translateY(-1px);
 }
 
+/* Difficulty Note */
+.difficultyNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.difficultyNote p {
+  margin: 0;
+}
+
+.difficultyNoteIcon {
+  color: #6366F1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.difficultyNoteLink {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #6366F1;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.difficultyNoteLink:hover {
+  color: #4F46E5;
+}
+
 /* Puzzle Cards */
 .puzzleCards {
   display: grid;
@@ -270,6 +312,10 @@
 
   .title {
     font-size: 1.75rem;
+  }
+
+  .difficultyNote {
+    margin-bottom: 1.5rem;
   }
 
   .puzzleCards {
